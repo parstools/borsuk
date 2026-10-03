@@ -1,0 +1,5 @@
+sema Broken for "broken.ag";
+
+node program
+    : EOF analysis { result = ; }
+    ;

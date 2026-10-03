@@ -1,0 +1,1357 @@
+sema ToyCTyped for "toyc.ag";
+
+// Typed declarations, expressions, statements and definite assignment.
+
+semantic_model {
+    return_policy function_return {
+        target = enclosing_function;
+        value = absent_for_void_otherwise_required;
+        conversion = implicit_conversion;
+        cleanup = no_cleanup;
+        evaluation = capture_value_before_cleanup;
+        flow = unreachable_after_success;
+        ir = Return;
+        errors {
+            missing_target = "return outside function";
+            wrong_presence = "invalid return value";
+            failed_conversion = "incompatible return type";
+        }
+    }
+    model_bindings function_return {
+        active_function = active_function;
+        functions = functions;
+        flow = current_flow;
+        poison = poisoned_expression;
+        convert = convert;
+        emit = add_operation;
+        return_ir = tuple;
+        cleanup_scopes = no_scopes;
+    }
+    assignment_policy store_value {
+        check = check_assignment_target;
+        increment = increment_value;
+        increment_operand = numeric;
+        increment_step = integer_one;
+        increment_operation = add_or_subtract;
+        target = non_array;
+        simple = implicit_conversion;
+        compound = read_modify_write;
+        result = exact_or_numeric_conversion;
+        flow = initialized_after_success;
+        evaluation = static_place;
+        ir = Store;
+        errors {
+            invalid_target = "invalid assignment target";
+            invalid_increment = "invalid increment operand";
+            dependent = "dependent error";
+            incompatible = "incompatible assignment types";
+        }
+    }
+    assignment_bindings store_value {
+        places = places;
+        expressions = expressions;
+        flow = current_flow;
+        poison = poisoned_expression;
+        read = read;
+        convert = convert;
+        binary = binary;
+        expression_builder = add_expression;
+        integer_literal = integer_literal;
+        emit = add_operation;
+        mark = mark_initialized;
+    }
+    condition_policy condition_bool {
+        target = bool;
+        already = identity;
+        accepted = numeric_or_pointer;
+        conversion = explicit_bool;
+        errors {
+            dependent = "dependent error";
+            incompatible = "condition is not convertible to bool";
+        }
+    }
+    condition_bindings condition_bool {
+        expressions = expressions;
+        poison = poisoned_expression;
+        emit = add_expression;
+    }
+    statement_ir statements {
+        append = append_statement;
+        call = call_statement;
+        if_without_else = make_if_without_else;
+        if_with_else = make_if_with_else;
+        loop_while = make_while;
+        for_initialization = for_initialization;
+        loop_for = make_for;
+        call_ir = Call;
+        if_ir = If;
+        while_ir = While;
+        block_ir = Block;
+        for_ir = For;
+    }
+    statement_bindings statements {
+        scopes = scopes;
+        emit = add_operation;
+    }
+    flow_actions statements {
+        snapshot = snapshot_flow;
+        restore = restore_flow;
+        merge_snapshot = merge_flow_snapshot;
+        recover = recover_statement;
+    }
+    flow_bindings statements {
+        current = current_flow;
+        snapshots = flow_snapshots;
+        merge = merge_flow;
+        record_error = record_error;
+        emit = add_operation;
+        error_ir = Error;
+    }
+    modules {
+        statements {
+            rules = [ifStatement, whileStatement, forStatement];
+            functions = [make_if_without_else, make_if_with_else, make_while, make_for];
+        }
+    }
+    rust_context Context;
+    inherited scope: ScopeId;
+    inherited target: DeclarationTarget;
+    inherited parameters: List<ParameterId>;
+    inherited enter: Bool;
+    inherited left: ExprId;
+    inherited base: PlaceId;
+    inherited arguments: List<ExprId>;
+
+    intrinsic copy_text(value: Text) -> OwnedText;
+    intrinsic ordinary_target() -> DeclarationTarget;
+    intrinsic field_target(structure: StructId) -> DeclarationTarget;
+    intrinsic declare_object(scope: ScopeId, target: DeclarationTarget, name: Text, type: Type, source: SourceRange) -> Result<Unit> mutates;
+    intrinsic type_int() -> Type;
+    intrinsic type_float() -> Type;
+    intrinsic type_bool() -> Type;
+    intrinsic type_char(pointer: Bool) -> Type;
+    intrinsic type_void() -> Type;
+    intrinsic resolve_type(scope: ScopeId, name: Text) -> Result<Type>;
+    intrinsic parse_array_length(value: Text) -> Result<Int>;
+    intrinsic array_type(element: Type, length: Int) -> Result<Type>;
+    intrinsic empty_parameters() -> List<ParameterId>;
+    intrinsic singleton_parameter(value: ParameterId) -> List<ParameterId>;
+    intrinsic append_parameter(parameters: List<ParameterId>, value: ParameterId) -> List<ParameterId>;
+    intrinsic create_parameter(name: Text, type: Type, source: SourceRange) -> Result<ParameterId> mutates;
+    intrinsic create_header(name: Text, type: Type, parameters: List<ParameterId>) -> Result<FunctionHeader>;
+    intrinsic declare_prototype(scope: ScopeId, header: FunctionHeader, source: SourceRange) -> Result<Unit> mutates;
+    intrinsic begin_definition(scope: ScopeId, header: FunctionHeader, source: SourceRange) -> Result<ScopeId> mutates;
+    intrinsic begin_struct(scope: ScopeId, name: Text, source: SourceRange) -> Result<StructId> mutates;
+    intrinsic finish_struct(structure: StructId) -> Unit mutates;
+    intrinsic nested_scope(parent: ScopeId, enter: Bool, source: SourceRange) -> ScopeId mutates;
+    intrinsic record_error(message: Text, source: SourceRange) -> Unit mutates;
+    intrinsic create_module(scope: ScopeId) -> ModuleId mutates;
+    intrinsic begin_initializer(scope: ScopeId, name: Text, type: Type, source: SourceRange) -> Result<SymbolId> mutates;
+    intrinsic finish_initializer(scope: ScopeId, symbol: SymbolId, value: ExprId, source: SourceRange) -> Result<Unit> mutates;
+    intrinsic finish_block(scope: ScopeId, entered: Bool, source: SourceRange) -> OpId mutates;
+    intrinsic op_le() -> Operator;
+    intrinsic op_lt() -> Operator;
+    intrinsic op_gt() -> Operator;
+    intrinsic op_ge() -> Operator;
+    intrinsic op_eq() -> Operator;
+    intrinsic op_ne() -> Operator;
+    intrinsic op_add() -> Operator;
+    intrinsic op_sub() -> Operator;
+    intrinsic op_mul() -> Operator;
+    intrinsic op_div() -> Operator;
+    intrinsic binary_expr(operator: Operator, left: ExprId, right: ExprId, source: SourceRange) -> Result<ExprId> mutates;
+    intrinsic integer_literal(value: Text, source: SourceRange) -> Result<ExprId> mutates;
+    intrinsic float_literal(value: Text, source: SourceRange) -> Result<ExprId> mutates;
+    intrinsic string_literal(value: Text, source: SourceRange) -> Result<ExprId> mutates;
+    intrinsic char_literal(value: Text, source: SourceRange) -> Result<ExprId> mutates;
+    intrinsic bool_literal_expr(value: Bool, source: SourceRange) -> ExprId mutates;
+    intrinsic null_literal(source: SourceRange) -> ExprId mutates;
+    intrinsic negate_expr(value: ExprId, source: SourceRange) -> Result<ExprId> mutates;
+    intrinsic lookup_place(scope: ScopeId, name: Text) -> Result<PlaceId>;
+    intrinsic named_field(base: PlaceId, name: Text) -> Result<PlaceId> mutates;
+    intrinsic load_place(place: PlaceId, source: SourceRange) -> Result<ExprId> mutates;
+    intrinsic load_indexed(place: PlaceId, index: ExprId, source: SourceRange) -> Result<ExprId> mutates;
+    intrinsic store_indexed(place: PlaceId, index: ExprId, value: ExprId, source: SourceRange) -> Result<OpId> mutates;
+    intrinsic assign_indexed(place: PlaceId, index: ExprId, operator: AssignmentOp, value: ExprId, source: SourceRange) -> Result<OpId> mutates;
+    intrinsic increment_indexed(place: PlaceId, index: ExprId, increment: Bool, source: SourceRange) -> Result<OpId> mutates;
+    intrinsic lookup_function(scope: ScopeId, name: Text) -> Result<FunctionId>;
+    intrinsic empty_arguments() -> List<ExprId>;
+    intrinsic singleton_argument(value: ExprId) -> List<ExprId>;
+    intrinsic append_argument(arguments: List<ExprId>, value: ExprId) -> List<ExprId>;
+    intrinsic create_call(callee: FunctionId, arguments: List<ExprId>, source: SourceRange) -> Result<ExprId> mutates;
+    intrinsic require_value(value: ExprId) -> Result<ExprId>;
+    intrinsic recover_expression(message: Text, source: SourceRange) -> ExprId mutates;
+    intrinsic assignment_set() -> AssignmentOp;
+    intrinsic assignment_add() -> AssignmentOp;
+    intrinsic assignment_subtract() -> AssignmentOp;
+    intrinsic assignment_multiply() -> AssignmentOp;
+    intrinsic assignment_divide() -> AssignmentOp;
+}
+
+lowering_model {
+    lower = lower_function_to_structured;
+    functions = functions;
+    function_body = body;
+    function_result = result;
+    function_parameters = parameters;
+    function_scope = scope;
+    scopes = scopes;
+    scope_symbols = symbols;
+    operations = operations;
+    block_ir = Block;
+    declare_ir = Declare;
+    initialize_ir = Initialize;
+    store_ir = Store;
+    index_store_ir = IndexStore;
+    index_update_ir = IndexUpdate;
+    if_ir = If;
+    while_ir = While;
+    for_ir = For;
+    return_ir = Return;
+    expressions = expressions;
+    load_ir = Load;
+    index_load_ir = IndexLoad;
+    call_ir = Call;
+    variables = variables;
+    places = places;
+    constant_ir = Constant;
+    integer_ir = Int;
+    float_ir = Float;
+    boolean_ir = Bool;
+    char_ir = Char;
+    convert_ir = Convert;
+    binary_ir = Binary;
+    negate_ir = Negate;
+    add_ir = Add;
+    subtract_ir = Subtract;
+    multiply_ir = Multiply;
+    divide_ir = Divide;
+    equal_ir = Equal;
+    not_equal_ir = NotEqual;
+    less_ir = Less;
+    less_equal_ir = LessEqual;
+    greater_ir = Greater;
+    greater_equal_ir = GreaterEqual;
+}
+
+backend_c {
+    emit = emit_c;
+    lower = lower_function_to_structured;
+}
+
+backend_llvm {
+    emit = emit_llvm;
+    lower = lower_function_to_structured;
+}
+
+execution_model {
+    enum Value {
+        Int(I32), Float(F32), Bool(Bool), Char(U8),
+        Pointer(Option<Index>), Struct(List<Value>), Array(List<Value>),
+        Void, Uninitialized
+    }
+    enum Control { Continue, Return(Value) }
+    record RuntimeError(message: Text, source: SourceRange);
+    record PlaceView(root: SymbolId, fields: List<Index>);
+    record FunctionView(body: Option<OpId>, parameters: List<Type>, symbols: Option<List<SymbolId>>, result: Type);
+    record Runtime(store: Store<SymbolId, Value>, steps_remaining: Index);
+    runtime_state runtime: Runtime;
+    intrinsic operation_node(operation: OpId) -> Result<OperationNode, RuntimeError>;
+    intrinsic expression_node(expression: ExprId) -> Result<Expression, RuntimeError>;
+    intrinsic literal_identity(expression: ExprId) -> Result<Index, RuntimeError>;
+    intrinsic module_operations() -> Result<List<OpId>, RuntimeError>;
+    intrinsic variable_type(symbol: SymbolId) -> Result<Type, RuntimeError>;
+    intrinsic variable_place(symbol: SymbolId) -> Result<PlaceId, RuntimeError>;
+    intrinsic field_types(structure: StructId) -> Result<List<Type>, RuntimeError>;
+    intrinsic place_view(place: PlaceId) -> Result<PlaceView, RuntimeError>;
+    intrinsic array_load(place: PlaceId, index: Value, source: SourceRange) -> Result<Value, RuntimeError>;
+    intrinsic array_store(place: PlaceId, index: Value, value: Value, source: SourceRange) -> Result<Unit, RuntimeError> mutates;
+    intrinsic function_view(callee: FunctionId) -> Result<FunctionView, RuntimeError>;
+
+    function initialize_globals() -> Result<Unit, RuntimeError> mutates {
+        let operations = module_operations();
+        foreach operation in operations { initialize_global(operation); }
+        return unit;
+    }
+    function initialize_global(operation: OpId) -> Result<Unit, RuntimeError> mutates {
+        let node = operation_node(operation);
+        match node.kind {
+            Operation.Declare(symbol) => return declare(symbol, node.source);
+            otherwise => runtime_error "invalid global declaration" at node.source;
+        }
+    }
+    function declare(symbol: SymbolId, source: SourceRange) -> Result<Unit, RuntimeError> mutates {
+        let ty = variable_type(symbol);
+        let value = value_for_type(ty, runtime.store.is_global());
+        runtime.store.insert_current(symbol, value);
+        return unit;
+    }
+    function value_for_type(ty: Type, zero: Bool) -> Result<Value, RuntimeError> {
+        match ty {
+            Type.Struct(structure) => return structure_value(structure, zero);
+            Type.Array(element, length) => return array_value(AgSemRuntime.unbox(element), length, zero);
+            otherwise => return scalar_value(ty, zero);
+        }
+    }
+    function structure_value(structure: StructId, zero: Bool) -> Result<Value, RuntimeError> {
+        let types = field_types(structure);
+        let values = AgSemRuntime.list();
+        foreach ty in types {
+            let value = value_for_type(ty, zero);
+            values.push(value);
+        }
+        return Value.Struct(values);
+    }
+    function array_value(element: Type, length: Index, zero: Bool) -> Result<Value, RuntimeError> {
+        let values = AgSemRuntime.list();
+        foreach index in AgSemRuntime.indices(length) {
+            let value = value_for_type(element.clone(), zero);
+            values.push(value);
+        }
+        return Value.Array(values);
+    }
+    function scalar_value(ty: Type, zero: Bool) -> Result<Value, RuntimeError> {
+        if zero == false { return Value.Uninitialized; }
+        match ty {
+            Type.Int => return Value.Int(0);
+            Type.Float => return Value.Float(0.0);
+            Type.Bool => return Value.Bool(false);
+            Type.Char => return Value.Char(0);
+            Type.CharPointer => return Value.Pointer(none);
+            Type.NullPointer => return Value.Pointer(none);
+            Type.Void => return Value.Void;
+            otherwise => return Value.Uninitialized;
+        }
+    }
+    function value_matches_type(value: Value, ty: Type) -> Result<Bool, RuntimeError> {
+        match value {
+            Value.Int(number) => return ty == Type.Int;
+            Value.Float(number) => return ty == Type.Float;
+            Value.Bool(flag) => return ty == Type.Bool;
+            Value.Char(character) => return ty == Type.Char;
+            Value.Void => return ty == Type.Void;
+            Value.Pointer(pointer) => if ty == Type.CharPointer { return true; } else { return ty == Type.NullPointer; }
+            Value.Struct(values) => match ty {
+                Type.Struct(structure) => return structure_matches(values, structure);
+                otherwise => return false;
+            }
+            Value.Array(values) => match ty {
+                Type.Array(element, length) => return array_matches(values, AgSemRuntime.unbox(element), length);
+                otherwise => return false;
+            }
+            otherwise => return false;
+        }
+    }
+    function structure_matches(values: List<Value>, structure: StructId) -> Result<Bool, RuntimeError> {
+        let types = field_types(structure);
+        return values_match(values, types);
+    }
+    function values_match(values: List<Value>, types: List<Type>) -> Result<Bool, RuntimeError> {
+        if values.len() != types.len() { return false; }
+        foreach pair in AgSemRuntime.zip(values, types) {
+            let valid = value_matches_type(pair.first, pair.second);
+            if valid == false { return false; }
+        }
+        return true;
+    }
+    function array_matches(values: List<Value>, element: Type, length: Index) -> Result<Bool, RuntimeError> {
+        if values.len() != length { return false; }
+        foreach value in values {
+            let valid = value_matches_type(value, element.clone());
+            if valid == false { return false; }
+        }
+        return true;
+    }
+    function load(place: PlaceId, source: SourceRange) -> Result<Value, RuntimeError> {
+        let key = place_view(place);
+        match runtime.store.load_path(key.root, key.fields) {
+            Ok(value) => return initialized_value(value, source);
+            Err(fault) => match fault {
+                AccessError.MissingRoot => runtime_error "missing runtime variable" at source;
+                AccessError.InvalidPath => runtime_error "invalid runtime field" at source;
+            }
+        }
+    }
+    function indexed_load(place: PlaceId, index: ExprId, source: SourceRange) -> Result<Value, RuntimeError> mutates {
+        let offset = evaluate(index);
+        return array_load(place, offset, source);
+    }
+    function indexed_store(place: PlaceId, index: ExprId, value: ExprId, source: SourceRange) -> Result<Unit, RuntimeError> mutates {
+        let offset = evaluate(index);
+        let computed = evaluate(value);
+        return array_store(place, offset, computed, source);
+    }
+    function indexed_update(place: PlaceId, index: ExprId, operator: Operator, value: ExprId, source: SourceRange) -> Result<Unit, RuntimeError> mutates {
+        let offset = evaluate(index);
+        let old = array_load(place, offset.clone(), source);
+        let rhs = evaluate(value);
+        let key = place_view(place);
+        let array_type = variable_type(key.root);
+        let target = array_element_type(array_type, source);
+        let rhs_node = expression_node(value);
+        let rhs_type = rhs_node.ty;
+        let common = numeric_common_type(target.clone(), rhs_type);
+        let left_value = convert(old, common.clone(), source);
+        let right_value = convert(rhs, common, source);
+        let computed = binary(operator, left_value, right_value, source);
+        let converted = convert(computed, target, source);
+        return array_store(place, offset, converted, source);
+    }
+    function array_element_type(ty: Type, source: SourceRange) -> Result<Type, RuntimeError> {
+        match ty {
+            Type.Array(element, length) => return AgSemRuntime.unbox(element);
+            otherwise => runtime_error "indexing non-array" at source;
+        }
+    }
+    function numeric_common_type(left: Type, right: Type) -> Result<Type, RuntimeError> {
+        if left == Type.Float { return Type.Float; }
+        if right == Type.Float { return Type.Float; }
+        return Type.Int;
+    }
+    function initialized_value(value: Value, source: SourceRange) -> Result<Value, RuntimeError> {
+        match value {
+            Value.Uninitialized => runtime_error "variable used before initialization" at source;
+            otherwise => return value;
+        }
+    }
+    function store(place: PlaceId, value: Value, source: SourceRange) -> Result<Unit, RuntimeError> mutates {
+        let key = place_view(place);
+        match runtime.store.write_path(key.root, key.fields, value) {
+            Ok(done) => return unit;
+            Err(fault) => match fault {
+                AccessError.MissingRoot => runtime_error "missing runtime variable" at source;
+                AccessError.InvalidPath => runtime_error "invalid runtime field" at source;
+            }
+        }
+    }
+    function write_symbol(symbol: SymbolId, value: Value, source: SourceRange) -> Result<Unit, RuntimeError> mutates {
+        let place = variable_place(symbol);
+        return store(place, value, source);
+    }
+    function write(place: PlaceId, value: Value, source: SourceRange) -> Result<Unit, RuntimeError> mutates {
+        return store(place, value, source);
+    }
+    function call(callee: FunctionId, arguments: List<Value>, source: SourceRange) -> Result<Value, RuntimeError> mutates {
+        let signature = function_view(callee);
+        let body = function_body(signature.body, source);
+        if arguments.len() != signature.parameters.len() {
+            runtime_error "wrong number of arguments" at source;
+        }
+        let valid = values_match(arguments.clone(), signature.parameters);
+        if valid == false { runtime_error "incompatible argument type" at source; }
+        if runtime.store.depth() >= 256 { runtime_error "call depth exceeded" at source; }
+        let symbols = function_symbols(signature.symbols, source);
+        runtime.store.push_bindings(symbols, arguments);
+        // Capture the error before releasing the frame, then preserve its source.
+        let outcome = capture(execute(body));
+        runtime.store.pop();
+        return finish_call(outcome, signature.result, source);
+    }
+    function function_body(body: Option<OpId>, source: SourceRange) -> Result<OpId, RuntimeError> {
+        match body {
+            Some(operation) => return operation;
+            none => runtime_error "undefined function" at source;
+        }
+    }
+    function function_symbols(symbols: Option<List<SymbolId>>, source: SourceRange) -> Result<List<SymbolId>, RuntimeError> {
+        match symbols {
+            Some(values) => return values;
+            none => runtime_error "missing function scope" at source;
+        }
+    }
+    function finish_call(outcome: Result<Control, RuntimeError>, result: Type, source: SourceRange) -> Result<Value, RuntimeError> {
+        match outcome {
+            Ok(control) => return finish_control(control, result, source);
+            Err(fault) => runtime_error fault.message at fault.source;
+        }
+    }
+    function finish_control(control: Control, result: Type, source: SourceRange) -> Result<Value, RuntimeError> {
+        match control {
+            Control.Return(value) => return value;
+            Control.Continue => if result == Type.Void { return Value.Void; } else {
+                runtime_error "missing return statement" at source;
+            }
+        }
+    }
+    function evaluate_call(callee: FunctionId, arguments: List<ExprId>, source: SourceRange) -> Result<Value, RuntimeError> mutates {
+        let values = AgSemRuntime.list();
+        foreach argument in arguments {
+            let value = evaluate(argument);
+            values.push(value);
+        }
+        return call(callee, values, source);
+    }
+    function binary_checked(operator: Operator, right: ExprId, lhs: Value, rhs: Value, checks: List<RuntimeCheck>, source: SourceRange) -> Result<Value, RuntimeError> {
+        foreach check in checks {
+            match check {
+                RuntimeCheck.Nonzero(checked) => if checked == right {
+                    if rhs == Value.Int(0) { runtime_error "division by zero" at source; }
+                }
+            }
+        }
+        return binary(operator, lhs, rhs, source);
+    }
+    function char_to_int(value: U8) -> Result<I32, RuntimeError> { return AgSemRuntime.char_to_int(value); }
+    function char_to_float(value: U8) -> Result<F32, RuntimeError> { return AgSemRuntime.char_to_float(value); }
+    function int_to_float(value: I32) -> Result<F32, RuntimeError> { return AgSemRuntime.int_to_float(value); }
+    function int_to_char(value: I32) -> Result<U8, RuntimeError> { return AgSemRuntime.int_to_char(value); }
+    function float_to_int(value: F32) -> Result<I32, RuntimeError> { return AgSemRuntime.float_to_int(value); }
+    function float_to_char(value: F32) -> Result<U8, RuntimeError> { return AgSemRuntime.float_to_char(value); }
+
+    function tick(source: SourceRange) -> Result<Unit, RuntimeError> mutates {
+        if runtime.steps_remaining == 0 {
+            runtime_error "execution limit exceeded" at source;
+        }
+        runtime.steps_remaining = runtime.steps_remaining - 1;
+        return unit;
+    }
+    function checked_neg_i32(number: I32, source: SourceRange) -> Result<I32, RuntimeError> {
+        let result = AgSemRuntime.checked_neg_i32(number);
+        match result {
+            Some(value) => return value;
+            otherwise => runtime_error "integer overflow" at source;
+        }
+    }
+    function checked_add_i32(left: I32, right: I32, source: SourceRange) -> Result<I32, RuntimeError> {
+        let result = AgSemRuntime.checked_add_i32(left, right);
+        match result {
+            Some(value) => return value;
+            otherwise => runtime_error "integer overflow" at source;
+        }
+    }
+    function checked_sub_i32(left: I32, right: I32, source: SourceRange) -> Result<I32, RuntimeError> {
+        let result = AgSemRuntime.checked_sub_i32(left, right);
+        match result {
+            Some(value) => return value;
+            otherwise => runtime_error "integer overflow" at source;
+        }
+    }
+    function checked_mul_i32(left: I32, right: I32, source: SourceRange) -> Result<I32, RuntimeError> {
+        let result = AgSemRuntime.checked_mul_i32(left, right);
+        match result {
+            Some(value) => return value;
+            otherwise => runtime_error "integer overflow" at source;
+        }
+    }
+    function checked_div_i32(left: I32, right: I32, source: SourceRange) -> Result<I32, RuntimeError> {
+        let result = AgSemRuntime.checked_div_i32(left, right);
+        match result {
+            Some(value) => return value;
+            otherwise => if right == 0 {
+                runtime_error "division by zero" at source;
+            } else {
+                runtime_error "integer overflow" at source;
+            }
+        }
+    }
+
+    function execute(operation: OpId) -> Result<Control, RuntimeError> mutates {
+        let node = operation_node(operation);
+        tick(node.source);
+        return execute_generated(node.kind, node.source);
+    }
+    function evaluate(expression: ExprId) -> Result<Value, RuntimeError> mutates {
+        let node = expression_node(expression);
+        tick(node.source);
+        return evaluate_generated(node.kind, node.checks, expression, node.source);
+    }
+
+    function condition_truthy(condition: ExprId, source: SourceRange) -> Result<Bool, RuntimeError> mutates {
+        let value = evaluate(condition);
+        return truthy(value, source);
+    }
+    function truthy(value: Value, source: SourceRange) -> Result<Bool, RuntimeError> {
+        match value {
+            Value.Bool(flag) => return flag;
+            Value.Int(number) => return number != 0;
+            Value.Float(number) => return number != 0.0;
+            Value.Char(number) => return number != 0;
+            Value.Pointer(pointer) => return pointer != none;
+            otherwise => runtime_error "invalid condition value" at source;
+        }
+    }
+    function execute_optional(operation: Option<OpId>) -> Result<Control, RuntimeError> mutates {
+        match operation {
+            Some(child) => return execute(child);
+            none => return Control.Continue;
+        }
+    }
+    function control_return(value: Value) -> Result<Control, RuntimeError> {
+        return Control.Return(value);
+    }
+    function no_op() -> Result<Unit, RuntimeError> {
+        return unit;
+    }
+    function return_value(value: Option<ExprId>) -> Result<Control, RuntimeError> mutates {
+        match value {
+            Some(expression) => return Control.Return(evaluate(expression));
+            none => return Control.Return(Value.Void);
+        }
+    }
+    function invalid_operation(source: SourceRange) -> Result<Control, RuntimeError> {
+        runtime_error "invalid semantic IR" at source;
+    }
+    function invalid_value(source: SourceRange) -> Result<Value, RuntimeError> {
+        runtime_error "invalid semantic IR" at source;
+    }
+    function value_from_constant(constant: Constant, expression: ExprId) -> Result<Value, RuntimeError> {
+        match constant {
+            Constant.Int(number) => return Value.Int(number);
+            Constant.Float(number) => return Value.Float(number);
+            Constant.Bool(flag) => return Value.Bool(flag);
+            Constant.Char(character) => return Value.Char(character);
+            Constant.String(literal) => return Value.Pointer(Some(literal_identity(expression)));
+            Constant.Null => return Value.Pointer(none);
+        }
+    }
+    function negate(value: Value, source: SourceRange) -> Result<Value, RuntimeError> {
+        match value {
+            Value.Int(number) => return Value.Int(checked_neg_i32(number, source));
+            Value.Float(number) => return Value.Float(-number);
+            otherwise => runtime_error "invalid unary operand" at source;
+        }
+    }
+    function binary(operator: Operator, left: Value, right: Value, source: SourceRange) -> Result<Value, RuntimeError> {
+        match left {
+            Value.Int(a) => match right {
+                Value.Int(b) => match operator {
+                    Operator.Add => return Value.Int(checked_add_i32(a, b, source));
+                    Operator.Subtract => return Value.Int(checked_sub_i32(a, b, source));
+                    Operator.Multiply => return Value.Int(checked_mul_i32(a, b, source));
+                    Operator.Divide => return Value.Int(checked_div_i32(a, b, source));
+                    Operator.Less => return Value.Bool(a < b);
+                    Operator.LessEqual => return Value.Bool(a <= b);
+                    Operator.Greater => return Value.Bool(a > b);
+                    Operator.GreaterEqual => return Value.Bool(a >= b);
+                    Operator.Equal => return Value.Bool(a == b);
+                    Operator.NotEqual => return Value.Bool(a != b);
+                }
+                otherwise => runtime_error "invalid binary operands" at source;
+            }
+            Value.Float(a) => match right {
+                Value.Float(b) => match operator {
+                    Operator.Add => return Value.Float(a + b);
+                    Operator.Subtract => return Value.Float(a - b);
+                    Operator.Multiply => return Value.Float(a * b);
+                    Operator.Divide => return Value.Float(a / b);
+                    Operator.Less => return Value.Bool(a < b);
+                    Operator.LessEqual => return Value.Bool(a <= b);
+                    Operator.Greater => return Value.Bool(a > b);
+                    Operator.GreaterEqual => return Value.Bool(a >= b);
+                    Operator.Equal => return Value.Bool(a == b);
+                    Operator.NotEqual => return Value.Bool(a != b);
+                }
+                otherwise => runtime_error "invalid binary operands" at source;
+            }
+            Value.Bool(a) => match right {
+                Value.Bool(b) => match operator {
+                    Operator.Equal => return Value.Bool(a == b);
+                    Operator.NotEqual => return Value.Bool(a != b);
+                    otherwise => runtime_error "invalid boolean operation" at source;
+                }
+                otherwise => runtime_error "invalid binary operands" at source;
+            }
+            Value.Pointer(a) => match right {
+                Value.Pointer(b) => match operator {
+                    Operator.Equal => return Value.Bool(a == b);
+                    Operator.NotEqual => return Value.Bool(a != b);
+                    otherwise => runtime_error "invalid pointer operation" at source;
+                }
+                otherwise => runtime_error "invalid binary operands" at source;
+            }
+            otherwise => runtime_error "invalid binary operands" at source;
+        }
+    }
+    function convert(value: Value, target: Type, source: SourceRange) -> Result<Value, RuntimeError> {
+        if target == Type.Bool { return Value.Bool(truthy(value, source)); }
+        match value {
+            Value.Char(number) => match target {
+                Type.Int => return Value.Int(char_to_int(number));
+                Type.Float => return Value.Float(char_to_float(number));
+                Type.Char => return Value.Char(number);
+                otherwise => runtime_error "invalid runtime conversion" at source;
+            }
+            Value.Int(number) => match target {
+                Type.Float => return Value.Float(int_to_float(number));
+                Type.Char => return Value.Char(int_to_char(number));
+                Type.Int => return Value.Int(number);
+                otherwise => runtime_error "invalid runtime conversion" at source;
+            }
+            Value.Float(number) => match target {
+                Type.Int => return Value.Int(float_to_int(number));
+                Type.Char => return Value.Char(float_to_char(number));
+                Type.Float => return Value.Float(number);
+                otherwise => runtime_error "invalid runtime conversion" at source;
+            }
+            Value.Pointer(pointer) => match target {
+                Type.CharPointer => return Value.Pointer(pointer);
+                Type.NullPointer => return Value.Pointer(pointer);
+                otherwise => runtime_error "invalid runtime conversion" at source;
+            }
+            Value.Struct(fields) => match target {
+                Type.Struct(structure) => return Value.Struct(fields);
+                otherwise => runtime_error "invalid runtime conversion" at source;
+            }
+            Value.Array(items) => match target {
+                Type.Array(element, length) => return Value.Array(items);
+                otherwise => runtime_error "invalid runtime conversion" at source;
+            }
+            Value.Void => match target {
+                Type.Void => return Value.Void;
+                otherwise => runtime_error "invalid runtime conversion" at source;
+            }
+            otherwise => runtime_error "invalid runtime conversion" at source;
+        }
+    }
+    properties {
+        forall a: I32, b: I32
+            where mathematical_sum(a, b) fits I32
+            expect checked_add_i32(a, b) == mathematical_sum(a, b);
+        forall a: I32, b: I32
+            where mathematical_sum(a, b) not fits I32
+            expect checked_add_i32(a, b) fails "integer overflow";
+        forall a: I32, b: I32
+            where mathematical_difference(a, b) fits I32
+            expect checked_sub_i32(a, b) == mathematical_difference(a, b);
+        forall a: I32, b: I32
+            where mathematical_difference(a, b) not fits I32
+            expect checked_sub_i32(a, b) fails "integer overflow";
+        forall a: I32, b: I32
+            where mathematical_product(a, b) fits I32
+            expect checked_mul_i32(a, b) == mathematical_product(a, b);
+        forall a: I32, b: I32
+            where mathematical_product(a, b) not fits I32
+            expect checked_mul_i32(a, b) fails "integer overflow";
+        forall a: I32
+            where mathematical_negation(a) fits I32
+            expect checked_neg_i32(a) == mathematical_negation(a);
+        forall a: I32
+            where mathematical_negation(a) not fits I32
+            expect checked_neg_i32(a) fails "integer overflow";
+        forall a: I32, b: I32
+            where b == 0
+            expect checked_div_i32(a, b) fails "division by zero";
+    }
+}
+
+execution_contract {
+    execute Declare(symbol) { declare(symbol, source); }
+    execute Initialize(symbol: symbol, value: value) {
+        let computed = evaluate(value);
+        write_symbol(symbol, computed, source);
+    }
+    execute Store(place: place, value: value) {
+        let computed = evaluate(value);
+        write(place, computed, source);
+    }
+    execute IndexStore(array: array, index: index, value: value) {
+        indexed_store(array, index, value, source);
+    }
+    execute IndexUpdate(array: array, index: index, operator: operator, value: value) {
+        indexed_update(array, index, operator, value, source);
+    }
+    execute Call(value) { evaluate(value); }
+    execute Block(scope: scope, body: body) {
+        foreach child in body {
+            let flow = execute(child);
+            match flow {
+                Return(value) => return control_return(value);
+                Continue => no_op();
+            }
+        }
+    }
+    execute If(condition: condition, then_branch: then_branch, else_branch: else_branch) {
+        let test = condition_truthy(condition, source);
+        if test { return execute(then_branch); }
+        return execute_optional(else_branch);
+    }
+    execute While(condition: condition, body: body) {
+        while condition_truthy(condition, source) {
+            let flow = execute(body);
+            match flow {
+                Return(value) => return control_return(value);
+                Continue => no_op();
+            }
+        }
+    }
+    execute For(scope: scope, initialization: initialization, condition: condition, body: body, update: update) {
+        let initial = execute(initialization);
+        match initial {
+            Return(value) => return control_return(value);
+            Continue => no_op();
+        }
+        while condition_truthy(condition, source) {
+            let flow = execute(body);
+            match flow {
+                Return(value) => return control_return(value);
+                Continue => no_op();
+            }
+            let step = execute(update);
+            match step {
+                Return(value) => return control_return(value);
+                Continue => no_op();
+            }
+        }
+    }
+    execute Return(value) { return return_value(value); }
+    execute Error() { return invalid_operation(source); }
+
+    evaluate Error() { return invalid_value(source); }
+    evaluate Constant(value) { return value_from_constant(value, expression); }
+    evaluate Load(place) { return load(place, source); }
+    evaluate IndexLoad(array: array, index: index) { return indexed_load(array, index, source); }
+    evaluate Convert(value: value, target: target) {
+        let original = evaluate(value);
+        return convert(original, target, source);
+    }
+    evaluate Negate(value) {
+        let original = evaluate(value);
+        return negate(original, source);
+    }
+    evaluate Binary(operator: operator, left: left, right: right) {
+        let lhs = evaluate(left);
+        let rhs = evaluate(right);
+        return binary_checked(operator, right, lhs, rhs, checks, source);
+    }
+    evaluate Call(function: function, arguments: arguments) {
+        return evaluate_call(function, arguments, source);
+    }
+}
+
+options {
+    generate_interpreter = true;
+}
+
+node program
+    : declarations=declaration+ EOF
+        analysis {
+            let state = unit;
+            foreach item in declarations {
+                analyze item with scope: scope -> state default record_error(failure_message, item.source) continue_on_error;
+            }
+            result = create_module(scope);
+        }
+    ;
+
+inline declaration
+    : value=varDeclaration
+        analysis {
+            let target = ordinary_target();
+            analyze value with scope: scope, target: target -> analyzed;
+            result = analyzed;
+        }
+    | value=funDeclaration
+        analysis {
+            analyze value with scope: scope -> analyzed; result = analyzed;
+        }
+    | value=funDefinition
+        analysis {
+            analyze value with scope: scope -> analyzed; result = analyzed;
+        }
+    | value=structDeclaration
+        analysis {
+            analyze value with scope: scope -> analyzed; result = analyzed;
+        }
+    ;
+
+node declarator
+    : name=ID
+        analysis {
+            result = copy_text(name.text);
+        }
+    ;
+
+node varDeclaration
+    : type=typeSpecifier name=declarator SEMI                                  #ScalarVariable
+        analysis {
+            analyze type with scope: scope -> declared_type;
+            analyze name -> identifier;
+            result = declare_object(scope, target, identifier, declared_type, self.source);
+        }
+    | type=typeSpecifier name=declarator LeftBrack length=NUMBER RightBrack SEMI #ArrayVariable
+        analysis {
+            analyze type with scope: scope -> element_type;
+            analyze name -> identifier;
+            let size = parse_array_length(length.text);
+            let declared_type = array_type(element_type, size);
+            result = declare_object(scope, target, identifier, declared_type, self.source);
+        }
+    ;
+
+node funDeclarator
+    : type=returnType name=ID LPAREN parameters=formalParameters? RPAREN
+        analysis {
+            analyze type with scope: scope -> return_type;
+            analyze parameters? with scope: scope -> params default empty_parameters();
+            result = create_header(name.text, return_type, params);
+        }
+    ;
+
+node funDeclaration
+    : declarator=funDeclarator SEMI
+        analysis {
+            analyze declarator with scope: scope -> header;
+            result = declare_prototype(scope, header, self.source);
+        }
+    ;
+
+node funDefinition
+    : declarator=funDeclarator body=compoundStatement
+        analysis {
+            analyze declarator with scope: scope -> header;
+            let function_scope = begin_definition(scope, header, self.source);
+            analyze body with scope: function_scope, enter: false -> analyzed; result = unit;
+        }
+    ;
+
+node structDeclaration
+    : STRUCT name=ID LBRACE fields=varDeclaration+ RBRACE SEMI
+        analysis {
+            let structure = begin_struct(scope, name.text, self.source);
+            let target = field_target(structure);
+            let state = unit;
+            foreach field in fields {
+                analyze field with scope: scope, target: target -> state default record_error(failure_message, field.source) continue_on_error;
+            }
+            finish_struct(structure);
+            result = unit;
+        }
+    ;
+
+inline returnType
+    : value=typeSpecifier
+        analysis {
+            analyze value with scope: scope -> analyzed; result = analyzed;
+        }
+    | value=VOID
+        analysis {
+            result = type_void();
+        }
+    ;
+
+inline typeSpecifier
+    : type=INT
+        analysis {
+            result = type_int();
+        }
+    | type=FLOAT
+        analysis {
+            result = type_float();
+        }
+    | type=BOOL
+        analysis {
+            result = type_bool();
+        }
+    | type=CHAR star=STAR?
+        analysis {
+            result = type_char(star.present);
+        }
+    | type=ID
+        analysis {
+            result = resolve_type(scope, type.text);
+        }
+    ;
+
+node formalParameters
+    : first=formalParameter rest=formalParameterTail*
+        analysis {
+            analyze first with scope: scope -> first_parameter;
+            let parameters = singleton_parameter(first_parameter);
+            foreach tail in rest {
+                analyze tail with scope: scope, parameters: parameters -> parameters;
+            }
+            result = parameters;
+        }
+    ;
+
+inline formalParameterTail
+    : COMMA value=formalParameter
+        analysis {
+            analyze value with scope: scope -> parameter;
+            result = append_parameter(parameters, parameter);
+        }
+    ;
+
+node formalParameter
+    : type=typeSpecifier name=declarator
+        analysis {
+            analyze type with scope: scope -> parameter_type;
+            analyze name -> identifier;
+            result = create_parameter(identifier, parameter_type, self.source);
+        }
+    ;
+
+node compoundStatement
+    : LBRACE items=compoundItem* RBRACE
+        analysis {
+            let block_scope = nested_scope(scope, enter, self.source);
+            let state = unit;
+            foreach item in items {
+                analyze item with scope: block_scope -> state default record_error(failure_message, item.source) continue_on_error;
+            }
+            result = finish_block(block_scope, enter, self.source);
+        }
+    ;
+
+inline compoundItem
+    : value=localDeclaration
+        analysis {
+            analyze value with scope: scope -> analyzed; result = analyzed;
+        }
+    | value=statement
+        analysis {
+            analyze value with scope: scope -> operation;
+            result = append_statement(scope, operation);
+        }
+    ;
+
+inline localDeclaration
+    : value=varDeclaration
+        analysis {
+            let target = ordinary_target();
+            analyze value with scope: scope, target: target -> analyzed;
+            result = analyzed;
+        }
+    | value=varInitialization
+        analysis {
+            analyze value with scope: scope -> analyzed; result = analyzed;
+        }
+    ;
+
+node varInitialization
+    : type=typeSpecifier name=declarator ASSIGN value=expression SEMI
+        analysis {
+            analyze type with scope: scope -> declared_type;
+            analyze name -> identifier;
+            let symbol = begin_initializer(scope, identifier, declared_type, self.source);
+            analyze value with scope: scope -> initializer default recover_expression(failure_message, value.source) continue_on_error;
+            result = finish_initializer(scope, symbol, initializer, self.source);
+        }
+    ;
+
+inline relop
+    : value=LE
+        analysis { result = op_le(); }
+    | value=LT
+        analysis { result = op_lt(); }
+    | value=GT
+        analysis { result = op_gt(); }
+    | value=GE
+        analysis { result = op_ge(); }
+    | value=EQ
+        analysis { result = op_eq(); }
+    | value=NEQ
+        analysis { result = op_ne(); }
+    ;
+
+node expression
+    : left=additiveExpression comparison=comparisonTail?
+        analysis {
+            analyze left with scope: scope -> lhs default recover_expression(failure_message, left.source) continue_on_error;
+            analyze comparison? with scope: scope, left: lhs -> result_value default lhs;
+            result = result_value;
+        }
+    ;
+
+inline comparisonTail
+    : operator=relop right=additiveExpression
+        analysis {
+            analyze operator -> operation;
+            analyze right with scope: scope -> rhs default recover_expression(failure_message, right.source) continue_on_error;
+            result = binary_expr(operation, left, rhs, self.source);
+        }
+    ;
+
+inline addop
+    : value=PLUS
+        analysis { result = op_add(); }
+    | value=MINUS
+        analysis { result = op_sub(); }
+    ;
+
+node additiveExpression
+    : first=term rest=additiveOperation*
+        analysis {
+            analyze first with scope: scope -> acc default recover_expression(failure_message, first.source) continue_on_error;
+            foreach part in rest {
+                analyze part with scope: scope, left: acc -> acc default recover_expression(failure_message, part.source) continue_on_error;
+            }
+            result = acc;
+        }
+    ;
+
+inline additiveOperation
+    : operator=addop operand=term
+        analysis {
+            analyze operator -> operation;
+            analyze operand with scope: scope -> rhs default recover_expression(failure_message, operand.source) continue_on_error;
+            result = binary_expr(operation, left, rhs, self.source);
+        }
+    ;
+
+inline mulop
+    : value=STAR
+        analysis { result = op_mul(); }
+    | value=DIV
+        analysis { result = op_div(); }
+    ;
+
+node term
+    : first=factor rest=multiplicativeOperation*
+        analysis {
+            analyze first with scope: scope -> acc default recover_expression(failure_message, first.source) continue_on_error;
+            foreach part in rest {
+                analyze part with scope: scope, left: acc -> acc default recover_expression(failure_message, part.source) continue_on_error;
+            }
+            result = acc;
+        }
+    ;
+
+inline multiplicativeOperation
+    : operator=mulop operand=factor
+        analysis {
+            analyze operator -> operation;
+            analyze operand with scope: scope -> rhs default recover_expression(failure_message, operand.source) continue_on_error;
+            result = binary_expr(operation, left, rhs, self.source);
+        }
+    ;
+
+node factor
+    : LPAREN value=expression RPAREN         #ParenthesizedFactor
+        analysis {
+            analyze value with scope: scope -> analyzed;
+            result = analyzed;
+        }
+    | value=varUsage                       #VariableFactor
+        analysis {
+            analyze value with scope: scope -> place;
+            result = load_place(place, self.source);
+        }
+    | name=ID LeftBrack index=expression RightBrack #IndexedFactor
+        analysis {
+            let place = lookup_place(scope, name.text);
+            analyze index with scope: scope -> offset;
+            result = load_indexed(place, offset, self.source);
+        }
+    | value=call                           #CallFactor
+        analysis {
+            analyze value with scope: scope -> call_value;
+            result = require_value(call_value);
+        }
+    | value=NUMBER                         #NumberFactor
+        analysis { result = integer_literal(value.text, self.source); }
+    | value=FLOAT_LITERAL                  #FloatFactor
+        analysis { result = float_literal(value.text, self.source); }
+    | value=STRING_LITERAL                 #StringFactor
+        analysis { result = string_literal(value.text, self.source); }
+    | value=CHAR_LITERAL                   #CharFactor
+        analysis { result = char_literal(value.text, self.source); }
+    | value=bool_literal                   #BoolFactor
+        analysis {
+            analyze value -> analyzed;
+            result = analyzed;
+        }
+    | value=NULL                           #NullFactor
+        analysis { result = null_literal(self.source); }
+    | MINUS operand=factor                 #NegatedFactor
+        analysis {
+            analyze operand with scope: scope -> inner;
+            result = negate_expr(inner, self.source);
+        }
+    ;
+
+inline bool_literal
+    : value=FALSE
+        analysis { result = bool_literal_expr(false, self.source); }
+    | value=TRUE
+        analysis { result = bool_literal_expr(true, self.source); }
+    ;
+
+node varUsage
+    : name=ID fields=fieldAccess*
+        analysis {
+            let place = lookup_place(scope, name.text);
+            foreach field in fields {
+                analyze field with base: place -> place;
+            }
+            result = place;
+        }
+    ;
+
+inline fieldAccess
+    : DOT value=ID
+        analysis { result = named_field(base, value.text); }
+    ;
+
+node call
+    : name=ID LPAREN arguments=argList? RPAREN
+        analysis {
+            analyze arguments? with scope: scope -> values default empty_arguments();
+            let callee = lookup_function(scope, name.text);
+            result = create_call(callee, values, self.source);
+        }
+    ;
+
+node argList
+    : first=argument rest=argumentTail*
+        analysis {
+            analyze first with scope: scope -> first_value default recover_expression(failure_message, first.source) continue_on_error;
+            let values = singleton_argument(first_value);
+            foreach tail in rest {
+                analyze tail with scope: scope, arguments: values -> values;
+            }
+            result = values;
+        }
+    ;
+
+inline argumentTail
+    : COMMA value=argument
+        analysis {
+            analyze value with scope: scope -> next_value default recover_expression(failure_message, value.source) continue_on_error;
+            result = append_argument(arguments, next_value);
+        }
+    ;
+
+inline argument
+    : value=expression
+        analysis {
+            analyze value with scope: scope -> analyzed;
+            result = analyzed;
+        }
+    ;
+
+inline statement
+    : value=whileStatement
+        analysis { analyze value with scope: scope -> analyzed; result = analyzed; }
+    | value=forStatement
+        analysis { analyze value with scope: scope -> analyzed; result = analyzed; }
+    | value=ifStatement
+        analysis { analyze value with scope: scope -> analyzed; result = analyzed; }
+    | value=assignStatement SEMI
+        analysis { analyze value with scope: scope -> analyzed; result = analyzed; }
+    | value=call SEMI
+        analysis {
+            analyze value with scope: scope -> invocation;
+            result = call_statement(invocation, self.source);
+        }
+    | value=compoundStatement
+        analysis {
+            analyze value with scope: scope, enter: true -> analyzed; result = analyzed;
+        }
+    | value=returnStatement
+        analysis { analyze value with scope: scope -> analyzed; result = analyzed; }
+    ;
+
+node whileStatement
+    : WHILE LPAREN condition=expression RPAREN body=statement
+        analysis {
+            analyze condition with scope: scope -> test;
+            let boolean_test = condition_bool(test);
+            let incoming = snapshot_flow();
+            analyze body with scope: scope -> loop_body default recover_statement(incoming, failure_message, body.source) continue_on_error;
+            merge_flow_snapshot(incoming);
+            result = make_while(boolean_test, loop_body, self.source);
+        }
+    ;
+
+node forStatement
+    : FOR LPAREN initialization=varInitialization condition=expression SEMI update=assignStatement RPAREN body=statement
+        analysis {
+            let local = nested_scope(scope, true, self.source);
+            analyze initialization with scope: local -> initialized;
+            let init_operation = for_initialization(local, initialization.source);
+            analyze condition with scope: local -> test;
+            let boolean_test = condition_bool(test);
+            let after_init = snapshot_flow();
+            analyze body with scope: local -> loop_body default recover_statement(after_init, failure_message, body.source) continue_on_error;
+            analyze update with scope: local -> step default recover_statement(after_init, failure_message, update.source) continue_on_error;
+            restore_flow(after_init);
+            result = make_for(local, init_operation, boolean_test, loop_body, step, self.source);
+        }
+    ;
+
+node ifStatement
+    : IF LPAREN condition=expression RPAREN thenBranch=statement                            #IfStatement
+        analysis {
+            analyze condition with scope: scope -> test;
+            let boolean_test = condition_bool(test);
+            let incoming = snapshot_flow();
+            analyze thenBranch with scope: scope -> then_operation default recover_statement(incoming, failure_message, thenBranch.source) continue_on_error;
+            merge_flow_snapshot(incoming);
+            result = make_if_without_else(boolean_test, then_operation, self.source);
+        }
+    | IF LPAREN condition=expression RPAREN thenBranch=statement ELSE elseBranch=statement #IfElseStatement
+        analysis {
+            analyze condition with scope: scope -> test;
+            let boolean_test = condition_bool(test);
+            let incoming = snapshot_flow();
+            analyze thenBranch with scope: scope -> then_operation default recover_statement(incoming, failure_message, thenBranch.source) continue_on_error;
+            let then_flow = snapshot_flow();
+            restore_flow(incoming);
+            analyze elseBranch with scope: scope -> else_operation default recover_statement(incoming, failure_message, elseBranch.source) continue_on_error;
+            merge_flow_snapshot(then_flow);
+            result = make_if_with_else(boolean_test, then_operation, else_operation, self.source);
+        }
+    ;
+
+inline assignop
+    : value=ASSIGN
+        analysis { result = assignment_set(); }
+    | value=ASSIGN_PLUS
+        analysis { result = assignment_add(); }
+    | value=ASSIGN_MINUS
+        analysis { result = assignment_subtract(); }
+    | value=ASSIGN_MUL
+        analysis { result = assignment_multiply(); }
+    | value=ASSIGN_DIV
+        analysis { result = assignment_divide(); }
+    ;
+
+node assignStatement
+    : target=varUsage operator=assignop value=expression         #ValueAssignment
+        analysis {
+            analyze target with scope: scope -> place;
+            analyze operator -> assignment_operator;
+            check_assignment_target(place, assignment_operator);
+            analyze value with scope: scope -> assigned_value;
+            result = store_value(place, assignment_operator, assigned_value, self.source);
+        }
+    | name=ID LeftBrack index=expression RightBrack operator=assignop value=expression #IndexedAssignment
+        analysis {
+            let place = lookup_place(scope, name.text);
+            analyze index with scope: scope -> offset;
+            analyze operator -> assignment_operator;
+            analyze value with scope: scope -> assigned_value;
+            result = assign_indexed(place, offset, assignment_operator, assigned_value, self.source);
+        }
+    | name=ID LeftBrack index=expression RightBrack INC #IndexedIncrement
+        analysis {
+            let place = lookup_place(scope, name.text);
+            analyze index with scope: scope -> offset;
+            result = increment_indexed(place, offset, true, self.source);
+        }
+    | name=ID LeftBrack index=expression RightBrack DEC #IndexedDecrement
+        analysis {
+            let place = lookup_place(scope, name.text);
+            analyze index with scope: scope -> offset;
+            result = increment_indexed(place, offset, false, self.source);
+        }
+    | target=varUsage operator=INC                               #PostIncrement
+        analysis {
+            analyze target with scope: scope -> place;
+            result = increment_value(place, true, self.source);
+        }
+    | target=varUsage operator=DEC                               #PostDecrement
+        analysis {
+            analyze target with scope: scope -> place;
+            result = increment_value(place, false, self.source);
+        }
+    ;
+
+node returnStatement
+    : RETURN value=expression? SEMI
+        analysis {
+            analyze value? with scope: scope -> returned;
+            result = function_return(returned, self.source);
+        }
+    ;

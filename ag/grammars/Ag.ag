@@ -1,0 +1,309 @@
+/*
+ * Agas described in Agas itself.
+ *
+ * Parser rules have no anonymous (...)-groups.  A suffix ?, * or + always
+ * belongs to exactly one symbol.  A complex repeated/optional fragment must
+ * first be named as an `inline` or `node` rule.
+ *
+ * `node` marks a stable AST anchor.  `inline` marks grammar scaffolding which
+ * is useful to the parser but should not add another AST level.  Only labelled
+ * elements are intended to become named fields of generated AST classes.
+ *
+ * Lexer rules remain regular expressions and may use (...) groups freely.
+ */
+
+grammar Ag;
+
+options {
+    parser = LALR;
+    lookahead = 2;
+    ast = explicit;
+}
+
+node document
+    : header=grammarDeclaration items=topLevelItem* EOF
+    ;
+
+node grammarDeclaration
+    : GRAMMAR name=TOKEN_REF SEMI
+    ;
+
+inline topLevelItem
+    : value=optionsBlock
+    | value=channelsBlock
+    | value=lexerClassesBlock
+    | value=conflictsBlock
+    | value=parserRuleSpec
+    | value=lexerRuleSpec
+    ;
+
+node optionsBlock
+    : OPTIONS LBRACE entries=optionEntry* RBRACE
+    ;
+
+node optionEntry
+    : name=identifier ASSIGN value=optionValue SEMI
+    ;
+
+inline optionValue
+    : value=identifier
+    | value=INTEGER
+    | value=STRING_LITERAL
+    | value=TRUE
+    | value=FALSE
+    ;
+
+node lexerClassesBlock
+    : LEXER_CLASSES LBRACE entries=optionEntry* RBRACE
+    ;
+
+node channelsBlock
+    : CHANNELS LBRACE names=channelList? RBRACE
+    ;
+
+inline channelList
+    : first=TOKEN_REF rest=channelTail* trailing=COMMA?
+    ;
+
+inline channelTail
+    : COMMA name=TOKEN_REF
+    ;
+
+node conflictsBlock
+    : CONFLICTS LBRACE entries=conflictEntry* RBRACE
+    ;
+
+node conflictEntry
+    : PREFER SHIFT terminal=TOKEN_REF OVER REDUCE rule=RULE_REF HASH label=TOKEN_REF SEMI #PreferShift
+    | PREFER REDUCE rule=RULE_REF HASH label=TOKEN_REF OVER SHIFT terminal=TOKEN_REF SEMI #PreferReduce
+    ;
+
+// --------------------------------------------------------------------------
+// Restricted EBNF for parser rules.
+
+node parserRuleSpec
+    : kind=treeModifier name=RULE_REF context=lexerCommands? COLON first=parserAlternative rest=parserAlternativeTail* SEMI
+    ;
+
+inline treeModifier
+    : value=NODE
+    | value=INLINE
+    ;
+
+inline parserAlternativeTail
+    : OR value=parserAlternative
+    ;
+
+node parserAlternative
+    : EMPTY label=alternativeLabel?             #EmptyAlternative
+    | elements=parserElement+ label=alternativeLabel? #NonemptyAlternative
+    ;
+
+node alternativeLabel
+    : HASH name=TOKEN_REF
+    ;
+
+node parserElement
+    : field=elementLabel? symbol=parserSymbol suffix=parserSuffix?
+    ;
+
+inline elementLabel
+    : name=RULE_REF ASSIGN
+    ;
+
+inline parserSymbol
+    : value=RULE_REF
+    | value=TOKEN_REF
+    | value=STRING_LITERAL
+    | value=qualifiedReference
+    ;
+
+node qualifiedReference
+    : scope=TOKEN_REF DOT name=identifier
+    ;
+
+inline parserSuffix
+    : value=QUESTION
+    | value=STAR
+    | value=PLUS
+    ;
+
+// --------------------------------------------------------------------------
+// Regular expressions for lexer rules.  Grouping is intentionally available
+// only in this section because lexer groups never shape the program AST.
+
+node lexerRuleSpec
+    : isFragment=FRAGMENT? name=TOKEN_REF COLON body=lexerAltList commands=lexerCommands? SEMI
+    ;
+
+node lexerAltList
+    : first=lexerAlternative rest=lexerAlternativeTail*
+    ;
+
+inline lexerAlternativeTail
+    : OR value=lexerAlternative
+    ;
+
+node lexerAlternative
+    : EMPTY                     #EmptyLexerAlternative
+    | elements=lexerElement+    #NonemptyLexerAlternative
+    ;
+
+node lexerElement
+    : atom=lexerAtom suffix=lexerSuffix?
+    ;
+
+inline lexerAtom
+    : value=TOKEN_REF
+    | value=STRING_LITERAL
+    | value=LEXER_CHAR_SET
+    | value=DOT
+    | value=lexerNegation
+    | value=lexerGroup
+    ;
+
+node lexerNegation
+    : NOT value=lexerNegatable
+    ;
+
+inline lexerNegatable
+    : value=STRING_LITERAL
+    | value=LEXER_CHAR_SET
+    ;
+
+node lexerGroup
+    : LPAREN body=lexerAltList RPAREN
+    ;
+
+inline lexerSuffix
+    : value=QUESTION
+    | value=starSuffix
+    | value=plusSuffix
+    ;
+
+inline starSuffix
+    : kind=STAR lazy=QUESTION?
+    ;
+
+inline plusSuffix
+    : kind=PLUS lazy=QUESTION?
+    ;
+
+node lexerCommands
+    : RARROW first=lexerCommand rest=lexerCommandTail*
+    ;
+
+inline lexerCommandTail
+    : COMMA value=lexerCommand
+    ;
+
+node lexerCommand
+    : name=identifier argument=lexerCommandArgument?
+    ;
+
+inline lexerCommandArgument
+    : LPAREN value=identifier RPAREN
+    ;
+
+inline identifier
+    : value=RULE_REF
+    | value=TOKEN_REF
+    ;
+
+// --------------------------------------------------------------------------
+// Lexer of the Agas language.
+
+GRAMMAR  : 'grammar';
+OPTIONS  : 'options';
+CHANNELS : 'channels';
+LEXER_CLASSES : 'lexerClasses';
+CONFLICTS: 'conflicts';
+PREFER   : 'prefer';
+SHIFT    : 'shift';
+OVER     : 'over';
+REDUCE   : 'reduce';
+NODE     : 'node';
+INLINE   : 'inline';
+FRAGMENT : 'fragment';
+EMPTY    : 'empty';
+TRUE     : 'true';
+FALSE    : 'false';
+
+STRING_LITERAL
+    : '\'' StringCharacter* '\''
+    ;
+
+fragment StringCharacter
+    : Escape
+    | ~['\\\r\n]
+    ;
+
+LEXER_CHAR_SET
+    : '[' LexerSetCharacter* ']'
+    ;
+
+fragment LexerSetCharacter
+    : Escape
+    | ~[\]\\\r\n]
+    ;
+
+RULE_REF
+    : LowerLetter IdentifierCharacter*
+    ;
+
+TOKEN_REF
+    : UpperLetter IdentifierCharacter*
+    ;
+
+INTEGER
+    : [0-9]+
+    ;
+
+fragment Escape
+    : '\\' .
+    ;
+
+fragment LowerLetter
+    : [a-z]
+    ;
+
+fragment UpperLetter
+    : [A-Z]
+    ;
+
+fragment IdentifierCharacter
+    : [a-zA-Z_0-9]
+    ;
+
+OR       : '|';
+QUESTION : '?';
+STAR     : '*';
+PLUS     : '+';
+NOT      : '~';
+LPAREN   : '(';
+RPAREN   : ')';
+SEMI     : ';';
+COLON    : ':';
+RARROW   : '->';
+COMMA    : ',';
+LBRACE   : '{';
+RBRACE   : '}';
+ASSIGN   : '=';
+DOT      : '.';
+HASH     : '#';
+
+DOC_COMMENT
+    : '/**' .*? '*/' -> skip
+    ;
+
+BLOCK_COMMENT
+    : '/*' .*? '*/' -> skip
+    ;
+
+LINE_COMMENT
+    : '//' ~[\r\n]* -> skip
+    ;
+
+WS
+    : [ \t\r\n\f]+ -> skip
+    ;

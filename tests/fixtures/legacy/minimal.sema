@@ -1,0 +1,32 @@
+// Syntax-only sample for Sema.ag; semantic coverage is not checked yet.
+sema ToyScopeDraft for "../toyscope.ag";
+
+node program
+    : items=item* EOF
+      analysis {
+          let scope = makeScope(none);
+          let body = list();
+          foreach item in items {
+              analyze item with scope: scope -> operation;
+              append(body, operation);
+          }
+          result = makeProgram(scope, body);
+      }
+    ;
+
+inline item
+    : value=declaration
+      analysis {
+          analyze value with scope: scope -> child;
+          result = child;
+      }
+    | value=assignment
+      analysis {
+          if isValid(value) {
+              analyze value with scope: scope -> child;
+              result = child;
+          } else {
+              result = makeError("invalid assignment");
+          }
+      }
+    ;

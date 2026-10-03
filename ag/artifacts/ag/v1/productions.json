@@ -1,0 +1,1344 @@
+{
+  "version": 1,
+  "productions": [
+    {
+      "id": 0,
+      "lhs": 0,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 1
+        },
+        {
+          "kind": "nonterminal",
+          "id": 39
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "lhs": 1,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 0
+        },
+        {
+          "kind": "terminal",
+          "id": 18
+        },
+        {
+          "kind": "terminal",
+          "id": 27
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "lhs": 2,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 3
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "lhs": 2,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 7
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "lhs": 2,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 6
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "lhs": 2,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 10
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "lhs": 2,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 12
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "lhs": 2,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 22
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "lhs": 3,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 1
+        },
+        {
+          "kind": "terminal",
+          "id": 31
+        },
+        {
+          "kind": "nonterminal",
+          "id": 40
+        },
+        {
+          "kind": "terminal",
+          "id": 32
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "lhs": 4,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 38
+        },
+        {
+          "kind": "terminal",
+          "id": 33
+        },
+        {
+          "kind": "nonterminal",
+          "id": 5
+        },
+        {
+          "kind": "terminal",
+          "id": 27
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "lhs": 5,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 38
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "lhs": 5,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 19
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "lhs": 5,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 15
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "lhs": 5,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 13
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "lhs": 5,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 14
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "lhs": 6,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 3
+        },
+        {
+          "kind": "terminal",
+          "id": 31
+        },
+        {
+          "kind": "nonterminal",
+          "id": 41
+        },
+        {
+          "kind": "terminal",
+          "id": 32
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "lhs": 7,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 2
+        },
+        {
+          "kind": "terminal",
+          "id": 31
+        },
+        {
+          "kind": "nonterminal",
+          "id": 42
+        },
+        {
+          "kind": "terminal",
+          "id": 32
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "lhs": 8,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 18
+        },
+        {
+          "kind": "nonterminal",
+          "id": 43
+        },
+        {
+          "kind": "nonterminal",
+          "id": 44
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "lhs": 9,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 30
+        },
+        {
+          "kind": "terminal",
+          "id": 18
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "lhs": 10,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 4
+        },
+        {
+          "kind": "terminal",
+          "id": 31
+        },
+        {
+          "kind": "nonterminal",
+          "id": 45
+        },
+        {
+          "kind": "terminal",
+          "id": 32
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "lhs": 11,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 5
+        },
+        {
+          "kind": "terminal",
+          "id": 6
+        },
+        {
+          "kind": "terminal",
+          "id": 18
+        },
+        {
+          "kind": "terminal",
+          "id": 7
+        },
+        {
+          "kind": "terminal",
+          "id": 8
+        },
+        {
+          "kind": "terminal",
+          "id": 17
+        },
+        {
+          "kind": "terminal",
+          "id": 35
+        },
+        {
+          "kind": "terminal",
+          "id": 18
+        },
+        {
+          "kind": "terminal",
+          "id": 27
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "lhs": 11,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 5
+        },
+        {
+          "kind": "terminal",
+          "id": 8
+        },
+        {
+          "kind": "terminal",
+          "id": 17
+        },
+        {
+          "kind": "terminal",
+          "id": 35
+        },
+        {
+          "kind": "terminal",
+          "id": 18
+        },
+        {
+          "kind": "terminal",
+          "id": 7
+        },
+        {
+          "kind": "terminal",
+          "id": 6
+        },
+        {
+          "kind": "terminal",
+          "id": 18
+        },
+        {
+          "kind": "terminal",
+          "id": 27
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "lhs": 12,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 13
+        },
+        {
+          "kind": "terminal",
+          "id": 17
+        },
+        {
+          "kind": "nonterminal",
+          "id": 46
+        },
+        {
+          "kind": "terminal",
+          "id": 28
+        },
+        {
+          "kind": "nonterminal",
+          "id": 15
+        },
+        {
+          "kind": "nonterminal",
+          "id": 47
+        },
+        {
+          "kind": "terminal",
+          "id": 27
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "lhs": 13,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 9
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "lhs": 13,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 10
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "lhs": 14,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 20
+        },
+        {
+          "kind": "nonterminal",
+          "id": 15
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "lhs": 15,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 12
+        },
+        {
+          "kind": "nonterminal",
+          "id": 48
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "lhs": 15,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 49
+        },
+        {
+          "kind": "nonterminal",
+          "id": 50
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "lhs": 16,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 35
+        },
+        {
+          "kind": "terminal",
+          "id": 18
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "lhs": 17,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 51
+        },
+        {
+          "kind": "nonterminal",
+          "id": 19
+        },
+        {
+          "kind": "nonterminal",
+          "id": 52
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "lhs": 18,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 17
+        },
+        {
+          "kind": "terminal",
+          "id": 33
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "lhs": 19,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 17
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "lhs": 19,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 18
+        }
+      ]
+    },
+    {
+      "id": 33,
+      "lhs": 19,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 15
+        }
+      ]
+    },
+    {
+      "id": 34,
+      "lhs": 19,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 20
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "lhs": 20,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 18
+        },
+        {
+          "kind": "terminal",
+          "id": 34
+        },
+        {
+          "kind": "nonterminal",
+          "id": 38
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "lhs": 21,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 21
+        }
+      ]
+    },
+    {
+      "id": 37,
+      "lhs": 21,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 22
+        }
+      ]
+    },
+    {
+      "id": 38,
+      "lhs": 21,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 23
+        }
+      ]
+    },
+    {
+      "id": 39,
+      "lhs": 22,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 53
+        },
+        {
+          "kind": "terminal",
+          "id": 18
+        },
+        {
+          "kind": "terminal",
+          "id": 28
+        },
+        {
+          "kind": "nonterminal",
+          "id": 23
+        },
+        {
+          "kind": "nonterminal",
+          "id": 54
+        },
+        {
+          "kind": "terminal",
+          "id": 27
+        }
+      ]
+    },
+    {
+      "id": 40,
+      "lhs": 23,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 25
+        },
+        {
+          "kind": "nonterminal",
+          "id": 55
+        }
+      ]
+    },
+    {
+      "id": 41,
+      "lhs": 24,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 20
+        },
+        {
+          "kind": "nonterminal",
+          "id": 25
+        }
+      ]
+    },
+    {
+      "id": 42,
+      "lhs": 25,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 12
+        }
+      ]
+    },
+    {
+      "id": 43,
+      "lhs": 25,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 56
+        }
+      ]
+    },
+    {
+      "id": 44,
+      "lhs": 26,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 27
+        },
+        {
+          "kind": "nonterminal",
+          "id": 57
+        }
+      ]
+    },
+    {
+      "id": 45,
+      "lhs": 27,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 18
+        }
+      ]
+    },
+    {
+      "id": 46,
+      "lhs": 27,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 15
+        }
+      ]
+    },
+    {
+      "id": 47,
+      "lhs": 27,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 16
+        }
+      ]
+    },
+    {
+      "id": 48,
+      "lhs": 27,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 34
+        }
+      ]
+    },
+    {
+      "id": 49,
+      "lhs": 27,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 28
+        }
+      ]
+    },
+    {
+      "id": 50,
+      "lhs": 27,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 30
+        }
+      ]
+    },
+    {
+      "id": 51,
+      "lhs": 28,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 24
+        },
+        {
+          "kind": "nonterminal",
+          "id": 29
+        }
+      ]
+    },
+    {
+      "id": 52,
+      "lhs": 29,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 15
+        }
+      ]
+    },
+    {
+      "id": 53,
+      "lhs": 29,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 16
+        }
+      ]
+    },
+    {
+      "id": 54,
+      "lhs": 30,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 25
+        },
+        {
+          "kind": "nonterminal",
+          "id": 23
+        },
+        {
+          "kind": "terminal",
+          "id": 26
+        }
+      ]
+    },
+    {
+      "id": 55,
+      "lhs": 31,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 21
+        }
+      ]
+    },
+    {
+      "id": 56,
+      "lhs": 31,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 32
+        }
+      ]
+    },
+    {
+      "id": 57,
+      "lhs": 31,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 33
+        }
+      ]
+    },
+    {
+      "id": 58,
+      "lhs": 32,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 22
+        },
+        {
+          "kind": "nonterminal",
+          "id": 58
+        }
+      ]
+    },
+    {
+      "id": 59,
+      "lhs": 33,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 23
+        },
+        {
+          "kind": "nonterminal",
+          "id": 59
+        }
+      ]
+    },
+    {
+      "id": 60,
+      "lhs": 34,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 29
+        },
+        {
+          "kind": "nonterminal",
+          "id": 36
+        },
+        {
+          "kind": "nonterminal",
+          "id": 60
+        }
+      ]
+    },
+    {
+      "id": 61,
+      "lhs": 35,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 30
+        },
+        {
+          "kind": "nonterminal",
+          "id": 36
+        }
+      ]
+    },
+    {
+      "id": 62,
+      "lhs": 36,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 38
+        },
+        {
+          "kind": "nonterminal",
+          "id": 61
+        }
+      ]
+    },
+    {
+      "id": 63,
+      "lhs": 37,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 25
+        },
+        {
+          "kind": "nonterminal",
+          "id": 38
+        },
+        {
+          "kind": "terminal",
+          "id": 26
+        }
+      ]
+    },
+    {
+      "id": 64,
+      "lhs": 38,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 17
+        }
+      ]
+    },
+    {
+      "id": 65,
+      "lhs": 38,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 18
+        }
+      ]
+    },
+    {
+      "id": 66,
+      "lhs": 39,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 39
+        },
+        {
+          "kind": "nonterminal",
+          "id": 2
+        }
+      ]
+    },
+    {
+      "id": 67,
+      "lhs": 39,
+      "rhs": []
+    },
+    {
+      "id": 68,
+      "lhs": 40,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 40
+        },
+        {
+          "kind": "nonterminal",
+          "id": 4
+        }
+      ]
+    },
+    {
+      "id": 69,
+      "lhs": 40,
+      "rhs": []
+    },
+    {
+      "id": 70,
+      "lhs": 41,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 41
+        },
+        {
+          "kind": "nonterminal",
+          "id": 4
+        }
+      ]
+    },
+    {
+      "id": 71,
+      "lhs": 41,
+      "rhs": []
+    },
+    {
+      "id": 72,
+      "lhs": 42,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 8
+        }
+      ]
+    },
+    {
+      "id": 73,
+      "lhs": 42,
+      "rhs": []
+    },
+    {
+      "id": 74,
+      "lhs": 43,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 43
+        },
+        {
+          "kind": "nonterminal",
+          "id": 9
+        }
+      ]
+    },
+    {
+      "id": 75,
+      "lhs": 43,
+      "rhs": []
+    },
+    {
+      "id": 76,
+      "lhs": 44,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 30
+        }
+      ]
+    },
+    {
+      "id": 77,
+      "lhs": 44,
+      "rhs": []
+    },
+    {
+      "id": 78,
+      "lhs": 45,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 45
+        },
+        {
+          "kind": "nonterminal",
+          "id": 11
+        }
+      ]
+    },
+    {
+      "id": 79,
+      "lhs": 45,
+      "rhs": []
+    },
+    {
+      "id": 80,
+      "lhs": 46,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 34
+        }
+      ]
+    },
+    {
+      "id": 81,
+      "lhs": 46,
+      "rhs": []
+    },
+    {
+      "id": 82,
+      "lhs": 47,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 47
+        },
+        {
+          "kind": "nonterminal",
+          "id": 14
+        }
+      ]
+    },
+    {
+      "id": 83,
+      "lhs": 47,
+      "rhs": []
+    },
+    {
+      "id": 84,
+      "lhs": 48,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 16
+        }
+      ]
+    },
+    {
+      "id": 85,
+      "lhs": 48,
+      "rhs": []
+    },
+    {
+      "id": 86,
+      "lhs": 49,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 49
+        },
+        {
+          "kind": "nonterminal",
+          "id": 17
+        }
+      ]
+    },
+    {
+      "id": 87,
+      "lhs": 49,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 17
+        }
+      ]
+    },
+    {
+      "id": 88,
+      "lhs": 50,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 16
+        }
+      ]
+    },
+    {
+      "id": 89,
+      "lhs": 50,
+      "rhs": []
+    },
+    {
+      "id": 90,
+      "lhs": 51,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 18
+        }
+      ]
+    },
+    {
+      "id": 91,
+      "lhs": 51,
+      "rhs": []
+    },
+    {
+      "id": 92,
+      "lhs": 52,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 21
+        }
+      ]
+    },
+    {
+      "id": 93,
+      "lhs": 52,
+      "rhs": []
+    },
+    {
+      "id": 94,
+      "lhs": 53,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 11
+        }
+      ]
+    },
+    {
+      "id": 95,
+      "lhs": 53,
+      "rhs": []
+    },
+    {
+      "id": 96,
+      "lhs": 54,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 34
+        }
+      ]
+    },
+    {
+      "id": 97,
+      "lhs": 54,
+      "rhs": []
+    },
+    {
+      "id": 98,
+      "lhs": 55,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 55
+        },
+        {
+          "kind": "nonterminal",
+          "id": 24
+        }
+      ]
+    },
+    {
+      "id": 99,
+      "lhs": 55,
+      "rhs": []
+    },
+    {
+      "id": 100,
+      "lhs": 56,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 56
+        },
+        {
+          "kind": "nonterminal",
+          "id": 26
+        }
+      ]
+    },
+    {
+      "id": 101,
+      "lhs": 56,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 26
+        }
+      ]
+    },
+    {
+      "id": 102,
+      "lhs": 57,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 31
+        }
+      ]
+    },
+    {
+      "id": 103,
+      "lhs": 57,
+      "rhs": []
+    },
+    {
+      "id": 104,
+      "lhs": 58,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 21
+        }
+      ]
+    },
+    {
+      "id": 105,
+      "lhs": 58,
+      "rhs": []
+    },
+    {
+      "id": 106,
+      "lhs": 59,
+      "rhs": [
+        {
+          "kind": "terminal",
+          "id": 21
+        }
+      ]
+    },
+    {
+      "id": 107,
+      "lhs": 59,
+      "rhs": []
+    },
+    {
+      "id": 108,
+      "lhs": 60,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 60
+        },
+        {
+          "kind": "nonterminal",
+          "id": 35
+        }
+      ]
+    },
+    {
+      "id": 109,
+      "lhs": 60,
+      "rhs": []
+    },
+    {
+      "id": 110,
+      "lhs": 61,
+      "rhs": [
+        {
+          "kind": "nonterminal",
+          "id": 37
+        }
+      ]
+    },
+    {
+      "id": 111,
+      "lhs": 61,
+      "rhs": []
+    }
+  ]
+}

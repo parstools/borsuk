@@ -1,0 +1,1099 @@
+/*
+ [The "BSD licence"]
+ Copyright (c) 2023 Andrzej Borucki
+ All rights reserved.
+ Parts from C grammar Copyright (c) 2013 Sam Harwell
+
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ 3. The name of the author may not be used to endorse or promote products
+    derived from this software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+ Conversion to the restricted Agas notation: 2026.
+ Parser-side (...) groups were replaced by named helper rules.
+ Lexer-side (...) groups remain regular-expression groups.
+*/
+
+grammar C90;
+
+options {
+    parser = LR;
+    lookahead = 1;
+    ast = explicit;
+}
+
+channels {
+    HIDDEN
+}
+
+node compilationUnit
+    : declarations=external_declaration* EOF
+    ;
+
+inline external_declaration
+    : value=functionDefinition
+    | value=varFuncDeclaration
+    | value=declaration
+    ;
+
+inline declaration
+    : value=varDeclaration
+    | value=typeDeclaration SEMI
+    | value=typeDefinition
+    | value=typeWillBeDeclared
+    | SEMI
+    ;
+
+inline storageFuncSpecifier
+    : value=STATIC
+    | value=INLINE_LONG
+    | value=INLINE_SHORT
+    | value=EXTERN
+    ;
+
+node typeWillBeDeclared
+    : kind=structOrUnion name=Identifier SEMI
+    ;
+
+inline structOrUnion
+    : value=STRUCT
+    | value=UNION
+    ;
+
+node type
+    : extension=EXTENSION? prefix=typePrefixSpecifier* base=typeCentralSpecifier suffix=typePrefixSpecifier*
+    ;
+
+inline typePrefixSpecifier
+    : value=storageFuncSpecifier
+    | value=typeQualifier
+    ;
+
+inline typeCentralSpecifier
+    : value=typeName
+    | value=typeQualifier
+    | value=storageFuncSpecifier
+    ;
+
+inline typeOrDecl
+    : value=type
+    | qualifiers=typeQualifier* declaration=typeDeclaration
+    ;
+
+node functionDefinition
+    : resultType=type? declarator=functionDeclarator knrParameters=parametersKandRlist? body=compoundStatement
+    ;
+
+inline typeQualifier
+    : value=CONST
+    | value=CONST_GNU
+    | value=volatile
+    ;
+
+inline typeDeclaration
+    : value=structDeclaration
+    | value=enumDeclaration
+    ;
+
+inline signedUnsigned
+    : value=UNSIGNED
+    | value=SIGNED
+    ;
+
+inline longShort
+    : value=LONG
+    | value=SHORT
+    ;
+
+inline integerTypePart
+    : value=INT
+    | value=signedUnsigned
+    | value=longShort
+    ;
+
+node intTypeName
+    : parts=integerTypePart+
+    ;
+
+node charTypeName
+    : sign=signedUnsigned CHAR
+    | CHAR sign=signedUnsigned?
+    ;
+
+inline floatTypeName
+    : value=FLOAT
+    | value=DOUBLE
+    | LONG DOUBLE
+    | DOUBLE LONG
+    | value=FLOAT128
+    | value=FLOAT80
+    ;
+
+inline typeName
+    : value=intTypeName
+    | value=charTypeName
+    | value=floatTypeName
+    | value=VOID
+    | kind=structOrUnion name=Identifier
+    | ENUM name=Identifier
+    | value=BUILTIN_VA_LIST
+    | value=Identifier
+    ;
+
+inline typeModifier
+    : value=STAR
+    ;
+
+node fixedParameterOrTypeList
+    : first=parameterOrType rest=parameterOrTypeTail*
+    ;
+
+inline parameterOrTypeTail
+    : COMMA value=parameterOrType
+    ;
+
+node parameterOrTypeList
+    : fixed=fixedParameterOrTypeList variadic=variadicParameterSuffix?
+    ;
+
+inline variadicParameterSuffix
+    : COMMA ELLIPSIS
+    ;
+
+node parametersKandRlist
+    : entries=parametersKandREntry+
+    ;
+
+inline parametersKandREntry
+    : value=parametersKandR SEMI
+    ;
+
+node parametersKandR
+    : type=typeOrDecl first=parameterDeclarator rest=parameterDeclaratorTail*
+    ;
+
+inline parameterDeclaratorTail
+    : COMMA value=parameterDeclarator
+    ;
+
+inline parameterDeclarator
+    : value=variableDeclarator
+    | value=functionDeclarator
+    ;
+
+node parameterOrType
+    : type=typeOrDecl declarator=parameterOrTypeDeclarator
+    ;
+
+inline parameterOrTypeDeclarator
+    : value=variableDeclarator
+    | value=variableDeclaratorPlace
+    | value=functionDeclarator
+    | value=functionDeclaratorPlace
+    ;
+
+node compoundStatement
+    : LBRACE declarations=declaration* statements=labeledStatement* RBRACE
+    ;
+
+node varFuncDeclaration
+    : type=type declarators=varFuncList SEMI
+    ;
+
+node varDeclaration
+    : type=variableBaseType declarators=varList SEMI
+    ;
+
+inline variableBaseType
+    : value=type
+    | value=typeDeclaration
+    ;
+
+node varFuncList
+    : first=commonDeclarator rest=commonDeclaratorTail*
+    ;
+
+inline commonDeclaratorTail
+    : COMMA value=commonDeclarator
+    ;
+
+node varList
+    : first=variableDeclaratorWithInit rest=variableDeclaratorWithInitTail*
+    ;
+
+inline variableDeclaratorWithInitTail
+    : COMMA value=variableDeclaratorWithInit
+    ;
+
+node variableDeclaratorWithInit
+    : declarator=variableDeclarator initialization=initializerSuffix?
+    ;
+
+inline initializerSuffix
+    : ASSIGN value=initializer
+    ;
+
+inline commonDeclarator
+    : value=variableDeclaratorWithInit
+    | value=functionDeclarator
+    ;
+
+// Declarators.
+
+node variableDeclarator
+    : qualifiers=typeQualifier* value=name
+    | value=variablePtrDeclarator
+    ;
+
+node variablePtrDeclarator
+    : value=ptrname
+    | modifiers=typeModifier* value=variableSubDeclarator
+    ;
+
+node variableSubDeclarator
+    : LPAREN value=variablePtrDeclarator RPAREN parameters=functionParameters
+    ;
+
+node variableDeclaratorPlace
+    : qualifiers=typeQualifier* value=namePlace
+    | value=variablePtrDeclaratorPlace
+    ;
+
+node variablePtrDeclaratorPlace
+    : value=ptrnamePlace
+    | modifiers=typeModifier* value=variableSubDeclaratorPlace
+    ;
+
+node variableSubDeclaratorPlace
+    : LPAREN value=variablePtrDeclaratorPlace RPAREN parameters=functionParameters
+    ;
+
+node functionDeclarator
+    : value=functionSubDeclarator
+    | modifiers=typeModifier+ value=functionDeclarator
+    | LPAREN value=functionDeclarator RPAREN suffix=functionOrArraySuffix
+    ;
+
+inline functionOrArraySuffix
+    : value=functionParameters
+    | value=array
+    ;
+
+node functionSubDeclarator
+    : LPAREN value=functionDeclarator RPAREN
+    | value=name parameters=functionParameters
+    ;
+
+node functionDeclaratorPlace
+    : value=functionSubDeclaratorPlace
+    | modifiers=typeModifier+ value=functionDeclaratorPlace
+    | LPAREN value=functionDeclaratorPlace RPAREN suffix=functionOrArraySuffix
+    ;
+
+node functionSubDeclaratorPlace
+    : LPAREN value=functionDeclarator RPAREN
+    | value=namePlace parameters=functionParameters
+    ;
+
+node name
+    : LPAREN value=name RPAREN
+    | value=Identifier
+    ;
+
+node arrname
+    : value=name dimensions=array
+    | LPAREN value=ptrname RPAREN dimensions=array
+    ;
+
+node ptrname
+    : first=typeModifier prefix=pointerPart* value=name
+    | prefix=pointerPart* value=arrname
+    | prefix=pointerPart* LPAREN value=ptrname RPAREN
+    ;
+
+inline pointerPart
+    : value=typeModifier
+    | value=typeQualifier
+    ;
+
+node namePlace
+    : LPAREN value=namePlace RPAREN
+    | empty
+    ;
+
+node arrnamePlace
+    : value=namePlace dimensions=array
+    | LPAREN value=ptrnamePlace RPAREN dimensions=array
+    ;
+
+node ptrnamePlace
+    : first=typeModifier prefix=pointerPart* value=namePlace
+    | prefix=pointerPart* value=arrnamePlace
+    | prefix=pointerPart* LPAREN value=ptrnamePlace RPAREN
+    ;
+
+// Initializers and aggregate fields.
+
+inline initializer
+    : value=assignmentExpression
+    | value=arrayStructInitializer
+    ;
+
+node fieldInitializer
+    : value=initializer
+    | DOT field=Identifier ASSIGN value=initializer
+    | field=Identifier COLON value=initializer
+    ;
+
+node arrayStructInitializer
+    : LBRACE fields=fieldInitializerList? RBRACE
+    | LBRACE cells=arrayCellInitializerList RBRACE
+    ;
+
+node fieldInitializerList
+    : first=fieldInitializer rest=fieldInitializerTail*
+    ;
+
+inline fieldInitializerTail
+    : COMMA value=fieldInitializer
+    ;
+
+node arrayCellInitializerList
+    : first=arrayCellInitializer rest=arrayCellInitializerTail*
+    ;
+
+inline arrayCellInitializerTail
+    : COMMA value=arrayCellInitializer
+    ;
+
+node arrayCellInitializer
+    : LBRACKET index=conditionalExpression RBRACKET field=arrayFieldDesignator? ASSIGN value=commaExpression
+    | LBRACKET first=conditionalExpression ELLIPSIS last=conditionalExpression RBRACKET ASSIGN value=commaExpression
+    ;
+
+inline arrayFieldDesignator
+    : DOT name=Identifier
+    ;
+
+node surroundedVariableName
+    : LPAREN value=surroundedVariableName RPAREN
+    | STAR value=surroundedVariableName
+    | LPAREN value=variableName RPAREN
+    ;
+
+node variableName
+    : STAR value=variableName
+    | value=variableName dimension=arrayOneDim
+    | value=Identifier
+    ;
+
+node fieldDeclaration
+    : type=typeOrDecl fields=fieldListOrBitField? SEMI
+    ;
+
+inline fieldListOrBitField
+    : value=fieldList
+    | value=bitField
+    ;
+
+node fieldList
+    : first=fieldDeclarator rest=fieldDeclaratorTail*
+    ;
+
+inline fieldDeclaratorTail
+    : COMMA value=fieldDeclarator
+    ;
+
+node fieldDeclarator
+    : declarator=commonDeclarator width=bitField?
+    ;
+
+node functionParameters
+    : LPAREN parameters=parameterOrTypeList? RPAREN
+    ;
+
+node array
+    : dimensions=arrayOneDim+
+    ;
+
+node arrayOneDim
+    : LBRACKET qualifiers=typeQualifier* bound=arrayBound? RBRACKET
+    ;
+
+inline arrayBound
+    : value=conditionalExpression
+    | value=STAR
+    ;
+
+node bitField
+    : COLON width=conditionalExpression
+    ;
+
+node structDeclaration
+    : extension=EXTENSION? kind=structOrUnion name=Identifier? LBRACE fields=fieldDeclarations? RBRACE
+    ;
+
+node fieldDeclarations
+    : fields=fieldDeclaration+
+    ;
+
+// Statements.
+
+node labeledStatement
+    : labels=label* value=statement
+    ;
+
+inline statement
+    : value=compoundStatement
+    | value=expressionStatement
+    | value=loopStatement
+    | value=ifStatement
+    | value=switchStatement
+    | value=asmStatement
+    | GOTO target=Identifier SEMI
+    | RETURN value=commaExpression? SEMI
+    | CONTINUE SEMI
+    | BREAK SEMI
+    | SEMI
+    ;
+
+inline label
+    : value=caseLabel SEMI
+    | value=defaulLabel SEMI
+    ;
+
+inline asm
+    : value=ASM_LONG
+    | value=ASM_SHORT
+    ;
+
+inline volatile
+    : value=VOLATILE
+    | value=VOLATILE_GNU
+    ;
+
+node asmStatement
+    : keyword=asm qualifier=volatile? LPAREN value=StringLiteral RPAREN SEMI
+    ;
+
+node ifStatement
+    : IF LPAREN condition=commaExpression RPAREN thenBranch=labeledStatement otherwise=elseClause?
+    ;
+
+inline elseClause
+    : ELSE value=labeledStatement
+    ;
+
+node switchStatement
+    : SWITCH LPAREN value=commaExpression RPAREN body=labeledStatement
+    ;
+
+node caseLabel
+    : CASE first=conditionalExpression range=caseRange? COLON
+    ;
+
+inline caseRange
+    : ELLIPSIS last=conditionalExpression
+    ;
+
+node defaulLabel
+    : DEFAULT COLON
+    ;
+
+node loopStatement
+    : WHILE LPAREN condition=commaExpression RPAREN body=labeledStatement
+    | DO body=labeledStatement WHILE LPAREN condition=commaExpression RPAREN SEMI
+    | FOR LPAREN initialization=commaExpression? SEMI condition=commaExpression? SEMI update=commaExpression? RPAREN body=labeledStatement
+    ;
+
+node expressionStatement
+    : value=commaExpression SEMI
+    ;
+
+// Expressions.  Named tail rules replace parser-side (...) groups.
+
+node commaExpression
+    : first=assignmentExpression rest=commaExpressionTail*
+    ;
+
+inline commaExpressionTail
+    : COMMA value=assignmentExpression
+    ;
+
+inline assignmentOperator
+    : value=ASSIGN
+    | value=ASSIGN_MUL
+    | value=ASSIGN_DIV
+    | value=ASSIGN_MOD
+    | value=ASSIGN_PLUS
+    | value=ASSIGN_MINUS
+    | value=ASSIGN_SHL
+    | value=ASSIGN_SHR
+    | value=ASSIGN_AND
+    | value=ASSIGN_XOR
+    | value=ASSIGN_OR
+    ;
+
+node assignmentExpression
+    : value=conditionalExpression
+    | left=unaryExpression operator=assignmentOperator right=assignmentExpression
+    ;
+
+node conditionalExpression
+    : condition=logicalOrExpression tail=conditionalTail?
+    ;
+
+inline conditionalTail
+    : QUESTION thenValue=commaExpression? COLON elseValue=conditionalExpression
+    ;
+
+node logicalOrExpression
+    : first=logicalAndExpression rest=logicalOrTail*
+    ;
+
+inline logicalOrTail
+    : LOGICAL_OR value=logicalAndExpression
+    ;
+
+node logicalAndExpression
+    : first=inclusiveOrExpression rest=logicalAndTail*
+    ;
+
+inline logicalAndTail
+    : LOGICAL_AND value=inclusiveOrExpression
+    ;
+
+node inclusiveOrExpression
+    : first=exclusiveOrExpression rest=inclusiveOrTail*
+    ;
+
+inline inclusiveOrTail
+    : BIT_OR value=exclusiveOrExpression
+    ;
+
+node exclusiveOrExpression
+    : first=andExpression rest=exclusiveOrTail*
+    ;
+
+inline exclusiveOrTail
+    : BIT_XOR value=andExpression
+    ;
+
+node andExpression
+    : first=equalityExpression rest=andExpressionTail*
+    ;
+
+inline andExpressionTail
+    : BIT_AND value=equalityExpression
+    ;
+
+inline eqop
+    : value=EQ
+    | value=NEQ
+    ;
+
+node equalityExpression
+    : first=relationalExpression rest=equalityExpressionTail*
+    ;
+
+inline equalityExpressionTail
+    : operator=eqop value=relationalExpression
+    ;
+
+inline relop
+    : value=LT
+    | value=GT
+    | value=LE
+    | value=GE
+    ;
+
+node relationalExpression
+    : first=shiftExpression rest=relationalExpressionTail*
+    ;
+
+inline relationalExpressionTail
+    : operator=relop value=shiftExpression
+    ;
+
+inline shiftop
+    : value=SHL
+    | value=SHR
+    ;
+
+node shiftExpression
+    : first=additiveExpression rest=shiftExpressionTail*
+    ;
+
+inline shiftExpressionTail
+    : operator=shiftop value=additiveExpression
+    ;
+
+inline addop
+    : value=PLUS
+    | value=MINUS
+    ;
+
+node additiveExpression
+    : first=multiplicativeExpression rest=additiveExpressionTail*
+    ;
+
+inline additiveExpressionTail
+    : operator=addop value=multiplicativeExpression
+    ;
+
+inline mulop
+    : value=STAR
+    | value=DIV
+    | value=MOD
+    ;
+
+node multiplicativeExpression
+    : first=castExpression rest=multiplicativeExpressionTail*
+    ;
+
+inline multiplicativeExpressionTail
+    : operator=mulop value=castExpression
+    ;
+
+node castExpression
+    : value=unaryExpression
+    | extension=EXTENSION? LPAREN type=typeSpecifier RPAREN value=castOperand
+    ;
+
+inline castOperand
+    : value=castExpression
+    | value=arrayStructInitializer
+    ;
+
+inline unaryOperator
+    : value=BIT_AND
+    | value=STAR
+    | value=PLUS
+    | value=MINUS
+    | value=BIT_NOT
+    | value=LOGICAL_NOT
+    ;
+
+node unaryExpression
+    : value=postfixExpression
+    | INC value=castExpression
+    | DEC value=castExpression
+    | LOGICAL_AND label=Identifier
+    | operator=unaryOperator value=castExpression
+    | operator=sizeofOrAlignof LPAREN type=typeSpecifier RPAREN
+    | operator=sizeofOrAlignof LPAREN value=conditionalExpression RPAREN
+    | operator=sizeofOrAlignof type=typeSpecifier
+    | operator=sizeofOrAlignof value=conditionalExpression
+    | BUILTIN_OFFSETOF LPAREN type=typeOrDecl COMMA value=postfixExpression RPAREN
+    | BUILTIN_VA_ARG LPAREN value=postfixExpression COMMA type=typeSpecifier RPAREN
+    | operator=realOrImag value=unaryExpression
+    ;
+
+inline realOrImag
+    : value=REAL
+    | value=IMAG
+    ;
+
+inline alignof
+    : value=ALIGNOF_C11
+    | value=ALIGNOF_GNU
+    ;
+
+inline sizeofOrAlignof
+    : value=SIZEOF
+    | value=alignof
+    ;
+
+node typeSpecifier
+    : type=typeOrDecl place=variableDeclaratorPlace
+    ;
+
+node postfixExpressionLeft
+    : value=atom
+    | value=postfixExpressionLeft LPAREN arguments=argumentExpressionList? RPAREN
+    | value=postfixExpressionLeft LBRACKET index=assignmentExpression RBRACKET
+    | value=postfixExpressionLeft DOT field=Identifier
+    | value=postfixExpressionLeft ARROW field=Identifier
+    ;
+
+node postfixExpression
+    : value=primaryExpression
+    | value=postfixExpressionLeft
+    | value=postfixExpression DOT field=Identifier
+    | value=postfixExpression ARROW field=Identifier
+    | value=postfixExpression LBRACKET index=assignmentExpression RBRACKET
+    | value=postfixExpression INC
+    | value=postfixExpression DEC
+    ;
+
+node argumentExpressionList
+    : first=assignmentExpression rest=argumentExpressionTail* prettyFunction=prettyFunctionSuffix?
+    ;
+
+inline argumentExpressionTail
+    : COMMA value=assignmentExpression
+    ;
+
+inline prettyFunctionSuffix
+    : COMMA EXTENSION PRETTY_FUNCTION
+    ;
+
+inline atom
+    : value=Identifier
+    | value=literal
+    | value=StringLiteral+
+    ;
+
+node primaryExpression
+    : LPAREN value=commaExpression RPAREN
+    | extension=EXTENSION? LPAREN value=compoundStatement RPAREN
+    ;
+
+inline literal
+    : value=integerConstant
+    | value=FloatingConstant
+    | value=CharacterConstant
+    ;
+
+// Typedef and enum declarations.
+
+node typeDefinition
+    : extension=EXTENSION? TYPEDEF qualifiers=typeQualifier* type=typeOrDecl first=commonDeclarator rest=commonDeclaratorTail* SEMI
+    ;
+
+node enumDeclaration
+    : ENUM name=Identifier? LBRACE items=enumList RBRACE
+    ;
+
+node enumList
+    : first=enumItem rest=enumItemTail*
+    ;
+
+inline enumItemTail
+    : COMMA value=enumItem
+    ;
+
+node enumItem
+    : name=Identifier value=enumValue?
+    ;
+
+inline enumValue
+    : ASSIGN value=inclusiveOrExpression
+    ;
+
+// Tokens and lexer fragments.
+
+STATIC          : 'static';
+INLINE_LONG     : '__inline__';
+INLINE_SHORT    : '__inline';
+EXTERN          : 'extern';
+STRUCT          : 'struct';
+UNION           : 'union';
+EXTENSION       : '__extension__';
+CONST           : 'const';
+CONST_GNU       : '__const';
+VOLATILE        : 'volatile';
+VOLATILE_GNU    : '__volatile__';
+UNSIGNED        : 'unsigned';
+SIGNED          : 'signed';
+LONG            : 'long';
+SHORT           : 'short';
+INT             : 'int';
+CHAR            : 'char';
+FLOAT           : 'float';
+DOUBLE          : 'double';
+FLOAT128        : '__float128';
+FLOAT80         : '__float80';
+VOID            : 'void';
+ENUM            : 'enum';
+BUILTIN_VA_LIST : '__builtin_va_list';
+TYPEDEF         : 'typedef';
+GOTO            : 'goto';
+RETURN          : 'return';
+CONTINUE        : 'continue';
+BREAK           : 'break';
+ASM_LONG        : '__asm__';
+ASM_SHORT       : '__asm';
+IF              : 'if';
+ELSE            : 'else';
+SWITCH          : 'switch';
+CASE            : 'case';
+DEFAULT         : 'default';
+WHILE           : 'while';
+DO              : 'do';
+FOR             : 'for';
+SIZEOF          : 'sizeof';
+ALIGNOF_C11     : '_Alignof';
+ALIGNOF_GNU     : '__alignof__';
+BUILTIN_OFFSETOF: '__builtin_offsetof';
+BUILTIN_VA_ARG  : '__builtin_va_arg';
+REAL            : '__real__';
+IMAG            : '__imag__';
+PRETTY_FUNCTION : '__PRETTY_FUNCTION__';
+
+ELLIPSIS     : '...';
+ARROW        : '->';
+INC          : '++';
+DEC          : '--';
+LOGICAL_OR   : '||';
+LOGICAL_AND  : '&&';
+SHL          : '<<';
+SHR          : '>>';
+LE           : '<=';
+GE           : '>=';
+EQ           : '==';
+NEQ          : '!=';
+ASSIGN_MUL   : '*=';
+ASSIGN_DIV   : '/=';
+ASSIGN_MOD   : '%=';
+ASSIGN_PLUS  : '+=';
+ASSIGN_MINUS : '-=';
+ASSIGN_SHL   : '<<=';
+ASSIGN_SHR   : '>>=';
+ASSIGN_AND   : '&=';
+ASSIGN_XOR   : '^=';
+ASSIGN_OR    : '|=';
+
+LPAREN       : '(';
+RPAREN       : ')';
+LBRACE       : '{';
+RBRACE       : '}';
+LBRACKET     : '[';
+RBRACKET     : ']';
+SEMI         : ';';
+COMMA        : ',';
+COLON        : ':';
+QUESTION     : '?';
+DOT          : '.';
+ASSIGN       : '=';
+STAR         : '*';
+DIV          : '/';
+MOD          : '%';
+PLUS         : '+';
+MINUS        : '-';
+BIT_OR       : '|';
+BIT_XOR      : '^';
+BIT_AND      : '&';
+BIT_NOT      : '~';
+LOGICAL_NOT  : '!';
+LT           : '<';
+GT           : '>';
+
+Identifier
+    : Nondigit (Nondigit | Digit)*
+    ;
+
+fragment Digit
+    : [0-9]
+    ;
+
+fragment NonzeroDigit
+    : [1-9]
+    ;
+
+fragment Nondigit
+    : [a-zA-Z_]
+    ;
+
+node integerConstant
+    : sign=sign? value=DecimalConstant
+    | value=BinaryConstant
+    | value=OctalConstant
+    | value=HexadecimalConstant
+    ;
+
+inline sign
+    : value=PLUS
+    | value=MINUS
+    ;
+
+DecimalConstant
+    : (NonzeroDigit Digit* | '0') IntegerSuffix?
+    ;
+
+fragment IntegerSuffix
+    : UnsignedSuffix (LongSuffix | LongLongSuffix)?
+    | (LongSuffix | LongLongSuffix) UnsignedSuffix?
+    ;
+
+fragment UnsignedSuffix
+    : [uU]
+    ;
+
+fragment LongSuffix
+    : [lL]
+    ;
+
+fragment LongLongSuffix
+    : 'll'
+    | 'LL'
+    ;
+
+fragment FloatingSuffix
+    : 'f'
+    | 'l'
+    | 'F'
+    | 'L'
+    | 'fi'
+    | 'fj'
+    | 'i'
+    ;
+
+fragment Sign
+    : '+'
+    | '-'
+    ;
+
+fragment OctalDigit
+    : [0-7]
+    ;
+
+fragment BinaryDigit
+    : [01]
+    ;
+
+fragment HexadecimalDigit
+    : [0-9a-fA-F]
+    ;
+
+OctalConstant
+    : '0' OctalDigit* IntegerSuffix?
+    ;
+
+BinaryConstant
+    : '0' [Bb] BinaryDigit* IntegerSuffix?
+    ;
+
+HexadecimalConstant
+    : HexadecimalPrefix HexadecimalDigitSequence IntegerSuffix?
+    ;
+
+fragment HexadecimalPrefix
+    : '0' [xX]
+    ;
+
+FloatingConstant
+    : DecimalFloatingConstant
+    | HexadecimalFloatingConstant
+    ;
+
+fragment DecimalFloatingConstant
+    : (FractionalConstant ExponentPart? | DigitSequence ExponentPart) FloatingSuffix?
+    ;
+
+fragment HexadecimalDigitSequence
+    : HexadecimalDigit+
+    ;
+
+fragment HexadecimalFractionalConstant
+    : HexadecimalDigitSequence? '.' HexadecimalDigitSequence
+    | HexadecimalDigitSequence '.'
+    ;
+
+fragment BinaryExponentPart
+    : [pP] Sign? DigitSequence
+    ;
+
+fragment HexadecimalFloatingConstant
+    : HexadecimalPrefix (HexadecimalFractionalConstant | HexadecimalDigitSequence) BinaryExponentPart FloatingSuffix?
+    ;
+
+fragment DigitSequence
+    : Digit+
+    ;
+
+fragment ExponentPart
+    : [eE] Sign? DigitSequence
+    ;
+
+fragment FractionalConstant
+    : DigitSequence? '.' DigitSequence
+    | DigitSequence '.'
+    ;
+
+fragment StringLiteralOne
+    : '"' SChar* '"'
+    ;
+
+fragment StringLiteralMulti
+    : '"' SChar* '\\' Newline (SChar* '\\' Newline)* SChar* '"'
+    ;
+
+StringLiteral
+    : 'L'? (StringLiteralOne | StringLiteralMulti)
+    ;
+
+fragment SChar
+    : ~["\\\r\n]
+    | EscapeSequence
+    ;
+
+CharacterConstant
+    : 'L'? '\'' CChar '\''
+    ;
+
+fragment CChar
+    : ~['\\\r\n]
+    | EscapeSequence
+    ;
+
+fragment EscapeSequence
+    : SimpleEscapeSequence
+    | OctalEscapeSequence
+    | HexadecimalEscapeSequence
+    | UnicodeEscapeSequence
+    ;
+
+fragment SimpleEscapeSequence
+    : '\\' ['"?abfnrtvhe\\]
+    ;
+
+fragment OctalEscapeSequence
+    : '\\' OctalDigit (OctalDigit OctalDigit?)?
+    ;
+
+fragment HexadecimalEscapeSequence
+    : '\\x' HexadecimalDigit HexadecimalDigit?
+    ;
+
+fragment UnicodeEscapeSequence
+    : '\\u' HexQuad
+    | '\\U' HexQuad HexQuad
+    ;
+
+fragment HexQuad
+    : HexadecimalDigit HexadecimalDigit HexadecimalDigit HexadecimalDigit
+    ;
+
+Whitespace
+    : [ \t]+ -> channel(HIDDEN)
+    ;
+
+Newline
+    : ('\r' '\n'? | '\n') -> channel(HIDDEN)
+    ;
+
+BlockComment
+    : '/*' .*? '*/' -> channel(HIDDEN)
+    ;
+
+Preprocessor
+    : '#' ~[\r\n]* -> channel(HIDDEN)
+    ;

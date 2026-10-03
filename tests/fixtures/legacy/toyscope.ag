@@ -1,0 +1,95 @@
+grammar ToyScope;
+
+options {
+    parser = LALR;
+    lookahead = 1;
+    ast = explicit;
+}
+
+channels {
+    HIDDEN
+}
+
+node program
+    : EOF #EmptyProgram
+    | items=item+ EOF #NonemptyProgram
+    ;
+
+inline item
+    : value=declaration
+    | value=assignment
+    | value=block
+    ;
+
+node block
+    : LBRACE RBRACE #EmptyBlock
+    | LBRACE items=item+ RBRACE #NonemptyBlock
+    ;
+
+node declaration
+    : INT name=ID SEMI #UninitializedDeclaration
+    | INT name=ID initializer=initializer SEMI #InitializedDeclaration
+    ;
+
+inline initializer
+    : ASSIGN value=expression
+    ;
+
+node assignment
+    : target=ID ASSIGN value=expression SEMI
+    ;
+
+node expression
+    : first=term #SingleTerm
+    | first=term rest=additiveOperation+ #AdditiveChain
+    ;
+
+inline additiveOperation
+    : operator=addop operand=term
+    ;
+
+inline addop
+    : value=PLUS
+    | value=MINUS
+    ;
+
+node term
+    : first=factor #SingleFactor
+    | first=factor rest=multiplicativeOperation+ #MultiplicativeChain
+    ;
+
+inline multiplicativeOperation
+    : operator=mulop operand=factor
+    ;
+
+inline mulop
+    : value=STAR
+    | value=SLASH
+    | value=PERCENT
+    ;
+
+node factor
+    : value=NUMBER                      #IntegerLiteral
+    | name=ID                           #VariableReference
+    | LPAREN value=expression RPAREN     #ParenthesizedExpression
+    | operator=addop operand=factor      #UnaryExpression
+    ;
+
+INT     : 'int';
+ID      : [a-zA-Z];
+NUMBER  : [0-9]+;
+ASSIGN  : '=';
+PLUS    : '+';
+MINUS   : '-';
+STAR    : '*';
+SLASH   : '/';
+PERCENT : '%';
+SEMI    : ';';
+LBRACE  : '{';
+RBRACE  : '}';
+LPAREN  : '(';
+RPAREN  : ')';
+
+WS
+    : [ \t\r\n]+ -> channel(HIDDEN)
+    ;

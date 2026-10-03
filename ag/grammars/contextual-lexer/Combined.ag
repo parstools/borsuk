@@ -1,0 +1,20 @@
+grammar Combined;
+options { parser = LALR; lookahead = 2; }
+lexerClasses { SHIFT = false; WORDS = false; }
+node start : ZERO plain | ONE keyword | TWO shifted | THREE both;
+inline plain : IDENT GT GT END;
+inline keyword -> enable(WORDS) : word GT GT END;
+inline shifted -> enable(SHIFT) : IDENT SHR END;
+inline both -> enable(WORDS), enable(SHIFT) : word SHR END;
+inline word : READ | WRITE;
+ZERO : '0';
+ONE : '1';
+TWO : '2';
+THREE : '3';
+READ : 'read' -> require(WORDS);
+WRITE : 'write' -> require(WORDS);
+IDENT : [a-z]+;
+SHR : '>>' -> require(SHIFT);
+GT : '>';
+END : ';';
+WS : [ \t\r\n]+ -> skip;

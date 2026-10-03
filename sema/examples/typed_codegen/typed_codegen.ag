@@ -1,0 +1,22 @@
+grammar TypedCodegen;
+
+options {
+    parser = LALR;
+    lookahead = 1;
+    ast = explicit;
+}
+
+channels {
+    HIDDEN
+}
+
+node program
+    : operand=value EOF #Value
+    ;
+
+node value
+    : text=NUMBER #Literal
+    ;
+
+NUMBER : [0-9]+;
+WS : [ \t\r\n]+ -> channel(HIDDEN);

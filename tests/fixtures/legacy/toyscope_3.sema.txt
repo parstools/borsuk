@@ -1,0 +1,922 @@
+/*
+ * Propozycja języka akcji AgSem, szkic 0.1 — ToyScope, polityka 3.
+ * Każdy numerowany punkt źródłowego opisu ma osobny komentarz, a bezpośrednio
+ * pod nim zapis symboliczny po angielsku. Zapis nie jest jeszcze składnią
+ * obsługiwaną przez generator .ag; produkcje zachowują jego dotychczasową postać.
+ *
+ * Polityka 3: najpierw zbieramy bezpośrednie deklaracje całego zakresu,
+ * a potem analizujemy jego elementy. Wszystkie nazwy lokalne przesłaniają
+ * zewnętrzne od początku zakresu. Same wartości nie powstają podczas analizy.
+ * W int x = 5; { int a = x; int x = x + 1; } odczyt w inicjalizatorze a
+ * wskazuje lokalne x. Analiza nazw i typów przechodzi, ale wykonanie kończy
+ * się tam błędem "variable read before initialization".
+ * Opcjonalnej analizy ostrzeżeń nie uruchamiamy w tym szkicu; punkt 2.5
+ * zwraca zbudowany program bez dodawania kontroli statycznej inicjalizacji.
+ *
+ * Znaczenie podstawowych konstrukcji:
+ * - analysis uruchamia działania analizatora. Kolejne bloki jednej alternatywy
+ *   tworzą jeden program; let zachowuje swoje wiązanie między tymi blokami.
+ * - analyze uruchamia analizę wskazanego dziecka dokładnie w tym miejscu.
+ *   Nie zakładamy wcześniejszej automatycznej analizy dzieci przez parser.
+ * - with przekazuje kontekst. Niewymienione składniki są dziedziczone.
+ *   scope jest jawnym zakresem, a output kolektorem operacji w programie
+ *   lub bloku. Wynik dziecka odbiera ->. W tym wariancie nie przekazujemy mapy
+ *   stanów inicjalizacji analizatora; stany należą do komórek wykonawcy.
+ * - result oznacza wynik bieżącej alternatywy. Samo przypisanie do result
+ *   nie kończy pozostałych działań. Wynik jest zwracany po ich zakończeniu.
+ * - new tworzy obiekt o nowej, trwałej tożsamości. Konstruktory bez new tworzą
+ *   rekordy opisu programu. Puste tablice i listy pól są domyślnie puste.
+ * - Scope(parent: ...) zaczyna z pustą tablicą. bind wpisuje symbol także na
+ *   listę scope.symbols. contains_local nie przeszukuje rodziców, a
+ *   lookup_lexical kończy na pierwszej znalezionej deklaracji niezależnie
+ *   od jej stanu inicjalizacji. Domyślnie obowiązuje porównanie nazw dokładne.
+ * - require sprawdza warunek; else error zapisuje komunikat i lokalizację,
+ *   kończy bieżącą alternatywę wynikiem błędnym. Istnienie symbolu jest warunkiem
+ *   dostępu do jego pól, więc błędna nazwa nie powoduje kolejnego błędu typu.
+ * - Błąd dziecka domyślnie przerywa alternatywę rodzica bez nowego komunikatu.
+ *   on failure pozwala wcześniej uporządkować stan; propagate_error przekazuje
+ *   istniejący błąd. continue_on_error w pętli pozwala analizować dalsze elementy.
+ * - item dopisuje do output dokładnie jedną operację, także znacznik błędu.
+ *   Program i blok uruchamiają item, ale nie dopisują ponownie jego wyniku.
+ * - direct_declarations(items) rozpakowuje tylko bezpośrednie inline item
+ *   i wybiera ich value pochodzące z reguły declaration. Nie schodzi do block.
+ *   Zapytanie poniżej dotyczy drzewa składni z zachowanymi etykietami reguł,
+ *   przed ewentualnym spłaszczeniem go do docelowego AST.
+ * - local.declarations wiąże tożsamość węzła deklaracji z symbolem utworzonym
+ *   w pierwszym przebiegu. Brak wpisu jest błędem realizacji analizatora,
+ *   nie błędem programu użytkownika. Dzięki kluczowi NodeId własny wpis nie
+ *   jest uznawany za duplikat podczas drugiego przebiegu.
+ * - execution result jest opisem obsługi zbudowanej operacji przez wykonawcę,
+ *   nie kolejnym krokiem analysis. Zmienne let z analysis nie są tam dostępne;
+ *   korzysta się z pól zapisanych w result oraz z runtime. Przepis wykonania
+ *   dotyczy operacji pochodzących z danej alternatywy i może zastępować przepis
+ *   wspólny. Nie wykonuje się obu przepisów dla tej samej operacji.
+ *   Kilka execution result w jednej alternatywie składa jeden przepis,
+ *   w kolejności punktów. Ich let są wspólne w obrębie wykonania operacji.
+ *   Cała faza analysis kończy się przed użyciem tego przepisu; result może
+ *   zostać przypisany także w późniejszym punkcie analysis, jak w assignment.
+ * - rewrite bottom_up odwiedza najpierw dzieci, potem rodzica; matched jest
+ *   bieżącym dopasowanym węzłem. Konstruktor Constant nie pasuje do CheckedLoad,
+ *   więc odczyty zmiennych nie są traktowane jak stałe. otherwise zachowuje węzeł.
+ * - W pętli where filtr wybiera elementy. Dopasowanie is Constant(value: x)
+ *   wiąże x tylko w gałęzi powodzenia. Pole type konstruktora Binary początkowo
+ *   jest nieustalone; uzupełnia je jawna kontrola argumentów.
+ *
+ * Dlaczego także wspólne definicje poniżej:
+ * Akcja ma budować konkretną strukturę, a nie tylko wywoływać nieokreśloną
+ * funkcję o nazwie podobnej do polskiego zdania. Dlatego jawnie określamy
+ * strukturę symboli, miejsc i operacji oraz podstawowy kontrakt wykonania.
+ * Nadal jest to projekt języka i jego biblioteki pojęć, nie implementacja
+ * interpretera ani twierdzenie o zgodności z istniejącą gramatyką AgSem.
+ */
+
+semantic_model {
+    type Int = MathematicalInteger;
+    enum RuntimeInitialization { Reserved, Uninitialized, Initialized }
+    enum OperatorKind { Plus, Minus, Multiply, Divide, Remainder }
+    enum OperandSide { Left, Right }
+
+    entity Scope {
+        id: ScopeId;
+        parent: Optional<ScopeId>;
+        source: SourceRange;
+        bindings: Map<Text, Variable> = {};
+        symbols: List<Variable> = [];
+        declarations: Map<NodeId, Variable> = {};
+    }
+    entity Variable {
+        id: SymbolId;
+        name: Text;
+        type: Type;
+        owner: ScopeId;
+        declaration: SourceRange;
+        place: Place;
+    }
+    entity Place {
+        id: PlaceId;
+        owner: ScopeId;
+        symbol: SymbolId;
+    }
+    record DeclarationEntry(node, symbol);
+    record RuntimeCell(symbol, state: RuntimeInitialization, value = none);
+    query direct_declarations(items) =
+        [item.value for item in items where item.value.rule == "declaration"];
+
+    record Program(scope, symbols, body, source);
+    record Block(scope, parent, symbols, body, source);
+    record Declare(symbol, initializer, source);
+    record CheckedStore(symbol, value, source);
+    record Constant(value, type, source);
+    record CheckedLoad(symbol, type, source);
+    record Unary(operator, operand, type, source);
+    record Binary(operator, left, right, source, type = Unresolved, checks = []);
+    record Operator(kind, source);
+    record Tail(operator, operand, source);
+    record Nonzero(operand, message);
+    record ErrorOperation(source);
+
+    intrinsic apply_integer(Plus, a, b) = a + b;
+    intrinsic apply_integer(Minus, a, b) = a - b;
+    intrinsic apply_integer(Multiply, a, b) = a * b;
+    intrinsic apply_integer(Divide, a, b) = truncate_toward_zero(a / b)
+        requires b != 0;
+    intrinsic apply_integer(Remainder, a, b) = a - apply_integer(Divide, a, b) * b
+        requires b != 0;
+    intrinsic apply_integer(Plus, a) = a;
+    intrinsic apply_integer(Minus, a) = -a;
+}
+
+/*
+ * Kontrakt wykonawcy: zbudowane miejsca są logiczne, nie są ramkami stosu.
+ * create_frame z initial_state: Reserved tworzy dla symboli zakresu
+ * komórki bez wartości, oznaczone jako zarezerwowane. Wykonanie deklaracji
+ * bez inicjalizatora zmienia stan na Uninitialized; udana inicjalizacja lub
+ * dozwolony zapis zmienia stan na Initialized. Nie ma domyślnej wartości zero.
+ * Rezerwacja komórek następuje na wejściu do zakresu, przed wykonaniem
+ * deklaracji; widoczność jest już rozstrzygnięta w odwołaniach do SymbolId. place_of odnajduje komórkę symbolu
+ * w odpowiedniej instancji jego leksykalnego zakresu, nie wyszukuje napisu nazwy.
+ * with zmienia current_frame na czas bloku i przywraca poprzednią wartość
+ * także przy błędzie. release_frame wykonuje się również przy błędzie;
+ * jest to zakończenie instancji, a nie nakaz konkretnej alokacji na stosie.
+ * Tylko poprawny pod względem nazw i typów Program można wykonać. Odczyt
+ * niezainicjalizowanej komórki jest tutaj zwykłym błędem wykonania programu,
+ * nie naruszeniem gwarancji analizatora. Reserved zabrania zarówno odczytu,
+ * jak i zwykłego przypisania; Uninitialized pozwala na pierwsze przypisanie.
+ * initialize jest specjalnym zapisem inicjalizatora i dopuszcza Reserved.
+ * Jego wywołanie następuje dopiero po poprawnym obliczeniu inicjalizatora.
+ * write jest zwykłym zapisem; CheckedStore sprawdza stan przed jego użyciem.
+ * Żaden błąd stanu nie uruchamia ponownego wyszukiwania nazwy w rodzicu.
+ * Wszystkie rekordy mają też znacznik valid; contains_error uwzględnia błędne
+ * dzieci, znaczniki ErrorOperation i błędy analizy przypisane do poddrzewa.
+ */
+execution_contract {
+    execute Program(program) {
+        require program.valid else reject_execution;
+        let frame = create_frame(program.scope, program.symbols,
+                                 initial_state: Reserved, parent: none);
+        with runtime.current_frame = frame {
+            execute_sequence(program.body);
+        } finally {
+            release_frame(frame);
+        }
+    }
+    execute Block(block) {
+        let frame = create_frame(block.scope, block.symbols, initial_state: Reserved,
+                                 parent: runtime.lexical_frame(block.parent));
+        with runtime.current_frame = frame {
+            execute_sequence(block.body);
+        } finally {
+            release_frame(frame);
+        }
+    }
+    execute Declare(symbol: symbol, initializer: none) {
+        let place = runtime.place_of(symbol);
+        place.state = Uninitialized;
+    }
+    execute CheckedStore(symbol: symbol, value: expression, source: source) {
+        let value = evaluate(expression);
+        let place = runtime.place_of(symbol);
+        require place.state != Reserved
+            else runtime_error "variable assigned before declaration" at source;
+        write(place, value);
+        place.state = Initialized;
+    }
+    evaluate Constant(value: value) {
+        return value;
+    }
+    evaluate CheckedLoad(symbol: symbol, source: source) {
+        let place = runtime.place_of(symbol);
+        require place.state == Initialized
+            else runtime_error "variable read before initialization" at source;
+        return read_initialized(place);
+    }
+    evaluate Unary(operator: op, operand: expression) {
+        let value = evaluate(expression);
+        return apply_integer(op, value);
+    }
+    evaluate Binary(operator: op, left: left, right: right, checks: checks) {
+        let left_value = evaluate(left);
+        let right_value = evaluate(right);
+        for check in checks {
+            match check {
+                Nonzero(operand: Right, message: message) =>
+                    require right_value != 0 else runtime_error message;
+            }
+        }
+        return apply_integer(op, left_value, right_value);
+    }
+}
+
+grammar ToyScope3;
+
+options {
+    parser = LALR;
+    lookahead = 1;
+    ast = explicit;
+}
+
+node program
+    : EOF #EmptyProgram
+      /*
+       * Alternatywa 1, punkt 1:
+       * 1. Utwórz główny zakres nazw bez rodzica i nadaj mu trwały identyfikator zakresu.
+       */
+      analysis {
+          let local = new Scope(parent: none, source: self.source);
+      }
+      /*
+       * Alternatywa 1, punkt 2:
+       * 2. Utwórz opis programu z pustą listą symboli, pustą listą operacji i odwołaniem do
+       *    głównego zakresu. Wykonanie programu kończy się bez obliczeń.
+       */
+      analysis {
+          result = Program(scope: local.id, symbols: [], body: [], source: self.source);
+      }
+    | items=item+ EOF #NonemptyProgram
+      /*
+       * Alternatywa 2, punkt 1:
+       * 1. Przed analizą items utwórz główny zakres nazw. Przejrzyj jego bezpośrednie elementy i
+       *    dla każdej declaration utwórz symbol int oraz logiczne miejsce, bez wykonywania
+       *    inicjalizatora.
+       */
+      analysis {
+          let local = new Scope(parent: none, source: self.source);
+          let pending = [];
+          let body = [];
+          for decl in direct_declarations(items) {
+              let symbol = new Variable(name: decl.name.text, type: Int,
+                                        owner: local.id, declaration: decl.source);
+              symbol.place = new Place(owner: local.id, symbol: symbol.id);
+              pending.append(DeclarationEntry(node: decl.id, symbol: symbol));
+          }
+      }
+      /*
+       * Alternatywa 2, punkt 2:
+       * 2. Sprawdź duplikaty w całym głównym zakresie; błąd: "identifier already declared". Nie
+       *    dodawaj do tej tablicy deklaracji znajdujących się wewnątrz block.
+       */
+      analysis {
+          for entry in pending {
+              require not local.contains_local(entry.symbol.name)
+                  else error "identifier already declared" at entry.symbol.declaration;
+              local.bind(entry.symbol.name, entry.symbol);
+              local.declarations[entry.node] = entry.symbol;
+          }
+      }
+      /*
+       * Alternatywa 2, punkt 3:
+       * 3. Udostępnij pełną tablicę bezpośrednich deklaracji wszystkim elementom tego zakresu, a
+       *    następnie przeanalizuj ich wyrażenia i operacje w kolejności tekstu.
+       */
+      analysis {
+          for item in items in source_order {
+              analyze item with scope: local, output: body continue_on_error;
+          }
+      }
+      /*
+       * Alternatywa 2, punkt 4:
+       * 4. Utwórz opis programu, który na wejściu rezerwuje wszystkie jego miejsca w stanie
+       *    zarezerwowanym i potem wykonuje operacje w kolejności. Powiązania nazw są ustalone
+       *    wcześniej, stany i wartości miejsc powstają podczas wykonania.
+       */
+      analysis {
+          let program = Program(scope: local.id, symbols: local.symbols,
+                                body: body, source: self.source);
+          program.valid = not contains_error(program);
+      }
+      /*
+       * Alternatywa 2, punkt 5:
+       * 5. Opcjonalnie można uprzedzić o pewnym przedwczesnym odczycie, ale w tej polityce nie
+       *    zastępuje to określonej kontroli wykonania i samo nie odrzuca programu.
+       */
+      analysis {
+          result = program;
+      }
+    ;
+
+inline item
+    : value=declaration
+      /*
+       * Alternatywa 3, punkt 1:
+       * 1. Przekaż deklaracji bieżący zakres i stan analizy. Do listy operacji otaczającego
+       *    programu lub bloku dopisz otrzymany opis deklaracji; zachowaj zmiany środowiska
+       *    wynikające z przyjętej polityki.
+       */
+      analysis {
+          analyze value with scope: scope -> child
+              on failure {
+                  output.append(ErrorOperation(source: self.source));
+                  propagate_error;
+              };
+          output.append(child);
+          result = child;
+      }
+    | value=assignment
+      /*
+       * Alternatywa 4, punkt 1:
+       * 1. Przekaż przypisaniu bieżący zakres i stan analizy. Dopisz otrzymaną operację zapisu do
+       *    listy operacji; zastosuj jej skutki dla stanu inicjalizacji, jeśli są śledzone
+       *    statycznie.
+       */
+      analysis {
+          analyze value with scope: scope -> child
+              on failure {
+                  output.append(ErrorOperation(source: self.source));
+                  propagate_error;
+              };
+          output.append(child);
+          result = child;
+      }
+    | value=block
+      /*
+       * Alternatywa 5, punkt 1:
+       * 1. Przeanalizuj blok z odwołaniem do bieżącego zakresu jako rodzica. Dopisz operację
+       *    wykonania bloku; po wyjściu jego nazwy lokalne nie są widoczne, ale zapisy do zmiennych
+       *    zewnętrznych zachowują skutki.
+       */
+      analysis {
+          analyze value with scope: scope -> child
+              on failure {
+                  output.append(ErrorOperation(source: self.source));
+                  propagate_error;
+              };
+          output.append(child);
+          result = child;
+      }
+    ;
+
+node block
+    : LBRACE RBRACE #EmptyBlock
+      /*
+       * Alternatywa 6, punkt 1:
+       * 1. Utwórz zakres potomny bieżącego zakresu i przypisz go do tego węzła bloku.
+       */
+      analysis {
+          let local = new Scope(parent: scope.id, source: self.source);
+      }
+      /*
+       * Alternatywa 6, punkt 2:
+       * 2. Utwórz opis pustego bloku. Zachowaj jego granice i zakres; wykonawca nie musi
+       *    przydzielać osobnej fizycznej ramki, skoro blok nie ma własnych miejsc.
+       */
+      analysis {
+          result = Block(scope: local.id, parent: scope.id, symbols: [],
+                         body: [], source: self.source);
+      }
+    | LBRACE items=item+ RBRACE #NonemptyBlock
+      /*
+       * Alternatywa 7, punkt 1:
+       * 1. Utwórz zakres potomny i przed analizą jego elementów zbierz wszystkie bezpośrednie
+       *    declaration. Nadaj symbolom tożsamości, typ int i logiczne miejsca; blokom wewnętrznym
+       *    pozostaw ich własne tablice.
+       */
+      analysis {
+          let local = new Scope(parent: scope.id, source: self.source);
+          let pending = [];
+          let body = [];
+          for decl in direct_declarations(items) {
+              let symbol = new Variable(name: decl.name.text, type: Int,
+                                        owner: local.id, declaration: decl.source);
+              symbol.place = new Place(owner: local.id, symbol: symbol.id);
+              pending.append(DeclarationEntry(node: decl.id, symbol: symbol));
+          }
+      }
+      /*
+       * Alternatywa 7, punkt 2:
+       * 2. Sprawdź powtórzenia nazw w całym tym zakresie. Błąd: "identifier already declared". Tak
+       *    zebrane nazwy od razu przesłaniają nazwy rodzica we wszystkich elementach bloku.
+       */
+      analysis {
+          for entry in pending {
+              require not local.contains_local(entry.symbol.name)
+                  else error "identifier already declared" at entry.symbol.declaration;
+              local.bind(entry.symbol.name, entry.symbol);
+              local.declarations[entry.node] = entry.symbol;
+          }
+      }
+      /*
+       * Alternatywa 7, punkt 3:
+       * 3. Przeanalizuj items z tą pełną tablicą nazw i zbuduj uporządkowaną listę operacji.
+       */
+      analysis {
+          for item in items in source_order {
+              analyze item with scope: local, output: body continue_on_error;
+          }
+      }
+      /*
+       * Alternatywa 7, punkt 4:
+       * 4. Opisz wejście do bloku: utwórz nową instancję środowiska, połącz ją z właściwą instancją
+       *    leksykalnego rodzica i zarezerwuj lokalne miejsca bez wartości. Dopiero potem wykonuj
+       *    kolejne operacje deklaracji, przypisań i bloków.
+       */
+      analysis {
+          result = Block(scope: local.id, parent: scope.id, symbols: local.symbols,
+                         body: body, source: self.source);
+      }
+      /*
+       * Alternatywa 7, punkt 5:
+       * 5. Po wykonaniu bloku opuść jego instancję. Zapisy do miejsc rodzica pozostają skuteczne;
+       *    lokalne nazwy nie stają się nazwami otoczenia.
+       */
+      execution result {
+          let frame = create_frame(result.scope, result.symbols, initial_state: Reserved,
+                                   parent: runtime.lexical_frame(result.parent));
+          with runtime.current_frame = frame {
+              execute_sequence(result.body);
+          } finally {
+              release_frame(frame);
+          }
+      }
+    ;
+
+node declaration
+    : INT name=ID SEMI #UninitializedDeclaration
+      /*
+       * Alternatywa 8, punkt 1:
+       * 1. Odszukaj symbol przygotowany dla tej konkretnej deklaracji we wcześniejszym zebraniu
+       *    nazw zakresu. Nie twórz drugiego symbolu i nie traktuj własnego zarezerwowanego wpisu
+       *    jako duplikatu.
+       */
+      analysis {
+          let symbol = scope.declarations[self.id];
+      }
+      /*
+       * Alternatywa 8, punkt 2:
+       * 2. Utwórz operację osiągnięcia deklaracji bez inicjalizatora. Nie zmieniaj powiązań
+       *    wcześniejszych ani późniejszych użyć nazwy; wszystkie odnoszą się już do właściwego
+       *    symbolu.
+       */
+      analysis {
+          result = Declare(symbol: symbol.id, initializer: none, source: self.source);
+      }
+      /*
+       * Alternatywa 8, punkt 3:
+       * 3. Podczas wykonania zmień stan jego miejsca z zarezerwowanego na dostępny, lecz
+       *    niezainicjalizowany. Nie przypisuj automatycznie zera. Późniejszy zapis jest dozwolony,
+       *    ale odczyt przed nim powoduje "variable read before initialization".
+       */
+      execution result {
+          let place = runtime.place_of(result.symbol);
+          place.state = Uninitialized;
+      }
+    | INT name=ID initializer=initializer SEMI #InitializedDeclaration
+      /*
+       * Alternatywa 9, punkt 1:
+       * 1. Odszukaj uprzednio zarezerwowany symbol tej deklaracji. Powtórzenia nazw sprawdzono
+       *    podczas zbierania całego zakresu; ta operacja nie dodaje kolejnego wiązania.
+       */
+      analysis {
+          let symbol = scope.declarations[self.id];
+      }
+      /*
+       * Alternatywa 9, punkt 2:
+       * 2. Przeanalizuj initializer z pełną tablicą nazw zakresu. Własna nazwa odnosi się do tego
+       *    symbolu, a nie do symbolu zewnętrznego.
+       */
+      analysis {
+          analyze initializer with scope: scope -> init;
+      }
+      /*
+       * Alternatywa 9, punkt 3:
+       * 3. Sprawdź typ int wyniku; błąd analizy: "incompatible initializer type". Utwórz opis
+       *    inicjalizacji konkretnego miejsca wynikiem tego wyrażenia.
+       */
+      analysis {
+          require init.type == Int
+              else error "incompatible initializer type" at initializer.source;
+          result = Declare(symbol: symbol.id, initializer: init, source: self.source);
+      }
+      /*
+       * Alternatywa 9, punkt 4:
+       * 4. Wykonując deklarację, pozostaw miejsce w stanie zarezerwowanym przez cały czas
+       *    obliczania inicjalizatora. Odczyty tego miejsca wykonują kontrolę z factor i mogą
+       *    przerwać obliczenie.
+       */
+      execution result {
+          let place = runtime.place_of(result.symbol);
+          let value = evaluate(result.initializer);
+      }
+      /*
+       * Alternatywa 9, punkt 5:
+       * 5. Dopiero po poprawnym obliczeniu zapisz wynik i oznacz miejsce jako zainicjalizowane.
+       *    Użyj specjalnej operacji inicjalizacji, uprawnionej do ustawienia miejsca
+       *    zarezerwowanego; zwykłe assignment nie ma tego uprawnienia.
+       */
+      execution result {
+          initialize(place, value);
+          place.state = Initialized;
+      }
+    ;
+
+inline initializer
+    : ASSIGN value=expression
+      /*
+       * Alternatywa 10, punkt 1:
+       * 1. Przeanalizuj expression w środowisku wskazanym przez deklarację nadrzędną. Sam
+       *    initializer nie dodaje nazwy zmiennej ani nie zmienia jej widoczności.
+       */
+      analysis {
+          analyze value with scope: scope -> expression;
+      }
+      /*
+       * Alternatywa 10, punkt 2:
+       * 2. Zwróć opis wyrażenia, jego typ int i ewentualną wartość stałą. Znak ASSIGN oznacza tutaj
+       *    inicjalizator, nie osobną operację przypisania; docelowe miejsce wskaże declaration.
+       */
+      analysis {
+          result = expression;
+      }
+    ;
+
+node assignment
+    : target=ID ASSIGN value=expression SEMI
+      /*
+       * Alternatywa 11, punkt 1:
+       * 1. Rozwiąż target leksykalnie z użyciem pełnych tablic deklaracji. Brak symbolu w bieżącym
+       *    zakresie i jego rodzicach jest błędem analizy: "identifier not declared".
+       */
+      analysis {
+          let symbol = scope.lookup_lexical(target.text);
+          require symbol exists
+              else error "identifier not declared" at target.source;
+      }
+      /*
+       * Alternatywa 11, punkt 2:
+       * 2. Przeanalizuj value i sprawdź typ int. Niezgodność: "incompatible assignment type".
+       *    Utwórz opis kontrolowanego zapisu do miejsca konkretnego symbolu; samo znalezienie
+       *    symbolu nie oznacza możliwości zapisu przed jego deklaracją.
+       */
+      analysis {
+          analyze value with scope: scope -> expression;
+          require symbol.type == Int and expression.type == Int
+              else error "incompatible assignment type" at self.source;
+          let store = CheckedStore(symbol: symbol.id, value: expression,
+                                   source: self.source);
+      }
+      /*
+       * Alternatywa 11, punkt 3:
+       * 3. W przyjętej kolejności wykonania najpierw oblicz prawą stronę, potem sprawdź możliwość
+       *    zapisu do celu. Jeżeli cel pozostaje zarezerwowany, zgłoś błąd wykonania:
+       *    "variable assigned before declaration".
+       */
+      execution result {
+          let value = evaluate(result.value);
+          let place = runtime.place_of(result.symbol);
+          require place.state != Reserved
+              else runtime_error "variable assigned before declaration" at result.source;
+      }
+      /*
+       * Alternatywa 11, punkt 4:
+       * 4. Jeśli deklaracja celu już została wykonana, zapisz wartość; jest to dozwolone zarówno
+       *    dla miejsca niezainicjalizowanego, jak i już mającego wartość. Oznacz miejsce jako
+       *    zainicjalizowane.
+       */
+      execution result {
+          write(place, value);
+          place.state = Initialized;
+      }
+      /*
+       * Alternatywa 11, punkt 5:
+       * 5. Nie twórz nowego wiązania przy przypisaniu. Gdy znaleziony lokalny symbol jest
+       *    zarezerwowany, nie przekierowuj zapisu do zmiennej zewnętrznej.
+       */
+      analysis {
+          result = store;
+      }
+    ;
+
+node expression
+    : first=term #SingleTerm
+      /*
+       * Alternatywa 12, punkt 1:
+       * 1. Przekaż opis, typ i ewentualną stałą wartość first. Nie twórz dodatkowej operacji tylko
+       *    z powodu przejścia przez tę alternatywę.
+       */
+      analysis {
+          analyze first with scope: scope -> expression;
+          result = expression;
+      }
+    | first=term rest=additiveOperation+ #AdditiveChain
+      /*
+       * Alternatywa 13, punkt 1:
+       * 1. Przeanalizuj first, a następnie kolejne elementy rest. Każdy element rest dostarcza
+       *    operator oraz opis prawego argumentu.
+       */
+      analysis {
+          analyze first with scope: scope -> head;
+          let tails = [];
+          for operation in rest in source_order {
+              analyze operation with scope: scope -> tail;
+              tails.append(tail);
+          }
+      }
+      /*
+       * Alternatywa 13, punkt 2:
+       * 2. Zbuduj drzewo działań od lewej: wynik wcześniejszego działania staje się lewym
+       *    argumentem następnego. Na przykład a - b - c oznacza (a - b) - c.
+       */
+      analysis {
+          let expression = head;
+          let operations = [];
+          for tail in tails {
+              expression = Binary(operator: tail.operator, left: expression,
+                                  right: tail.operand, source: tail.source);
+              operations.append(expression);
+          }
+      }
+      /*
+       * Alternatywa 13, punkt 3:
+       * 3. Każdemu dodawaniu lub odejmowaniu nadaj typ int i zapisz źródłową lokalizację operatora.
+       *    Argumenty muszą mieć typ int; inny typ: "integer operands required".
+       */
+      analysis {
+          for operation in operations {
+              require operation.left.type == Int and operation.right.type == Int
+                  else error "integer operands required" at operation.source;
+              operation.type = Int;
+          }
+      }
+      /*
+       * Alternatywa 13, punkt 4:
+       * 4. Jeżeli oba argumenty działania są stałe, można obliczyć jego wynik w analizatorze. W
+       *    przeciwnym razie zachowaj operację do wykonania. Nie traktuj odczytu zwykłej zmiennej
+       *    jak stałej tylko dlatego, że miała stały inicjalizator.
+       */
+      analysis {
+          result = rewrite expression bottom_up {
+              Binary(operator: op, left: Constant(value: a), right: Constant(value: b))
+                  => Constant(value: apply_integer(op, a, b), type: Int,
+                              source: matched.source);
+              otherwise => unchanged;
+          };
+      }
+    ;
+
+inline additiveOperation
+    : operator=addop operand=term
+      /*
+       * Alternatywa 14, punkt 1:
+       * 1. Zwróć parę: rozpoznany operator dodawania lub odejmowania oraz opis operand. Lewy
+       *    argument dostarczy expression; ta alternatywa nie tworzy samodzielnego działania
+       *    dwuargumentowego.
+       */
+      analysis {
+          analyze operator -> op;
+          analyze operand with scope: scope -> expression;
+          result = Tail(operator: op.kind, operand: expression, source: op.source);
+      }
+    ;
+
+inline addop
+    : value=PLUS
+      /*
+       * Alternatywa 15, punkt 1:
+       * 1. Zwróć oznaczenie plusa. W additiveOperation oznacza dodawanie, a w factor z
+       *    UnaryExpression oznacza jednoargumentowy plus. Sam token nie wykonuje obliczenia.
+       */
+      analysis {
+          result = Operator(kind: Plus, source: value.source);
+      }
+    | value=MINUS
+      /*
+       * Alternatywa 16, punkt 1:
+       * 1. Zwróć oznaczenie minusa. W additiveOperation oznacza odejmowanie, a w factor z
+       *    UnaryExpression oznacza zmianę znaku. Sam token nie wykonuje obliczenia.
+       */
+      analysis {
+          result = Operator(kind: Minus, source: value.source);
+      }
+    ;
+
+node term
+    : first=factor #SingleFactor
+      /*
+       * Alternatywa 17, punkt 1:
+       * 1. Przekaż opis, typ i ewentualną stałą wartość first. Nie twórz dodatkowej operacji tylko
+       *    z powodu przejścia przez tę alternatywę.
+       */
+      analysis {
+          analyze first with scope: scope -> expression;
+          result = expression;
+      }
+    | first=factor rest=multiplicativeOperation+ #MultiplicativeChain
+      /*
+       * Alternatywa 18, punkt 1:
+       * 1. Przeanalizuj first i kolejne elementy rest; każdy element dostarcza operator oraz prawy
+       *    argument.
+       */
+      analysis {
+          analyze first with scope: scope -> head;
+          let tails = [];
+          for operation in rest in source_order {
+              analyze operation with scope: scope -> tail;
+              tails.append(tail);
+          }
+      }
+      /*
+       * Alternatywa 18, punkt 2:
+       * 2. Zbuduj drzewo mnożenia, dzielenia i reszty z dzielenia od lewej. Ponieważ expression
+       *    łączy gotowe term, te działania mają pierwszeństwo przed dodawaniem i odejmowaniem.
+       */
+      analysis {
+          let expression = head;
+          let operations = [];
+          for tail in tails {
+              expression = Binary(operator: tail.operator, left: expression,
+                                  right: tail.operand, source: tail.source);
+              operations.append(expression);
+          }
+      }
+      /*
+       * Alternatywa 18, punkt 3:
+       * 3. Nadaj działaniom typ int. Dla niezgodnego argumentu zgłoś: "integer operands required".
+       *    Dla dzielenia i reszty dodaj kontrolę niezerowego prawego argumentu.
+       */
+      analysis {
+          for operation in operations {
+              require operation.left.type == Int and operation.right.type == Int
+                  else error "integer operands required" at operation.source;
+              operation.type = Int;
+              if operation.operator in [Divide, Remainder] {
+                  operation.checks.append(Nonzero(operand: Right,
+                                                 message: "division by zero"));
+              }
+          }
+      }
+      /*
+       * Alternatywa 18, punkt 4:
+       * 4. Jeżeli dzielnik jest stałym zerem, zgłoś w analizie: "division by zero". W pozostałych
+       *    przypadkach, w których nie wykazano niezerowości, zachowaj kontrolę wykonania z tym
+       *    komunikatem.
+       */
+      analysis {
+          for operation in operations where operation.operator in [Divide, Remainder] {
+              if operation.right is Constant(value: divisor) {
+                  require divisor != 0
+                      else error "division by zero" at operation.source;
+                  operation.checks.remove(Nonzero(operand: Right));
+              }
+          }
+      }
+      /*
+       * Alternatywa 18, punkt 5:
+       * 5. Można obliczyć wynik działania na dwóch stałych. Działania zależne od odczytów zmiennych
+       *    pozostaw w opisie programu.
+       */
+      analysis {
+          result = rewrite expression bottom_up {
+              Binary(operator: op, left: Constant(value: a), right: Constant(value: b))
+                  => Constant(value: apply_integer(op, a, b), type: Int,
+                              source: matched.source);
+              otherwise => unchanged;
+          };
+      }
+    ;
+
+inline multiplicativeOperation
+    : operator=mulop operand=factor
+      /*
+       * Alternatywa 19, punkt 1:
+       * 1. Zwróć parę: rozpoznany operator oraz opis operand. Lewy argument dostarczy term; ta
+       *    alternatywa nie wykonuje jeszcze działania dwuargumentowego.
+       */
+      analysis {
+          analyze operator -> op;
+          analyze operand with scope: scope -> expression;
+          result = Tail(operator: op.kind, operand: expression, source: op.source);
+      }
+    ;
+
+inline mulop
+    : value=STAR
+      /*
+       * Alternatywa 20, punkt 1:
+       * 1. Zwróć oznaczenie mnożenia całkowitego; typ argumentów i wynik ustala term.
+       */
+      analysis {
+          result = Operator(kind: Multiply, source: value.source);
+      }
+    | value=SLASH
+      /*
+       * Alternatywa 21, punkt 1:
+       * 1. Zwróć oznaczenie dzielenia całkowitego z obcięciem ilorazu w stronę zera. Kontrolę
+       *    dzielnika umieszcza term.
+       */
+      analysis {
+          result = Operator(kind: Divide, source: value.source);
+      }
+    | value=PERCENT
+      /*
+       * Alternatywa 22, punkt 1:
+       * 1. Zwróć oznaczenie reszty z dzielenia całkowitego: a % b jest równe a - (a / b) * b przy
+       *    dzieleniu z obcięciem w stronę zera. Kontrolę dzielnika umieszcza term.
+       */
+      analysis {
+          result = Operator(kind: Remainder, source: value.source);
+      }
+    ;
+
+node factor
+    : value=NUMBER #IntegerLiteral
+      /*
+       * Alternatywa 23, punkt 1:
+       * 1. Odczytaj cyfry tokenu NUMBER i utwórz stałą całkowitą o tej wartości. Przypisz jej typ
+       *    int i lokalizację źródłową.
+       */
+      analysis {
+          let literal = Constant(value: parse_integer(value.text, radix: 10),
+                                 type: Int, source: value.source);
+      }
+      /*
+       * Alternatywa 23, punkt 2:
+       * 2. Zwróć węzeł stałej; nie twórz symbolu ani miejsca zmiennej. Znak liczby ujemnej
+       *    obsługuje osobna alternatywa UnaryExpression.
+       */
+      analysis {
+          result = literal;
+      }
+    | name=ID #VariableReference
+      /*
+       * Alternatywa 24, punkt 1:
+       * 1. Rozwiąż name w pełnej tablicy bieżącego zakresu, a potem w tablicach leksykalnych
+       *    rodziców. Deklaracja może znajdować się później w tekście. Brak symbolu: błąd analizy
+       *    "identifier not declared".
+       */
+      analysis {
+          let symbol = scope.lookup_lexical(name.text);
+          require symbol exists
+              else error "identifier not declared" at name.source;
+      }
+      /*
+       * Alternatywa 24, punkt 2:
+       * 2. Utwórz kontrolowany odczyt konkretnego symbolu i nadaj mu typ int. Zapisz sposób
+       *    odnalezienia właściwej instancji jego zakresu; wykonawca nie ma ponownie wybierać
+       *    deklaracji po napisie nazwy.
+       */
+      analysis {
+          result = CheckedLoad(symbol: symbol.id, type: Int, source: name.source);
+      }
+      /*
+       * Alternatywa 24, punkt 3:
+       * 3. Podczas wykonania sprawdź stan miejsca. Dla miejsca zarezerwowanego zgłoś
+       *    "variable read before initialization"; dla dostępnego, lecz niezainicjalizowanego zgłoś
+       *    "variable read before initialization".
+       */
+      execution result {
+          let place = runtime.place_of(result.symbol);
+          require place.state == Initialized
+              else runtime_error "variable read before initialization" at result.source;
+      }
+      /*
+       * Alternatywa 24, punkt 4:
+       * 4. Tylko miejsce zainicjalizowane dostarcza wartość. W żadnym ze stanów błędnych nie
+       *    przechodź do symbolu zewnętrznego o tej samej nazwie.
+       */
+      execution result {
+          return read_initialized(place);
+      }
+    | LPAREN value=expression RPAREN #ParenthesizedExpression
+      /*
+       * Alternatywa 25, punkt 1:
+       * 1. Przekaż opis wyrażenia value, jego typ i informację o stałości. Nawiasy wyznaczają
+       *    grupowanie, ale nie tworzą zakresu nazw. Zachowaj ich lokalizację jako informację
+       *    źródłową, jeśli jest potrzebna.
+       */
+      analysis {
+          analyze value with scope: scope -> expression;
+          result = expression with source: self.source;
+      }
+    | operator=addop operand=factor #UnaryExpression
+      /*
+       * Alternatywa 26, punkt 1:
+       * 1. Przeanalizuj operand i rozpoznaj jednoargumentowy plus lub minus. Argument musi mieć typ
+       *    int; błąd: "integer operand required".
+       */
+      analysis {
+          analyze operator -> op;
+          analyze operand with scope: scope -> expression;
+          require expression.type == Int
+              else error "integer operand required" at operand.source;
+      }
+      /*
+       * Alternatywa 26, punkt 2:
+       * 2. Dla plusa zachowaj wartość argumentu, a dla minusa utwórz opis zmiany znaku. Wynik ma
+       *    typ int; stały argument pozwala obliczyć stały wynik.
+       */
+      analysis {
+          let unary = Unary(operator: op.kind, operand: expression,
+                            type: Int, source: op.source);
+          if expression is Constant(value: number) {
+              unary = Constant(value: apply_integer(op.kind, number),
+                               type: Int, source: self.source);
+          }
+      }
+      /*
+       * Alternatywa 26, punkt 3:
+       * 3. Zwróć opis wynikowego wyrażenia. Operator nie zmienia wartości zmiennej, z której
+       *    pochodzi argument.
+       */
+      analysis {
+          result = unary;
+      }
+    ;

@@ -1,0 +1,55 @@
+sema ScopeCodegen for "scope_codegen.ag";
+
+semantic_model {
+    rust_context SemaContext;
+    analyzer program(flow: FlowId, scope: ScopeId) -> SymbolId;
+    analyzer statement(flow: FlowId, scope: ScopeId) -> FlowId;
+    analyzer block(flow: FlowId, scope: ScopeId) -> FlowId;
+    intrinsic scope_lookup(scope: ScopeId, name: Text) -> Option<SymbolId>;
+    intrinsic scope_chain(scope: ScopeId) -> List<ScopeId>;
+    intrinsic parameter_name(parameter: ParameterId) -> Text;
+    intrinsic option_symbol(value: Option<SymbolId>) -> SymbolId;
+}
+
+node program
+    : name=ID EOF #Lookup analysis {
+        result = option_symbol(scope_lookup(scope, name.text));
+      }
+    | INT declared=ID SEMI target=ID ASSIGN value=NUMBER SEMI used=ID EOF #DeclareAssignRead analysis {
+        result = option_symbol(scope_lookup(scope, used.text));
+      }
+    | INT declared=ID SEMI EOF #DeclareOnly analysis {
+        result = true;
+      }
+    | statement_node=statement used=ID EOF #StatementAndRead analysis {
+        result = option_symbol(scope_lookup(scope, used.text));
+      }
+    ;
+
+node statement
+    : IF LPAREN condition=ID RPAREN then_target=ID ASSIGN then_value=NUMBER SEMI ELSE else_target=ID ASSIGN else_value=NUMBER SEMI #IfElseAssign analysis {
+        result = flow;
+      }
+    | IF LPAREN condition=ID RPAREN then_target=ID ASSIGN then_value=NUMBER SEMI ELSE SEMI #IfElseEmpty analysis {
+        result = flow;
+      }
+    | IF LPAREN condition=ID RPAREN then_branch=block ELSE else_branch=block #IfElseBlocks analysis {
+        result = flow;
+      }
+    | target=ID ASSIGN value=NUMBER SEMI #Assign analysis {
+        result = flow;
+      }
+    | used=ID SEMI #Read analysis {
+        result = flow;
+      }
+    | INT declared=ID SEMI #Declare analysis {
+        result = flow;
+      }
+    | nested=block #NestedBlock analysis {}
+    ;
+
+node block
+    : LBRACE items=statement* RBRACE #Statements analysis {
+        result = flow;
+      }
+    ;

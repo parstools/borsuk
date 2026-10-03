@@ -1,0 +1,303 @@
+sema ToyScope1Typed; format 1;
+grammar ToyScope;
+
+options {
+    parser = LALR;
+    lookahead = 1;
+    ast = explicit;
+}
+
+channels {
+    HIDDEN
+}
+
+
+
+semantic_model {
+    rust_context ToyScopeContext;
+    analyzer program() -> ProgramId;
+    analyzer item(scope: ScopeId) -> OpId;
+    analyzer block(scope: ScopeId) -> OpId;
+    analyzer declaration(scope: ScopeId) -> OpId;
+    analyzer initializer(scope: ScopeId) -> ExprId;
+    analyzer assignment(scope: ScopeId) -> OpId;
+    analyzer expression(scope: ScopeId) -> ExprId;
+    analyzer additiveOperation(scope: ScopeId, left: ExprId) -> ExprId;
+    analyzer addop() -> OperatorKind;
+    analyzer term(scope: ScopeId) -> ExprId;
+    analyzer multiplicativeOperation(scope: ScopeId, left: ExprId) -> ExprId;
+    analyzer mulop() -> OperatorKind;
+    analyzer factor(scope: ScopeId) -> ExprId;
+
+    intrinsic root_scope(source: SourceRange) -> ScopeId mutates;
+    intrinsic child_scope(parent: ScopeId, source: SourceRange) -> ScopeId mutates;
+    intrinsic no_op() -> OpId;
+    intrinsic record_error_operation(scope: ScopeId, source: SourceRange, message: Text) -> OpId mutates;
+    intrinsic finish_program(scope: ScopeId, last: OpId) -> ProgramId mutates;
+    intrinsic finish_block(scope: ScopeId, last: OpId) -> OpId mutates;
+    intrinsic scope_lookup_local(scope: ScopeId, name: Text) -> Option<SymbolId>;
+    intrinsic scope_chain(scope: ScopeId) -> List<ScopeId>;
+    intrinsic fresh_variable(scope: ScopeId, name: Text, source: SourceRange) -> SymbolId mutates;
+    intrinsic scope_bind(scope: ScopeId, name: Text, symbol: SymbolId) -> Unit mutates;
+    intrinsic option_symbol(found: Option<SymbolId>) -> SymbolId;
+    intrinsic is_initialized(symbol: SymbolId) -> Bool;
+    intrinsic is_poisoned(symbol: SymbolId) -> Bool;
+    intrinsic begin_initializer(symbol: SymbolId) -> Unit mutates;
+    intrinsic mark_initialized(symbol: SymbolId) -> Unit mutates;
+    intrinsic record_uninitialized_declaration(scope: ScopeId, symbol: SymbolId, source: SourceRange) -> OpId mutates;
+    intrinsic record_initialized_declaration(scope: ScopeId, symbol: SymbolId, value: ExprId, source: SourceRange) -> OpId mutates;
+    intrinsic record_assignment(scope: ScopeId, symbol: SymbolId, value: ExprId, source: SourceRange) -> OpId mutates;
+    intrinsic parse_integer(text: Text) -> Result<BigInt>;
+    intrinsic make_constant(value: BigInt, source: SourceRange) -> ExprId mutates;
+    intrinsic make_load(symbol: SymbolId, source: SourceRange) -> ExprId mutates;
+    intrinsic operator_kind(text: Text) -> OperatorKind;
+    intrinsic make_unary(operator: OperatorKind, operand: ExprId, source: SourceRange) -> ExprId mutates;
+    intrinsic make_binary(left: ExprId, operator: OperatorKind, right: ExprId, source: SourceRange) -> Result<ExprId> mutates;
+
+    function contains_local(scope: ScopeId, name: Text) -> Bool {
+        return scope_lookup_local(scope, name) != none;
+    }
+
+    function lookup_lexical(scope: ScopeId, name: Text) -> Option<SymbolId> {
+        foreach current in scope_chain(scope) {
+            let found = scope_lookup_local(current, name);
+            if found != none {
+                return found;
+            }
+        }
+        return none;
+    }
+
+    function declare_variable(scope: ScopeId, name: Text, source: SourceRange) -> Result<SymbolId> mutates {
+        if contains_local(scope, name) {
+            error "identifier already declared" at source;
+        }
+        let symbol = fresh_variable(scope, name, source);
+        scope_bind(scope, name, symbol);
+        return symbol;
+    }
+
+    function read_symbol(symbol: SymbolId, source: SourceRange) -> Result<SymbolId> mutates {
+        if is_poisoned(symbol) {
+            error "dependent error";
+        }
+        if is_initialized(symbol) == false {
+            error "variable read before initialization" at source;
+        }
+        return symbol;
+    }
+}
+
+
+
+node program
+    : EOF #EmptyProgram
+      analysis {
+        let root = root_scope(self.source);
+        let last = no_op();
+        result = finish_program(root, last);
+      }
+    | items=item+ EOF #NonemptyProgram
+      analysis {
+        let root = root_scope(self.source);
+        let last = no_op();
+        foreach entry in items {
+            analyze entry with scope: root -> last default record_error_operation(root, entry.source, failure_message) continue_on_error;
+        }
+        result = finish_program(root, last);
+      }
+    ;
+
+inline item
+    : value=declaration
+      analysis {
+        analyze value with scope: scope -> operation;
+        result = operation;
+      }
+    | value=assignment
+      analysis {
+        analyze value with scope: scope -> operation;
+        result = operation;
+      }
+    | value=block
+      analysis {
+        analyze value with scope: scope -> operation;
+        result = operation;
+      }
+    ;
+
+node block
+    : LBRACE RBRACE #EmptyBlock
+      analysis {
+        let local = child_scope(scope, self.source);
+        let last = no_op();
+        result = finish_block(local, last);
+      }
+    | LBRACE items=item+ RBRACE #NonemptyBlock
+      analysis {
+        let local = child_scope(scope, self.source);
+        let last = no_op();
+        foreach entry in items {
+            analyze entry with scope: local -> last default record_error_operation(local, entry.source, failure_message) continue_on_error;
+        }
+        result = finish_block(local, last);
+      }
+    ;
+
+node declaration
+    : INT name=ID SEMI #UninitializedDeclaration
+      analysis {
+        let symbol = declare_variable(scope, name.text, name.source);
+        result = record_uninitialized_declaration(scope, symbol, self.source);
+      }
+    | INT name=ID initializer=initializer SEMI #InitializedDeclaration
+      analysis {
+        let symbol = declare_variable(scope, name.text, name.source);
+        begin_initializer(symbol);
+        analyze initializer with scope: scope -> value;
+        mark_initialized(symbol);
+        result = record_initialized_declaration(scope, symbol, value, self.source);
+      }
+    ;
+
+inline initializer
+    : ASSIGN value=expression
+      analysis {
+        analyze value with scope: scope -> evaluated;
+        result = evaluated;
+      }
+    ;
+
+node assignment
+    : target=ID ASSIGN value=expression SEMI
+      analysis {
+        let found = lookup_lexical(scope, target.text);
+        require found != none else error "identifier not declared" at target.source;
+        let symbol = option_symbol(found);
+        analyze value with scope: scope -> evaluated;
+        mark_initialized(symbol);
+        result = record_assignment(scope, symbol, evaluated, self.source);
+      }
+    ;
+
+node expression
+    : first=term #SingleTerm
+      analysis {
+        analyze first with scope: scope -> evaluated;
+        result = evaluated;
+      }
+    | first=term rest=additiveOperation+ #AdditiveChain
+      analysis {
+        analyze first with scope: scope -> accumulated;
+        foreach entry in rest {
+            analyze entry with scope: scope, left: accumulated -> accumulated;
+        }
+        result = accumulated;
+      }
+    ;
+
+inline additiveOperation
+    : operator=addop operand=term
+      analysis {
+        analyze operator -> kind;
+        analyze operand with scope: scope -> right;
+        result = make_binary(left, kind, right, self.source);
+      }
+    ;
+
+inline addop
+    : value=PLUS
+      analysis {
+        result = operator_kind(value.text);
+      }
+    | value=MINUS
+      analysis {
+        result = operator_kind(value.text);
+      }
+    ;
+
+node term
+    : first=factor #SingleFactor
+      analysis {
+        analyze first with scope: scope -> evaluated;
+        result = evaluated;
+      }
+    | first=factor rest=multiplicativeOperation+ #MultiplicativeChain
+      analysis {
+        analyze first with scope: scope -> accumulated;
+        foreach entry in rest {
+            analyze entry with scope: scope, left: accumulated -> accumulated;
+        }
+        result = accumulated;
+      }
+    ;
+
+inline multiplicativeOperation
+    : operator=mulop operand=factor
+      analysis {
+        analyze operator -> kind;
+        analyze operand with scope: scope -> right;
+        result = make_binary(left, kind, right, self.source);
+      }
+    ;
+
+inline mulop
+    : value=STAR
+      analysis {
+        result = operator_kind(value.text);
+      }
+    | value=SLASH
+      analysis {
+        result = operator_kind(value.text);
+      }
+    | value=PERCENT
+      analysis {
+        result = operator_kind(value.text);
+      }
+    ;
+
+node factor
+    : value=NUMBER #IntegerLiteral
+      analysis {
+        let number = parse_integer(value.text);
+        result = make_constant(number, value.source);
+      }
+    | name=ID #VariableReference
+      analysis {
+        let found = lookup_lexical(scope, name.text);
+        require found != none else error "identifier not declared" at name.source;
+        let symbol = option_symbol(found);
+        let checked = read_symbol(symbol, name.source);
+        result = make_load(checked, name.source);
+      }
+    | LPAREN value=expression RPAREN #ParenthesizedExpression
+      analysis {
+        analyze value with scope: scope -> evaluated;
+        result = evaluated;
+      }
+    | operator=addop operand=factor #UnaryExpression
+      analysis {
+        analyze operator -> kind;
+        analyze operand with scope: scope -> evaluated;
+        result = make_unary(kind, evaluated, self.source);
+      }
+    ;
+
+INT     : 'int';
+ID      : [a-zA-Z];
+NUMBER  : [0-9]+;
+ASSIGN  : '=';
+PLUS    : '+';
+MINUS   : '-';
+STAR    : '*';
+SLASH   : '/';
+PERCENT : '%';
+SEMI    : ';';
+LBRACE  : '{';
+RBRACE  : '}';
+LPAREN  : '(';
+RPAREN  : ')';
+
+WS
+    : [ \t\r\n]+ -> channel(HIDDEN)
+    ;

@@ -1,0 +1,478 @@
+grammar ToyCMeta;
+
+options {
+    parser = LALR;
+    lookahead = 2;
+    ast = explicit;
+}
+
+channels {
+    HIDDEN
+}
+
+conflicts {
+    prefer shift ELSE over reduce ifStatement#IfStatement;
+}
+
+node program
+    : declarations=declaration+ EOF
+    ;
+
+inline declaration
+    : value=varDeclaration
+    | value=funDeclaration
+    | value=funDefinition
+    | value=methodOutOf
+    | value=operatorMethodOutOf
+    | value=constructorOutOf
+    | value=destructorOutOf
+    | value=structDeclaration
+    | value=templateStructDeclaration
+    | value=templateFunDefinition
+    | value=metaStructDeclaration
+    | value=comptimeMetaDeclaration
+    ;
+
+node declarator
+    : name=ID
+    ;
+
+node varDeclaration
+    : type=typeSpecifier name=declarator SEMI                                  #ScalarVariable
+    | type=typeSpecifier name=declarator LeftBrack length=NUMBER RightBrack SEMI #ArrayVariable
+    ;
+
+node funDeclarator
+    : type=returnType name=ID LPAREN parameters=formalParameters? RPAREN
+    ;
+
+node funDeclaration
+    : declarator=funDeclarator SEMI
+    ;
+node funDefinition
+    : declarator=funDeclarator body=compoundStatement
+    ;
+
+node templateFunDefinition
+    : TEMPLATE LT parameter=ID GT definition=funDefinition
+    ;
+
+node operatorDeclarator
+    : type=returnType OPERATOR symbol=operator LPAREN parameters=formalParameters? RPAREN
+    ;
+
+node operatorDeclaration
+    : declarator=operatorDeclarator SEMI
+    ;
+node operatorDefinition
+    : declarator=operatorDeclarator body=compoundStatement
+    ;
+
+
+node constructorDeclarator
+    : name=ID LPAREN parameters=formalParameters? RPAREN
+    ;
+
+node constructorDeclaration
+    : declarator=constructorDeclarator SEMI
+    ;
+node constructorDefinition
+    : declarator=constructorDeclarator body=compoundStatement
+    ;
+
+node destructorDeclarator
+    : TILDE name=ID LPAREN RPAREN
+    ;
+
+node destructorDeclaration
+    : declarator=destructorDeclarator SEMI
+    ;
+
+node destructorDefinition
+    : declarator=destructorDeclarator body=compoundStatement
+    ;
+
+node methodOutOf
+    : type=returnType class=ID DoubleColon name=ID LPAREN parameters=formalParameters? RPAREN body=compoundStatement
+    ;
+
+node operatorMethodOutOf
+    : type=returnType class=ID DoubleColon OPERATOR symbol=operator LPAREN parameters=formalParameters? RPAREN body=compoundStatement
+    ;
+
+inline operator
+    : value=ASSIGN
+    | value=PLUS
+    | value=MINUS
+    | value=STAR
+    | value=DIV
+    ;
+
+node constructorOutOf
+    : class=ID DoubleColon name=ID LPAREN parameters=formalParameters? RPAREN body=compoundStatement
+    ;
+
+node destructorOutOf
+    : class=ID DoubleColon TILDE name=ID LPAREN RPAREN body=compoundStatement
+    ;
+
+node structDeclaration
+    : STRUCT name=ID base=inheritance? transformation=metaApplication? LBRACE members=memberDeclaration* sections=accessSection* RBRACE SEMI
+    ;
+
+inline metaApplication
+    : WITH value=ID
+    ;
+
+node comptimeMetaDeclaration
+    : COMPTIME META name=ID LBRACE requirements=metaRequirement* EMIT LBRACE method=funDefinition RBRACE RBRACE
+    ;
+
+node metaRequirement
+    : REQUIRE collection=ID DOT predicate=ID LPAREN RPAREN SEMI
+    ;
+
+node comptimeForStatement
+    : COMPTIME FOR LPAREN variable=ID IN owner=ID DOT collection=ID RPAREN body=compoundStatement
+    ;
+
+node templateStructDeclaration
+    : TEMPLATE LT parameter=ID GT definition=structDeclaration
+    ;
+
+node metaStructDeclaration
+    : META STRUCT name=ID FOR target=typeSpecifier LBRACE members=memberDeclaration* sections=accessSection* RBRACE SEMI
+    ;
+
+
+inline inheritance
+    : COLON value=typeSpecifier
+    ;
+
+node accessSection
+    : access=accessSpecifier COLON members=memberDeclaration*
+    ;
+
+inline accessSpecifier
+    : value=PRIVATE
+    | value=PROTECTED
+    | value=PUBLIC
+    ;
+
+node memberDeclaration
+    : value=varDeclaration                       #FieldMember
+    | value=method                              #MethodMember
+    | VIRTUAL value=method                      #VirtualMember
+    ;
+
+inline method
+    : value=funDeclaration
+    | value=funDefinition
+    | value=templateFunDefinition
+    | value=constructorDeclaration
+    | value=constructorDefinition
+    | value=destructorDeclaration
+    | value=destructorDefinition
+    | value=operatorDeclaration
+    | value=operatorDefinition
+    ;
+
+inline returnType
+    : value=typeSpecifier
+    ;
+
+node typeSpecifier
+    : name=typeName argument=typeArgument? pointers=STAR*
+    ;
+
+inline typeName
+    : value=INT
+    | value=FLOAT
+    | value=BOOL
+    | value=CHAR
+    | value=VOID
+    | value=ID
+    ;
+
+inline typeArgument
+    : LT value=typeSpecifier GT
+    ;
+
+node formalParameters
+    : first=formalParameter rest=formalParameterTail*
+    ;
+
+inline formalParameterTail
+    : COMMA value=formalParameter
+    ;
+
+node formalParameter
+    : type=typeSpecifier name=declarator
+    ;
+
+node compoundStatement
+    : LBRACE items=compoundItem* RBRACE
+    ;
+
+inline compoundItem
+    : value=localDeclaration
+    | value=statement
+    ;
+
+inline localDeclaration
+    : value=varDeclaration
+    | value=varInitialization
+    | value=varConstruction
+    ;
+
+node varInitialization
+    : type=typeSpecifier name=declarator ASSIGN value=expression SEMI
+    ;
+
+node varConstruction
+    : type=typeSpecifier name=declarator LPAREN arguments=argList? RPAREN SEMI
+    ;
+
+inline relop
+    : value=LE
+    | value=LT
+    | value=GT
+    | value=GE
+    | value=EQ
+    | value=NEQ
+    ;
+
+node expression
+    : left=additiveExpression comparison=comparisonTail?
+    ;
+
+inline comparisonTail
+    : operator=relop right=additiveExpression
+    ;
+
+inline addop
+    : value=PLUS
+    | value=MINUS
+    ;
+
+node additiveExpression
+    : first=term rest=additiveOperation*
+    ;
+
+inline additiveOperation
+    : operator=addop operand=term
+    ;
+
+inline mulop
+    : value=STAR
+    | value=DIV
+    ;
+
+node term
+    : first=factor rest=multiplicativeOperation*
+    ;
+
+inline multiplicativeOperation
+    : operator=mulop operand=factor
+    ;
+
+node factor
+    : LPAREN value=expression RPAREN         #ParenthesizedFactor
+    | value=varUsage                       #VariableFactor
+    | value=call                           #CallFactor
+    | value=NUMBER                         #NumberFactor
+    | value=FLOAT_LITERAL                  #FloatFactor
+    | value=STRING_LITERAL                 #StringFactor
+    | value=CHAR_LITERAL                   #CharFactor
+    | value=bool_literal                   #BoolFactor
+    | value=NULL                           #NullFactor
+    | MINUS operand=factor                 #NegatedFactor
+    | AMP operand=factor                   #AddressFactor
+    | STAR operand=factor                  #DereferenceFactor
+    | value=methodReference                #MethodReferenceFactor
+    ;
+
+node methodReference
+    : owner=ID DoubleColon name=ID
+    ;
+
+inline bool_literal
+    : value=FALSE
+    | value=TRUE
+    ;
+
+node varUsage
+    : name=ID accesses=variableAccess*
+    ;
+
+node variableAccess
+    : DOT name=ID                                   #FieldAccess
+    | ARROW name=ID                                 #PointerFieldAccess
+    | LeftBrack index=expression RightBrack           #IndexAccess
+    | DOT LeftBrack name=ID RightBrack               #ReflectedFieldAccess
+    | ARROW LeftBrack name=ID RightBrack             #ReflectedPointerFieldAccess
+    ;
+
+node call
+    : target=varUsage LPAREN arguments=argList? RPAREN
+    ;
+
+node argList
+    : first=argument rest=argumentTail*
+    ;
+
+inline argumentTail
+    : COMMA value=argument
+    ;
+
+inline argument
+    : value=expression
+    ;
+
+inline statement
+    : value=whileStatement
+    | value=forStatement
+    | value=ifStatement
+    | value=assignStatement SEMI
+    | value=call SEMI
+    | value=compoundStatement
+    | value=returnStatement
+    | value=comptimeForStatement
+    ;
+
+node whileStatement
+    : WHILE LPAREN condition=expression RPAREN body=statement
+    ;
+
+node forStatement
+    // The shared semantic pass requires an int control variable updated here.
+    : FOR LPAREN initialization=varInitialization condition=expression SEMI update=assignStatement RPAREN body=statement
+    ;
+
+node ifStatement
+    : IF LPAREN condition=expression RPAREN thenBranch=statement                            #IfStatement
+    | IF LPAREN condition=expression RPAREN thenBranch=statement ELSE elseBranch=statement #IfElseStatement
+    ;
+
+inline assignop
+    : value=ASSIGN
+    | value=ASSIGN_PLUS
+    | value=ASSIGN_MINUS
+    | value=ASSIGN_MUL
+    | value=ASSIGN_DIV
+    ;
+
+node assignStatement
+    : target=varUsage operator=assignop value=expression         #ValueAssignment
+    | target=varUsage operator=INC                               #PostIncrement
+    | target=varUsage operator=DEC                               #PostDecrement
+    ;
+
+node returnStatement
+    : RETURN value=expression? SEMI
+    ;
+
+DOT        : '.';
+ARROW      : '->';
+AMP        : '&';
+PLUS       : '+';
+MINUS      : '-';
+STAR        : '*';
+DIV        : '/';
+COMMA      : ',';
+LPAREN     : '(';
+RPAREN     : ')';
+LBRACE     : '{';
+RBRACE     : '}';
+LeftBrack  : '[';
+RightBrack : ']';
+SEMI       : ';';
+COLON      : ':';
+LT         : '<';
+LE         : '<=';
+GT         : '>';
+GE         : '>=';
+ASSIGN     : '=';
+ASSIGN_PLUS  : '+=';
+ASSIGN_MINUS : '-=';
+ASSIGN_MUL   : '*=';
+ASSIGN_DIV   : '/=';
+INC        : '++';
+DEC        : '--';
+EQ         : '==';
+NEQ        : '!=';
+INT        : 'int';
+FLOAT      : 'float';
+BOOL       : 'bool';
+CHAR       : 'char';
+VOID       : 'void';
+IF         : 'if';
+ELSE       : 'else';
+WHILE      : 'while';
+FOR        : 'for';
+RETURN     : 'return';
+FALSE      : 'false';
+TRUE       : 'true';
+NULL       : 'null';
+STRUCT     : 'struct';
+PRIVATE    : 'private';
+PROTECTED  : 'protected';
+PUBLIC     : 'public';
+VIRTUAL    : 'virtual';
+DoubleColon: '::';
+TILDE      : '~';
+OPERATOR   : 'operator';
+TEMPLATE   : 'template';
+META       : 'meta';
+COMPTIME   : 'comptime';
+WITH       : 'with';
+EMIT       : 'emit';
+REQUIRE    : 'require';
+IN         : 'in';
+
+BLOCK_COMMENT
+    : '/*' .*? '*/' -> channel(HIDDEN)
+    ;
+
+LINE_COMMENT
+    : '//' ~[\r\n]* -> channel(HIDDEN)
+    ;
+
+ID
+    : [a-zA-Z_] [a-zA-Z_0-9]*
+    ;
+
+NUMBER
+    : '0'
+    | [1-9] [0-9]*
+    ;
+
+FLOAT_LITERAL
+    : NUMBER DOT [0-9]*
+    | NUMBER ('E'|'e') NUMBER
+    | NUMBER DOT [0-9]* ('E'|'e') NUMBER
+    ;
+
+STRING_LITERAL
+    : '"' SChar* '"'
+    ;
+
+CHAR_LITERAL
+    : '\'' CChar '\''
+    ;
+
+fragment CChar
+    : ~['\\\r\n] | EscapeSequence
+    ;
+
+fragment SChar
+    : ~["\\\r\n] | EscapeSequence
+    ;
+
+fragment EscapeSequence
+    : '\\' [btnfr"'\\]
+    ;
+
+WS
+    : [ \t\r\n]+ -> channel(HIDDEN)
+    ;

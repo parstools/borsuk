@@ -1,0 +1,14 @@
+grammar Nested;
+options { parser = LALR; lookahead = 2; }
+lexerClasses { SHIFT = true; WORDS = true; }
+node start : READ typeName SHR WRITE END;
+node typeName -> disable(SHIFT), disable(WORDS) : IDENT arguments?;
+inline arguments : LT typeName GT;
+READ : 'read' -> require(WORDS);
+WRITE : 'write' -> require(WORDS);
+IDENT : [a-z]+;
+SHR : '>>' -> require(SHIFT);
+GT : '>';
+LT : '<';
+END : ';';
+WS : [ \t\r\n]+ -> skip;

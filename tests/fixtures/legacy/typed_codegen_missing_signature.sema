@@ -1,0 +1,19 @@
+sema TypedCodegen for "typed_codegen.ag";
+
+semantic_model {
+    rust_context CalcContext;
+    analyzer program(seed: Int, offset: Int) -> Int;
+}
+
+node program
+    : operand=value EOF #Value analysis {
+        analyze operand with offset: offset, seed: seed -> computed;
+        result = computed;
+      }
+    ;
+
+node value
+    : text=NUMBER #Literal analysis {
+        result = seed;
+      }
+    ;

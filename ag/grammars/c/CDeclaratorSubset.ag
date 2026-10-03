@@ -1,0 +1,163 @@
+/*
+ * Mechanical conversion of a legacy ANTLR4 grammar to restricted Agas.
+ * Source: agas-cpp/grammars/c/CDeclaratorSubset.g4
+ * Source SHA-256: 222a5d3876fade24dc410f1f2f416be713ee889c9407da9d3e5b01651b9132e5
+ * Anonymous parser groups were extracted into named inline rules.
+ */
+
+grammar CDeclaratorSubset;
+
+options {
+    parser = LR;
+    lookahead = 1;
+    ast = concrete;
+    legacy = true;
+}
+
+channels {
+    HIDDEN
+}
+
+node compilationUnit
+    : externalDeclaration* EOF
+    ;
+
+node externalDeclaration
+    : functionDefinition
+    | declaration
+    ;
+
+node declaration
+    : initDeclaration
+    | typeDefinition
+    | ';'
+    ;
+
+node functionDefinition
+    : type declarator parametersKandRList? compoundStatement
+    ;
+
+node initDeclaration
+    : type initDeclaratorList ';'
+    ;
+
+node type
+    : 'int'
+    | 'char'
+    | 'double'
+    | 'void'
+    | 'struct' Identifier
+    | Identifier
+    ;
+
+node initDeclaratorList
+    : initDeclarator initDeclaratorListGroup1*
+    ;
+
+inline initDeclaratorListGroup1
+    : ',' initDeclarator
+    ;
+
+node initDeclarator
+    : declarator initDeclaratorGroup1?
+    ;
+
+inline initDeclaratorGroup1
+    : '=' initializer
+    ;
+
+node declarator
+    : pointer? directDeclarator
+    ;
+
+node pointer
+    : '*'+
+    ;
+
+node directDeclarator
+    : Identifier
+    | '(' declarator ')'
+    | directDeclarator functionParameters
+    | directDeclarator array
+    ;
+
+node functionParameters
+    : '(' parameterOrTypeList? ')'
+    ;
+
+node parameterOrTypeList
+    : parameterOrType parameterOrTypeListGroup1*
+    ;
+
+inline parameterOrTypeListGroup1
+    : ',' parameterOrType
+    ;
+
+node parameterOrType
+    : type declarator?
+    ;
+
+node parametersKandRList
+    : parametersKandR+
+    ;
+
+node parametersKandR
+    : type initDeclaratorList ';'
+    ;
+
+node compoundStatement
+    : '{' '}'
+    ;
+
+node array
+    : '[' atom? ']'
+    ;
+
+node initializer
+    : atom
+    ;
+
+node atom
+    : Identifier
+    | integerConstant
+    ;
+
+node integerConstant
+    : DecimalConstant
+    ;
+
+node typeDefinition
+    : 'typedef' type initDeclaratorList ';'
+    ;
+
+Identifier
+    : Nondigit ( Nondigit | Digit ) *
+    ;
+
+fragment Digit
+    : [0-9]
+    ;
+
+fragment NonzeroDigit
+    : [1-9]
+    ;
+
+fragment Nondigit
+    : [a-zA-Z_]
+    ;
+
+DecimalConstant
+    : NonzeroDigit Digit * | '0'
+    ;
+
+Whitespace
+    : [ \t] + -> channel ( HIDDEN )
+    ;
+
+Newline
+    : ( '\r' '\n' ? | '\n' ) -> channel ( HIDDEN )
+    ;
+
+BlockComment
+    : '/*' . * ? '*/' -> channel ( HIDDEN )
+    ;

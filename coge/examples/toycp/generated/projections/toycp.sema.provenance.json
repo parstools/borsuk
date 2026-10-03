@@ -1,0 +1,60 @@
+{
+  "format": 1,
+  "document_format": 1,
+  "projection": "sema",
+  "specification": "ToyCPTyped",
+  "grammar": "ToyCP",
+  "source": "agsem/toycp_typed.coge",
+  "source_sha256": "46b11a3ca8363dc33b27f3599e730ac97fd680c379dc952a44610336b506b931",
+  "output_sha256": "a291592b17a741bfdec725c0ca3968d6a26cdaaeb24225c7db61ef97f41e0350",
+  "tool_sha256": "ebe3f129dcde18c766c400de8d3adc150f17ea92e542f09d69a854765dbbe0a4",
+  "contracts": [
+    {
+      "id": "toycp-runtime",
+      "version": "1",
+      "sha256": "535777e069364c90223203e32dcb516270a427317073bbfd5ad65eee1b3201e8"
+    }
+  ],
+  "binding_schema": {
+    "id": "standard_semantic_v1",
+    "version": "1",
+    "sha256": "c3d719549c082acd9179e51199de908f1553f7f522121590affe4ad4e6ce8472"
+  },
+  "origins": [
+    {
+      "output_begin": 0,
+      "output_end": 4,
+      "input_begin": 0,
+      "input_end": 4,
+      "replacement": true
+    },
+    {
+      "output_begin": 4,
+      "output_end": 12346,
+      "input_begin": 4,
+      "input_end": 12346,
+      "replacement": false
+    },
+    {
+      "output_begin": 12346,
+      "output_end": 12348,
+      "input_begin": 18476,
+      "input_end": 18478,
+      "replacement": false
+    },
+    {
+      "output_begin": 12348,
+      "output_end": 12350,
+      "input_begin": 19079,
+      "input_end": 19081,
+      "replacement": false
+    },
+    {
+      "output_begin": 12350,
+      "output_end": 43493,
+      "input_begin": 19128,
+      "input_end": 50271,
+      "replacement": false
+    }
+  ]
+}

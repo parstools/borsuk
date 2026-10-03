@@ -1,0 +1,3085 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "name": "document",
+      "treeModifier": "node",
+      "resultTypes": [
+        {
+          "kind": "node",
+          "name": "document",
+          "arguments": []
+        }
+      ],
+      "publicFields": [
+        {
+          "name": "header",
+          "acceptedTypes": [
+            {
+              "kind": "rule",
+              "name": "grammarDeclaration",
+              "arguments": []
+            }
+          ],
+          "absentInSomeAlternatives": false
+        },
+        {
+          "name": "items",
+          "acceptedTypes": [
+            {
+              "kind": "list",
+              "name": "",
+              "arguments": [
+                {
+                  "kind": "rule",
+                  "name": "topLevelItem",
+                  "arguments": []
+                }
+              ]
+            }
+          ],
+          "absentInSomeAlternatives": false
+        }
+      ],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "node",
+            "name": "document",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "header",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "grammarDeclaration",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "items",
+              "acceptedTypes": [
+                {
+                  "kind": "list",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "rule",
+                      "name": "topLevelItem",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "grammarDeclaration",
+      "treeModifier": "node",
+      "resultTypes": [
+        {
+          "kind": "node",
+          "name": "grammarDeclaration",
+          "arguments": []
+        }
+      ],
+      "publicFields": [
+        {
+          "name": "name",
+          "acceptedTypes": [
+            {
+              "kind": "token",
+              "name": "TOKEN_REF",
+              "arguments": []
+            }
+          ],
+          "absentInSomeAlternatives": false
+        }
+      ],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "node",
+            "name": "grammarDeclaration",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "name",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "TOKEN_REF",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "topLevelItem",
+      "treeModifier": "inline",
+      "resultTypes": [
+        {
+          "kind": "rule",
+          "name": "optionsBlock",
+          "arguments": []
+        },
+        {
+          "kind": "rule",
+          "name": "channelsBlock",
+          "arguments": []
+        },
+        {
+          "kind": "rule",
+          "name": "lexerClassesBlock",
+          "arguments": []
+        },
+        {
+          "kind": "rule",
+          "name": "conflictsBlock",
+          "arguments": []
+        },
+        {
+          "kind": "rule",
+          "name": "parserRuleSpec",
+          "arguments": []
+        },
+        {
+          "kind": "rule",
+          "name": "lexerRuleSpec",
+          "arguments": []
+        }
+      ],
+      "publicFields": [],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "rule",
+            "name": "optionsBlock",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "optionsBlock",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 1,
+          "variantName": null,
+          "resultType": {
+            "kind": "rule",
+            "name": "channelsBlock",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "channelsBlock",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 2,
+          "variantName": null,
+          "resultType": {
+            "kind": "rule",
+            "name": "lexerClassesBlock",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "lexerClassesBlock",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 3,
+          "variantName": null,
+          "resultType": {
+            "kind": "rule",
+            "name": "conflictsBlock",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "conflictsBlock",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 4,
+          "variantName": null,
+          "resultType": {
+            "kind": "rule",
+            "name": "parserRuleSpec",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "parserRuleSpec",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 5,
+          "variantName": null,
+          "resultType": {
+            "kind": "rule",
+            "name": "lexerRuleSpec",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "lexerRuleSpec",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "optionsBlock",
+      "treeModifier": "node",
+      "resultTypes": [
+        {
+          "kind": "node",
+          "name": "optionsBlock",
+          "arguments": []
+        }
+      ],
+      "publicFields": [
+        {
+          "name": "entries",
+          "acceptedTypes": [
+            {
+              "kind": "list",
+              "name": "",
+              "arguments": [
+                {
+                  "kind": "rule",
+                  "name": "optionEntry",
+                  "arguments": []
+                }
+              ]
+            }
+          ],
+          "absentInSomeAlternatives": false
+        }
+      ],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "node",
+            "name": "optionsBlock",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "entries",
+              "acceptedTypes": [
+                {
+                  "kind": "list",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "rule",
+                      "name": "optionEntry",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "optionEntry",
+      "treeModifier": "node",
+      "resultTypes": [
+        {
+          "kind": "node",
+          "name": "optionEntry",
+          "arguments": []
+        }
+      ],
+      "publicFields": [
+        {
+          "name": "name",
+          "acceptedTypes": [
+            {
+              "kind": "rule",
+              "name": "identifier",
+              "arguments": []
+            }
+          ],
+          "absentInSomeAlternatives": false
+        },
+        {
+          "name": "value",
+          "acceptedTypes": [
+            {
+              "kind": "rule",
+              "name": "optionValue",
+              "arguments": []
+            }
+          ],
+          "absentInSomeAlternatives": false
+        }
+      ],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "node",
+            "name": "optionEntry",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "name",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "identifier",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "optionValue",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "optionValue",
+      "treeModifier": "inline",
+      "resultTypes": [
+        {
+          "kind": "rule",
+          "name": "identifier",
+          "arguments": []
+        },
+        {
+          "kind": "token",
+          "name": "INTEGER",
+          "arguments": []
+        },
+        {
+          "kind": "token",
+          "name": "STRING_LITERAL",
+          "arguments": []
+        },
+        {
+          "kind": "token",
+          "name": "TRUE",
+          "arguments": []
+        },
+        {
+          "kind": "token",
+          "name": "FALSE",
+          "arguments": []
+        }
+      ],
+      "publicFields": [],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "rule",
+            "name": "identifier",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "identifier",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 1,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "INTEGER",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "INTEGER",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 2,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "STRING_LITERAL",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "STRING_LITERAL",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 3,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "TRUE",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "TRUE",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 4,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "FALSE",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "FALSE",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lexerClassesBlock",
+      "treeModifier": "node",
+      "resultTypes": [
+        {
+          "kind": "node",
+          "name": "lexerClassesBlock",
+          "arguments": []
+        }
+      ],
+      "publicFields": [
+        {
+          "name": "entries",
+          "acceptedTypes": [
+            {
+              "kind": "list",
+              "name": "",
+              "arguments": [
+                {
+                  "kind": "rule",
+                  "name": "optionEntry",
+                  "arguments": []
+                }
+              ]
+            }
+          ],
+          "absentInSomeAlternatives": false
+        }
+      ],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "node",
+            "name": "lexerClassesBlock",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "entries",
+              "acceptedTypes": [
+                {
+                  "kind": "list",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "rule",
+                      "name": "optionEntry",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "channelsBlock",
+      "treeModifier": "node",
+      "resultTypes": [
+        {
+          "kind": "node",
+          "name": "channelsBlock",
+          "arguments": []
+        }
+      ],
+      "publicFields": [
+        {
+          "name": "names",
+          "acceptedTypes": [
+            {
+              "kind": "optional",
+              "name": "",
+              "arguments": [
+                {
+                  "kind": "rule",
+                  "name": "channelList",
+                  "arguments": []
+                }
+              ]
+            }
+          ],
+          "absentInSomeAlternatives": false
+        }
+      ],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "node",
+            "name": "channelsBlock",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "names",
+              "acceptedTypes": [
+                {
+                  "kind": "optional",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "rule",
+                      "name": "channelList",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "channelList",
+      "treeModifier": "inline",
+      "resultTypes": [
+        {
+          "kind": "record",
+          "name": "channelList/alternative:0",
+          "arguments": []
+        }
+      ],
+      "publicFields": [],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "record",
+            "name": "channelList/alternative:0",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "first",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "TOKEN_REF",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "rest",
+              "acceptedTypes": [
+                {
+                  "kind": "list",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "rule",
+                      "name": "channelTail",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "trailing",
+              "acceptedTypes": [
+                {
+                  "kind": "optional",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "token",
+                      "name": "COMMA",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "channelTail",
+      "treeModifier": "inline",
+      "resultTypes": [
+        {
+          "kind": "token",
+          "name": "TOKEN_REF",
+          "arguments": []
+        }
+      ],
+      "publicFields": [],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "TOKEN_REF",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "name",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "TOKEN_REF",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "conflictsBlock",
+      "treeModifier": "node",
+      "resultTypes": [
+        {
+          "kind": "node",
+          "name": "conflictsBlock",
+          "arguments": []
+        }
+      ],
+      "publicFields": [
+        {
+          "name": "entries",
+          "acceptedTypes": [
+            {
+              "kind": "list",
+              "name": "",
+              "arguments": [
+                {
+                  "kind": "rule",
+                  "name": "conflictEntry",
+                  "arguments": []
+                }
+              ]
+            }
+          ],
+          "absentInSomeAlternatives": false
+        }
+      ],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "node",
+            "name": "conflictsBlock",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "entries",
+              "acceptedTypes": [
+                {
+                  "kind": "list",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "rule",
+                      "name": "conflictEntry",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "conflictEntry",
+      "treeModifier": "node",
+      "resultTypes": [
+        {
+          "kind": "node",
+          "name": "conflictEntry#PreferShift",
+          "arguments": []
+        },
+        {
+          "kind": "node",
+          "name": "conflictEntry#PreferReduce",
+          "arguments": []
+        }
+      ],
+      "publicFields": [],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": "PreferShift",
+          "resultType": {
+            "kind": "node",
+            "name": "conflictEntry#PreferShift",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "terminal",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "TOKEN_REF",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "rule",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "RULE_REF",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "label",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "TOKEN_REF",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 1,
+          "variantName": "PreferReduce",
+          "resultType": {
+            "kind": "node",
+            "name": "conflictEntry#PreferReduce",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "rule",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "RULE_REF",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "label",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "TOKEN_REF",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "terminal",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "TOKEN_REF",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "parserRuleSpec",
+      "treeModifier": "node",
+      "resultTypes": [
+        {
+          "kind": "node",
+          "name": "parserRuleSpec",
+          "arguments": []
+        }
+      ],
+      "publicFields": [
+        {
+          "name": "kind",
+          "acceptedTypes": [
+            {
+              "kind": "rule",
+              "name": "treeModifier",
+              "arguments": []
+            }
+          ],
+          "absentInSomeAlternatives": false
+        },
+        {
+          "name": "name",
+          "acceptedTypes": [
+            {
+              "kind": "token",
+              "name": "RULE_REF",
+              "arguments": []
+            }
+          ],
+          "absentInSomeAlternatives": false
+        },
+        {
+          "name": "context",
+          "acceptedTypes": [
+            {
+              "kind": "optional",
+              "name": "",
+              "arguments": [
+                {
+                  "kind": "rule",
+                  "name": "lexerCommands",
+                  "arguments": []
+                }
+              ]
+            }
+          ],
+          "absentInSomeAlternatives": false
+        },
+        {
+          "name": "first",
+          "acceptedTypes": [
+            {
+              "kind": "rule",
+              "name": "parserAlternative",
+              "arguments": []
+            }
+          ],
+          "absentInSomeAlternatives": false
+        },
+        {
+          "name": "rest",
+          "acceptedTypes": [
+            {
+              "kind": "list",
+              "name": "",
+              "arguments": [
+                {
+                  "kind": "rule",
+                  "name": "parserAlternativeTail",
+                  "arguments": []
+                }
+              ]
+            }
+          ],
+          "absentInSomeAlternatives": false
+        }
+      ],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "node",
+            "name": "parserRuleSpec",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "kind",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "treeModifier",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "name",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "RULE_REF",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "context",
+              "acceptedTypes": [
+                {
+                  "kind": "optional",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "rule",
+                      "name": "lexerCommands",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "first",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "parserAlternative",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "rest",
+              "acceptedTypes": [
+                {
+                  "kind": "list",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "rule",
+                      "name": "parserAlternativeTail",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "treeModifier",
+      "treeModifier": "inline",
+      "resultTypes": [
+        {
+          "kind": "token",
+          "name": "NODE",
+          "arguments": []
+        },
+        {
+          "kind": "token",
+          "name": "INLINE",
+          "arguments": []
+        }
+      ],
+      "publicFields": [],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "NODE",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "NODE",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 1,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "INLINE",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "INLINE",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "parserAlternativeTail",
+      "treeModifier": "inline",
+      "resultTypes": [
+        {
+          "kind": "rule",
+          "name": "parserAlternative",
+          "arguments": []
+        }
+      ],
+      "publicFields": [],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "rule",
+            "name": "parserAlternative",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "parserAlternative",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "parserAlternative",
+      "treeModifier": "node",
+      "resultTypes": [
+        {
+          "kind": "node",
+          "name": "parserAlternative#EmptyAlternative",
+          "arguments": []
+        },
+        {
+          "kind": "node",
+          "name": "parserAlternative#NonemptyAlternative",
+          "arguments": []
+        }
+      ],
+      "publicFields": [],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": "EmptyAlternative",
+          "resultType": {
+            "kind": "node",
+            "name": "parserAlternative#EmptyAlternative",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "label",
+              "acceptedTypes": [
+                {
+                  "kind": "optional",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "rule",
+                      "name": "alternativeLabel",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 1,
+          "variantName": "NonemptyAlternative",
+          "resultType": {
+            "kind": "node",
+            "name": "parserAlternative#NonemptyAlternative",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "elements",
+              "acceptedTypes": [
+                {
+                  "kind": "non-empty-list",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "rule",
+                      "name": "parserElement",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "label",
+              "acceptedTypes": [
+                {
+                  "kind": "optional",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "rule",
+                      "name": "alternativeLabel",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "alternativeLabel",
+      "treeModifier": "node",
+      "resultTypes": [
+        {
+          "kind": "node",
+          "name": "alternativeLabel",
+          "arguments": []
+        }
+      ],
+      "publicFields": [
+        {
+          "name": "name",
+          "acceptedTypes": [
+            {
+              "kind": "token",
+              "name": "TOKEN_REF",
+              "arguments": []
+            }
+          ],
+          "absentInSomeAlternatives": false
+        }
+      ],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "node",
+            "name": "alternativeLabel",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "name",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "TOKEN_REF",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "parserElement",
+      "treeModifier": "node",
+      "resultTypes": [
+        {
+          "kind": "node",
+          "name": "parserElement",
+          "arguments": []
+        },
+        {
+          "kind": "rule",
+          "name": "parserSymbol",
+          "arguments": []
+        }
+      ],
+      "publicFields": [
+        {
+          "name": "field",
+          "acceptedTypes": [
+            {
+              "kind": "optional",
+              "name": "",
+              "arguments": [
+                {
+                  "kind": "rule",
+                  "name": "elementLabel",
+                  "arguments": []
+                }
+              ]
+            }
+          ],
+          "absentInSomeAlternatives": false
+        },
+        {
+          "name": "symbol",
+          "acceptedTypes": [
+            {
+              "kind": "rule",
+              "name": "parserSymbol",
+              "arguments": []
+            }
+          ],
+          "absentInSomeAlternatives": false
+        },
+        {
+          "name": "suffix",
+          "acceptedTypes": [
+            {
+              "kind": "optional",
+              "name": "",
+              "arguments": [
+                {
+                  "kind": "rule",
+                  "name": "parserSuffix",
+                  "arguments": []
+                }
+              ]
+            }
+          ],
+          "absentInSomeAlternatives": false
+        }
+      ],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "choice",
+            "name": "",
+            "arguments": [
+              {
+                "kind": "node",
+                "name": "parserElement",
+                "arguments": []
+              },
+              {
+                "kind": "rule",
+                "name": "parserSymbol",
+                "arguments": []
+              }
+            ]
+          },
+          "fields": [
+            {
+              "name": "field",
+              "acceptedTypes": [
+                {
+                  "kind": "optional",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "rule",
+                      "name": "elementLabel",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "symbol",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "parserSymbol",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "suffix",
+              "acceptedTypes": [
+                {
+                  "kind": "optional",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "rule",
+                      "name": "parserSuffix",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "elementLabel",
+      "treeModifier": "inline",
+      "resultTypes": [
+        {
+          "kind": "token",
+          "name": "RULE_REF",
+          "arguments": []
+        }
+      ],
+      "publicFields": [],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "RULE_REF",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "name",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "RULE_REF",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "parserSymbol",
+      "treeModifier": "inline",
+      "resultTypes": [
+        {
+          "kind": "token",
+          "name": "RULE_REF",
+          "arguments": []
+        },
+        {
+          "kind": "token",
+          "name": "TOKEN_REF",
+          "arguments": []
+        },
+        {
+          "kind": "token",
+          "name": "STRING_LITERAL",
+          "arguments": []
+        },
+        {
+          "kind": "rule",
+          "name": "qualifiedReference",
+          "arguments": []
+        }
+      ],
+      "publicFields": [],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "RULE_REF",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "RULE_REF",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 1,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "TOKEN_REF",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "TOKEN_REF",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 2,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "STRING_LITERAL",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "STRING_LITERAL",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 3,
+          "variantName": null,
+          "resultType": {
+            "kind": "rule",
+            "name": "qualifiedReference",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "qualifiedReference",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "qualifiedReference",
+      "treeModifier": "node",
+      "resultTypes": [
+        {
+          "kind": "node",
+          "name": "qualifiedReference",
+          "arguments": []
+        }
+      ],
+      "publicFields": [
+        {
+          "name": "scope",
+          "acceptedTypes": [
+            {
+              "kind": "token",
+              "name": "TOKEN_REF",
+              "arguments": []
+            }
+          ],
+          "absentInSomeAlternatives": false
+        },
+        {
+          "name": "name",
+          "acceptedTypes": [
+            {
+              "kind": "rule",
+              "name": "identifier",
+              "arguments": []
+            }
+          ],
+          "absentInSomeAlternatives": false
+        }
+      ],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "node",
+            "name": "qualifiedReference",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "scope",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "TOKEN_REF",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "name",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "identifier",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "parserSuffix",
+      "treeModifier": "inline",
+      "resultTypes": [
+        {
+          "kind": "token",
+          "name": "QUESTION",
+          "arguments": []
+        },
+        {
+          "kind": "token",
+          "name": "STAR",
+          "arguments": []
+        },
+        {
+          "kind": "token",
+          "name": "PLUS",
+          "arguments": []
+        }
+      ],
+      "publicFields": [],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "QUESTION",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "QUESTION",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 1,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "STAR",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "STAR",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 2,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "PLUS",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "PLUS",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lexerRuleSpec",
+      "treeModifier": "node",
+      "resultTypes": [
+        {
+          "kind": "node",
+          "name": "lexerRuleSpec",
+          "arguments": []
+        }
+      ],
+      "publicFields": [
+        {
+          "name": "isFragment",
+          "acceptedTypes": [
+            {
+              "kind": "optional",
+              "name": "",
+              "arguments": [
+                {
+                  "kind": "token",
+                  "name": "FRAGMENT",
+                  "arguments": []
+                }
+              ]
+            }
+          ],
+          "absentInSomeAlternatives": false
+        },
+        {
+          "name": "name",
+          "acceptedTypes": [
+            {
+              "kind": "token",
+              "name": "TOKEN_REF",
+              "arguments": []
+            }
+          ],
+          "absentInSomeAlternatives": false
+        },
+        {
+          "name": "body",
+          "acceptedTypes": [
+            {
+              "kind": "rule",
+              "name": "lexerAltList",
+              "arguments": []
+            }
+          ],
+          "absentInSomeAlternatives": false
+        },
+        {
+          "name": "commands",
+          "acceptedTypes": [
+            {
+              "kind": "optional",
+              "name": "",
+              "arguments": [
+                {
+                  "kind": "rule",
+                  "name": "lexerCommands",
+                  "arguments": []
+                }
+              ]
+            }
+          ],
+          "absentInSomeAlternatives": false
+        }
+      ],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "node",
+            "name": "lexerRuleSpec",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "isFragment",
+              "acceptedTypes": [
+                {
+                  "kind": "optional",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "token",
+                      "name": "FRAGMENT",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "name",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "TOKEN_REF",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "body",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "lexerAltList",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "commands",
+              "acceptedTypes": [
+                {
+                  "kind": "optional",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "rule",
+                      "name": "lexerCommands",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lexerAltList",
+      "treeModifier": "node",
+      "resultTypes": [
+        {
+          "kind": "node",
+          "name": "lexerAltList",
+          "arguments": []
+        },
+        {
+          "kind": "rule",
+          "name": "lexerAlternative",
+          "arguments": []
+        }
+      ],
+      "publicFields": [
+        {
+          "name": "first",
+          "acceptedTypes": [
+            {
+              "kind": "rule",
+              "name": "lexerAlternative",
+              "arguments": []
+            }
+          ],
+          "absentInSomeAlternatives": false
+        },
+        {
+          "name": "rest",
+          "acceptedTypes": [
+            {
+              "kind": "list",
+              "name": "",
+              "arguments": [
+                {
+                  "kind": "rule",
+                  "name": "lexerAlternativeTail",
+                  "arguments": []
+                }
+              ]
+            }
+          ],
+          "absentInSomeAlternatives": false
+        }
+      ],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "choice",
+            "name": "",
+            "arguments": [
+              {
+                "kind": "node",
+                "name": "lexerAltList",
+                "arguments": []
+              },
+              {
+                "kind": "rule",
+                "name": "lexerAlternative",
+                "arguments": []
+              }
+            ]
+          },
+          "fields": [
+            {
+              "name": "first",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "lexerAlternative",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "rest",
+              "acceptedTypes": [
+                {
+                  "kind": "list",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "rule",
+                      "name": "lexerAlternativeTail",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lexerAlternativeTail",
+      "treeModifier": "inline",
+      "resultTypes": [
+        {
+          "kind": "rule",
+          "name": "lexerAlternative",
+          "arguments": []
+        }
+      ],
+      "publicFields": [],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "rule",
+            "name": "lexerAlternative",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "lexerAlternative",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lexerAlternative",
+      "treeModifier": "node",
+      "resultTypes": [
+        {
+          "kind": "node",
+          "name": "lexerAlternative#EmptyLexerAlternative",
+          "arguments": []
+        },
+        {
+          "kind": "node",
+          "name": "lexerAlternative#NonemptyLexerAlternative",
+          "arguments": []
+        }
+      ],
+      "publicFields": [],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": "EmptyLexerAlternative",
+          "resultType": {
+            "kind": "node",
+            "name": "lexerAlternative#EmptyLexerAlternative",
+            "arguments": []
+          },
+          "fields": []
+        },
+        {
+          "sourceAlternativeIndex": 1,
+          "variantName": "NonemptyLexerAlternative",
+          "resultType": {
+            "kind": "node",
+            "name": "lexerAlternative#NonemptyLexerAlternative",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "elements",
+              "acceptedTypes": [
+                {
+                  "kind": "non-empty-list",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "rule",
+                      "name": "lexerElement",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lexerElement",
+      "treeModifier": "node",
+      "resultTypes": [
+        {
+          "kind": "node",
+          "name": "lexerElement",
+          "arguments": []
+        },
+        {
+          "kind": "rule",
+          "name": "lexerAtom",
+          "arguments": []
+        }
+      ],
+      "publicFields": [
+        {
+          "name": "atom",
+          "acceptedTypes": [
+            {
+              "kind": "rule",
+              "name": "lexerAtom",
+              "arguments": []
+            }
+          ],
+          "absentInSomeAlternatives": false
+        },
+        {
+          "name": "suffix",
+          "acceptedTypes": [
+            {
+              "kind": "optional",
+              "name": "",
+              "arguments": [
+                {
+                  "kind": "rule",
+                  "name": "lexerSuffix",
+                  "arguments": []
+                }
+              ]
+            }
+          ],
+          "absentInSomeAlternatives": false
+        }
+      ],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "choice",
+            "name": "",
+            "arguments": [
+              {
+                "kind": "node",
+                "name": "lexerElement",
+                "arguments": []
+              },
+              {
+                "kind": "rule",
+                "name": "lexerAtom",
+                "arguments": []
+              }
+            ]
+          },
+          "fields": [
+            {
+              "name": "atom",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "lexerAtom",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "suffix",
+              "acceptedTypes": [
+                {
+                  "kind": "optional",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "rule",
+                      "name": "lexerSuffix",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lexerAtom",
+      "treeModifier": "inline",
+      "resultTypes": [
+        {
+          "kind": "token",
+          "name": "TOKEN_REF",
+          "arguments": []
+        },
+        {
+          "kind": "token",
+          "name": "STRING_LITERAL",
+          "arguments": []
+        },
+        {
+          "kind": "token",
+          "name": "LEXER_CHAR_SET",
+          "arguments": []
+        },
+        {
+          "kind": "token",
+          "name": "DOT",
+          "arguments": []
+        },
+        {
+          "kind": "rule",
+          "name": "lexerNegation",
+          "arguments": []
+        },
+        {
+          "kind": "rule",
+          "name": "lexerGroup",
+          "arguments": []
+        }
+      ],
+      "publicFields": [],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "TOKEN_REF",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "TOKEN_REF",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 1,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "STRING_LITERAL",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "STRING_LITERAL",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 2,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "LEXER_CHAR_SET",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "LEXER_CHAR_SET",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 3,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "DOT",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "DOT",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 4,
+          "variantName": null,
+          "resultType": {
+            "kind": "rule",
+            "name": "lexerNegation",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "lexerNegation",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 5,
+          "variantName": null,
+          "resultType": {
+            "kind": "rule",
+            "name": "lexerGroup",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "lexerGroup",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lexerNegation",
+      "treeModifier": "node",
+      "resultTypes": [
+        {
+          "kind": "node",
+          "name": "lexerNegation",
+          "arguments": []
+        }
+      ],
+      "publicFields": [
+        {
+          "name": "value",
+          "acceptedTypes": [
+            {
+              "kind": "rule",
+              "name": "lexerNegatable",
+              "arguments": []
+            }
+          ],
+          "absentInSomeAlternatives": false
+        }
+      ],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "node",
+            "name": "lexerNegation",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "lexerNegatable",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lexerNegatable",
+      "treeModifier": "inline",
+      "resultTypes": [
+        {
+          "kind": "token",
+          "name": "STRING_LITERAL",
+          "arguments": []
+        },
+        {
+          "kind": "token",
+          "name": "LEXER_CHAR_SET",
+          "arguments": []
+        }
+      ],
+      "publicFields": [],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "STRING_LITERAL",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "STRING_LITERAL",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 1,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "LEXER_CHAR_SET",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "LEXER_CHAR_SET",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lexerGroup",
+      "treeModifier": "node",
+      "resultTypes": [
+        {
+          "kind": "rule",
+          "name": "lexerAltList",
+          "arguments": []
+        }
+      ],
+      "publicFields": [
+        {
+          "name": "body",
+          "acceptedTypes": [
+            {
+              "kind": "rule",
+              "name": "lexerAltList",
+              "arguments": []
+            }
+          ],
+          "absentInSomeAlternatives": false
+        }
+      ],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "rule",
+            "name": "lexerAltList",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "body",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "lexerAltList",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lexerSuffix",
+      "treeModifier": "inline",
+      "resultTypes": [
+        {
+          "kind": "token",
+          "name": "QUESTION",
+          "arguments": []
+        },
+        {
+          "kind": "rule",
+          "name": "starSuffix",
+          "arguments": []
+        },
+        {
+          "kind": "rule",
+          "name": "plusSuffix",
+          "arguments": []
+        }
+      ],
+      "publicFields": [],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "QUESTION",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "QUESTION",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 1,
+          "variantName": null,
+          "resultType": {
+            "kind": "rule",
+            "name": "starSuffix",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "starSuffix",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 2,
+          "variantName": null,
+          "resultType": {
+            "kind": "rule",
+            "name": "plusSuffix",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "plusSuffix",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "starSuffix",
+      "treeModifier": "inline",
+      "resultTypes": [
+        {
+          "kind": "record",
+          "name": "starSuffix/alternative:0",
+          "arguments": []
+        }
+      ],
+      "publicFields": [],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "record",
+            "name": "starSuffix/alternative:0",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "kind",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "STAR",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "lazy",
+              "acceptedTypes": [
+                {
+                  "kind": "optional",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "token",
+                      "name": "QUESTION",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "plusSuffix",
+      "treeModifier": "inline",
+      "resultTypes": [
+        {
+          "kind": "record",
+          "name": "plusSuffix/alternative:0",
+          "arguments": []
+        }
+      ],
+      "publicFields": [],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "record",
+            "name": "plusSuffix/alternative:0",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "kind",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "PLUS",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "lazy",
+              "acceptedTypes": [
+                {
+                  "kind": "optional",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "token",
+                      "name": "QUESTION",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lexerCommands",
+      "treeModifier": "node",
+      "resultTypes": [
+        {
+          "kind": "node",
+          "name": "lexerCommands",
+          "arguments": []
+        }
+      ],
+      "publicFields": [
+        {
+          "name": "first",
+          "acceptedTypes": [
+            {
+              "kind": "rule",
+              "name": "lexerCommand",
+              "arguments": []
+            }
+          ],
+          "absentInSomeAlternatives": false
+        },
+        {
+          "name": "rest",
+          "acceptedTypes": [
+            {
+              "kind": "list",
+              "name": "",
+              "arguments": [
+                {
+                  "kind": "rule",
+                  "name": "lexerCommandTail",
+                  "arguments": []
+                }
+              ]
+            }
+          ],
+          "absentInSomeAlternatives": false
+        }
+      ],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "node",
+            "name": "lexerCommands",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "first",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "lexerCommand",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "rest",
+              "acceptedTypes": [
+                {
+                  "kind": "list",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "rule",
+                      "name": "lexerCommandTail",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lexerCommandTail",
+      "treeModifier": "inline",
+      "resultTypes": [
+        {
+          "kind": "rule",
+          "name": "lexerCommand",
+          "arguments": []
+        }
+      ],
+      "publicFields": [],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "rule",
+            "name": "lexerCommand",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "lexerCommand",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lexerCommand",
+      "treeModifier": "node",
+      "resultTypes": [
+        {
+          "kind": "node",
+          "name": "lexerCommand",
+          "arguments": []
+        },
+        {
+          "kind": "rule",
+          "name": "identifier",
+          "arguments": []
+        }
+      ],
+      "publicFields": [
+        {
+          "name": "name",
+          "acceptedTypes": [
+            {
+              "kind": "rule",
+              "name": "identifier",
+              "arguments": []
+            }
+          ],
+          "absentInSomeAlternatives": false
+        },
+        {
+          "name": "argument",
+          "acceptedTypes": [
+            {
+              "kind": "optional",
+              "name": "",
+              "arguments": [
+                {
+                  "kind": "rule",
+                  "name": "lexerCommandArgument",
+                  "arguments": []
+                }
+              ]
+            }
+          ],
+          "absentInSomeAlternatives": false
+        }
+      ],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "choice",
+            "name": "",
+            "arguments": [
+              {
+                "kind": "node",
+                "name": "lexerCommand",
+                "arguments": []
+              },
+              {
+                "kind": "rule",
+                "name": "identifier",
+                "arguments": []
+              }
+            ]
+          },
+          "fields": [
+            {
+              "name": "name",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "identifier",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            },
+            {
+              "name": "argument",
+              "acceptedTypes": [
+                {
+                  "kind": "optional",
+                  "name": "",
+                  "arguments": [
+                    {
+                      "kind": "rule",
+                      "name": "lexerCommandArgument",
+                      "arguments": []
+                    }
+                  ]
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lexerCommandArgument",
+      "treeModifier": "inline",
+      "resultTypes": [
+        {
+          "kind": "rule",
+          "name": "identifier",
+          "arguments": []
+        }
+      ],
+      "publicFields": [],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "rule",
+            "name": "identifier",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "rule",
+                  "name": "identifier",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "identifier",
+      "treeModifier": "inline",
+      "resultTypes": [
+        {
+          "kind": "token",
+          "name": "RULE_REF",
+          "arguments": []
+        },
+        {
+          "kind": "token",
+          "name": "TOKEN_REF",
+          "arguments": []
+        }
+      ],
+      "publicFields": [],
+      "alternatives": [
+        {
+          "sourceAlternativeIndex": 0,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "RULE_REF",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "RULE_REF",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        },
+        {
+          "sourceAlternativeIndex": 1,
+          "variantName": null,
+          "resultType": {
+            "kind": "token",
+            "name": "TOKEN_REF",
+            "arguments": []
+          },
+          "fields": [
+            {
+              "name": "value",
+              "acceptedTypes": [
+                {
+                  "kind": "token",
+                  "name": "TOKEN_REF",
+                  "arguments": []
+                }
+              ],
+              "absentInSomeAlternatives": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

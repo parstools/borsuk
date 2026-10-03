@@ -1,0 +1,26 @@
+sema ExecutionModelSyntax for "minimal.ag";
+
+semantic_model {
+    record Frame(state: Bool);
+}
+
+execution_model {
+    input ir {
+        operation(id: OpId) -> Option<OperationNode>;
+        expression(id: ExprId) -> Option<Expression>;
+    }
+    runtime_state runtime: Runtime;
+
+    enum Value { Int(I32), Pair(I32, I32), Void }
+    enum Control { Continue, Return(Value) }
+    record Runtime(steps_remaining: U64);
+
+    intrinsic checked_add(left: I32, right: I32) -> Result<I32, RuntimeError>;
+    function enough_steps(remaining: U64) -> Bool {
+        return remaining != 0;
+    }
+}
+
+node state
+    : EOF analysis {}
+    ;

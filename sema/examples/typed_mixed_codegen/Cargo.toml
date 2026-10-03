@@ -1,0 +1,11 @@
+[package]
+name = "borsuk-typed-mixed-codegen"
+version = "1.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+agas-runtime = { path = "../../../rust/crates/ag-runtime" }
+
+[lints.rust]
+unsafe_code = "forbid"

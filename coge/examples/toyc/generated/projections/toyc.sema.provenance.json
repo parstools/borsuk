@@ -1,0 +1,81 @@
+{
+  "format": 1,
+  "document_format": 1,
+  "projection": "sema",
+  "specification": "ToyCTyped",
+  "grammar": "ToyC",
+  "source": "agsem/toyc_typed.coge",
+  "source_sha256": "bca4857e3716ba4257cea97a21755ccaf678b71ad3f84f5d3dd61d6c37fe600d",
+  "output_sha256": "be0a1a39e551c74062ca76226d38d9b2de25cc0d594542c10d6608bef6456a24",
+  "tool_sha256": "ebe3f129dcde18c766c400de8d3adc150f17ea92e542f09d69a854765dbbe0a4",
+  "contracts": [
+    {
+      "id": "toyc-runtime",
+      "version": "1",
+      "sha256": "bb72513eac5a26099cb5024a3ff19b729c6a16f2eef6fd0358c2ed4aa62b2d24"
+    }
+  ],
+  "binding_schema": {
+    "id": "standard_semantic_v1",
+    "version": "1",
+    "sha256": "c3d719549c082acd9179e51199de908f1553f7f522121590affe4ad4e6ce8472"
+  },
+  "origins": [
+    {
+      "output_begin": 0,
+      "output_end": 4,
+      "input_begin": 0,
+      "input_end": 4,
+      "replacement": true
+    },
+    {
+      "output_begin": 4,
+      "output_end": 6888,
+      "input_begin": 4,
+      "input_end": 6888,
+      "replacement": false
+    },
+    {
+      "output_begin": 6888,
+      "output_end": 6890,
+      "input_begin": 6982,
+      "input_end": 6984,
+      "replacement": false
+    },
+    {
+      "output_begin": 6890,
+      "output_end": 6892,
+      "input_begin": 7022,
+      "input_end": 7024,
+      "replacement": false
+    },
+    {
+      "output_begin": 6892,
+      "output_end": 6894,
+      "input_begin": 7068,
+      "input_end": 7070,
+      "replacement": false
+    },
+    {
+      "output_begin": 6894,
+      "output_end": 6896,
+      "input_begin": 13762,
+      "input_end": 13764,
+      "replacement": false
+    },
+    {
+      "output_begin": 6896,
+      "output_end": 6898,
+      "input_begin": 14225,
+      "input_end": 14227,
+      "replacement": false
+    },
+    {
+      "output_begin": 6898,
+      "output_end": 27780,
+      "input_begin": 14274,
+      "input_end": 35156,
+      "replacement": false
+    }
+  ]
+}

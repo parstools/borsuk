@@ -1,0 +1,1026 @@
+{
+  "format": 1,
+  "id": "toyc-runtime",
+  "version": "1",
+  "semantic": [
+    {
+      "name": "ScopeId",
+      "kind": "opaque"
+    },
+    {
+      "name": "SymbolId",
+      "kind": "opaque"
+    },
+    {
+      "name": "FunctionId",
+      "kind": "opaque"
+    },
+    {
+      "name": "StructId",
+      "kind": "opaque"
+    },
+    {
+      "name": "FieldId",
+      "kind": "opaque"
+    },
+    {
+      "name": "PlaceId",
+      "kind": "opaque"
+    },
+    {
+      "name": "ExprId",
+      "kind": "opaque"
+    },
+    {
+      "name": "OpId",
+      "kind": "opaque"
+    },
+    {
+      "name": "FlowId",
+      "kind": "opaque"
+    },
+    {
+      "name": "ModuleId",
+      "kind": "opaque"
+    },
+    {
+      "name": "ParameterId",
+      "kind": "opaque"
+    },
+    {
+      "name": "I32",
+      "kind": "opaque"
+    },
+    {
+      "name": "F32",
+      "kind": "opaque"
+    },
+    {
+      "name": "U8",
+      "kind": "opaque"
+    },
+    {
+      "name": "U64",
+      "kind": "opaque"
+    },
+    {
+      "name": "Type",
+      "kind": "enum",
+      "variants": {
+        "Int": [],
+        "Float": [],
+        "Bool": [],
+        "Char": [],
+        "CharPointer": [],
+        "Void": [],
+        "NullPointer": [],
+        "Struct": [
+          {
+            "name": "StructId"
+          }
+        ],
+        "Array": [
+          {
+            "name": "Type"
+          },
+          {
+            "name": "Index"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DeclarationTarget",
+      "kind": "enum",
+      "variants": {
+        "Ordinary": [],
+        "Field": [
+          {
+            "name": "StructId"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Operator",
+      "kind": "enum",
+      "variants": {
+        "Add": [],
+        "Subtract": [],
+        "Multiply": [],
+        "Divide": [],
+        "Less": [],
+        "LessEqual": [],
+        "Greater": [],
+        "GreaterEqual": [],
+        "Equal": [],
+        "NotEqual": []
+      }
+    },
+    {
+      "name": "AssignmentOp",
+      "kind": "enum",
+      "variants": {
+        "Set": [],
+        "Add": [],
+        "Subtract": [],
+        "Multiply": [],
+        "Divide": []
+      }
+    },
+    {
+      "name": "Initialization",
+      "kind": "enum",
+      "variants": {
+        "Uninitialized": [],
+        "Initializing": [],
+        "Initialized": [],
+        "Poisoned": []
+      }
+    },
+    {
+      "name": "Binding",
+      "kind": "enum",
+      "variants": {
+        "Variable": [
+          {
+            "name": "SymbolId"
+          }
+        ],
+        "Function": [
+          {
+            "name": "FunctionId"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Constant",
+      "kind": "enum",
+      "variants": {
+        "Int": [
+          {
+            "name": "I32"
+          }
+        ],
+        "Float": [
+          {
+            "name": "F32"
+          }
+        ],
+        "Bool": [
+          {
+            "name": "Bool"
+          }
+        ],
+        "Char": [
+          {
+            "name": "U8"
+          }
+        ],
+        "String": [
+          {
+            "name": "Text"
+          }
+        ],
+        "Null": []
+      }
+    },
+    {
+      "name": "RuntimeCheck",
+      "kind": "enum",
+      "variants": {
+        "Nonzero": [
+          {
+            "name": "ExprId"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExpressionKind",
+      "kind": "enum",
+      "variants": {
+        "Error": [],
+        "Constant": [
+          {
+            "name": "Constant"
+          }
+        ],
+        "Load": [
+          {
+            "name": "PlaceId"
+          }
+        ],
+        "Convert": [
+          {
+            "name": "ExprId"
+          },
+          {
+            "name": "Type"
+          }
+        ],
+        "Negate": [
+          {
+            "name": "ExprId"
+          }
+        ],
+        "Binary": [
+          {
+            "name": "Operator"
+          },
+          {
+            "name": "ExprId"
+          },
+          {
+            "name": "ExprId"
+          }
+        ],
+        "Call": [
+          {
+            "name": "FunctionId"
+          },
+          {
+            "name": "List",
+            "arguments": [
+              {
+                "name": "ExprId"
+              }
+            ]
+          }
+        ],
+        "IndexLoad": [
+          {
+            "name": "PlaceId"
+          },
+          {
+            "name": "ExprId"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Operation",
+      "kind": "enum",
+      "variants": {
+        "Declare": [
+          {
+            "name": "SymbolId"
+          }
+        ],
+        "Initialize": [
+          {
+            "name": "SymbolId"
+          },
+          {
+            "name": "ExprId"
+          }
+        ],
+        "Store": [
+          {
+            "name": "PlaceId"
+          },
+          {
+            "name": "ExprId"
+          }
+        ],
+        "Call": [
+          {
+            "name": "ExprId"
+          }
+        ],
+        "Block": [
+          {
+            "name": "ScopeId"
+          },
+          {
+            "name": "List",
+            "arguments": [
+              {
+                "name": "OpId"
+              }
+            ]
+          }
+        ],
+        "If": [
+          {
+            "name": "ExprId"
+          },
+          {
+            "name": "OpId"
+          },
+          {
+            "name": "Option",
+            "arguments": [
+              {
+                "name": "OpId"
+              }
+            ]
+          }
+        ],
+        "While": [
+          {
+            "name": "ExprId"
+          },
+          {
+            "name": "OpId"
+          }
+        ],
+        "For": [
+          {
+            "name": "ScopeId"
+          },
+          {
+            "name": "OpId"
+          },
+          {
+            "name": "ExprId"
+          },
+          {
+            "name": "OpId"
+          },
+          {
+            "name": "OpId"
+          }
+        ],
+        "Return": [
+          {
+            "name": "Option",
+            "arguments": [
+              {
+                "name": "ExprId"
+              }
+            ]
+          }
+        ],
+        "Error": [],
+        "IndexStore": [
+          {
+            "name": "PlaceId"
+          },
+          {
+            "name": "ExprId"
+          },
+          {
+            "name": "ExprId"
+          }
+        ],
+        "IndexUpdate": [
+          {
+            "name": "PlaceId"
+          },
+          {
+            "name": "ExprId"
+          },
+          {
+            "name": "Operator"
+          },
+          {
+            "name": "ExprId"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Parameter",
+      "kind": "record",
+      "fields": {
+        "name": {
+          "name": "OwnedText"
+        },
+        "ty": {
+          "name": "Type"
+        },
+        "source": {
+          "name": "SourceRange"
+        }
+      }
+    },
+    {
+      "name": "FunctionHeader",
+      "kind": "record",
+      "fields": {
+        "name": {
+          "name": "OwnedText"
+        },
+        "result": {
+          "name": "Type"
+        },
+        "parameters": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "ParameterId"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Scope",
+      "kind": "record",
+      "fields": {
+        "parent": {
+          "name": "Option",
+          "arguments": [
+            {
+              "name": "ScopeId"
+            }
+          ]
+        },
+        "source": {
+          "name": "SourceRange"
+        },
+        "symbols": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "SymbolId"
+            }
+          ]
+        },
+        "operations": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "OpId"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Variable",
+      "kind": "record",
+      "fields": {
+        "name": {
+          "name": "OwnedText"
+        },
+        "ty": {
+          "name": "Type"
+        },
+        "owner": {
+          "name": "ScopeId"
+        },
+        "place": {
+          "name": "PlaceId"
+        },
+        "source": {
+          "name": "SourceRange"
+        }
+      }
+    },
+    {
+      "name": "Function",
+      "kind": "record",
+      "fields": {
+        "name": {
+          "name": "OwnedText"
+        },
+        "result": {
+          "name": "Type"
+        },
+        "parameters": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "Type"
+            }
+          ]
+        },
+        "defined": {
+          "name": "Bool"
+        },
+        "scope": {
+          "name": "Option",
+          "arguments": [
+            {
+              "name": "ScopeId"
+            }
+          ]
+        },
+        "body": {
+          "name": "Option",
+          "arguments": [
+            {
+              "name": "OpId"
+            }
+          ]
+        },
+        "source": {
+          "name": "SourceRange"
+        }
+      }
+    },
+    {
+      "name": "Struct",
+      "kind": "record",
+      "fields": {
+        "name": {
+          "name": "OwnedText"
+        },
+        "fields": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "FieldId"
+            }
+          ]
+        },
+        "complete": {
+          "name": "Bool"
+        },
+        "source": {
+          "name": "SourceRange"
+        }
+      }
+    },
+    {
+      "name": "Field",
+      "kind": "record",
+      "fields": {
+        "name": {
+          "name": "OwnedText"
+        },
+        "ty": {
+          "name": "Type"
+        },
+        "owner": {
+          "name": "StructId"
+        },
+        "ordinal": {
+          "name": "Index"
+        },
+        "source": {
+          "name": "SourceRange"
+        }
+      }
+    },
+    {
+      "name": "PlaceKey",
+      "kind": "record",
+      "fields": {
+        "root": {
+          "name": "SymbolId"
+        },
+        "fields": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "FieldId"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Place",
+      "kind": "record",
+      "fields": {
+        "key": {
+          "name": "PlaceKey"
+        },
+        "ty": {
+          "name": "Type"
+        }
+      }
+    },
+    {
+      "name": "Diagnostic",
+      "kind": "record",
+      "fields": {
+        "message": {
+          "name": "OwnedText"
+        },
+        "source": {
+          "name": "SourceRange"
+        }
+      }
+    },
+    {
+      "name": "SourceComment",
+      "kind": "record",
+      "fields": {
+        "text": {
+          "name": "OwnedText"
+        },
+        "source": {
+          "name": "SourceRange"
+        }
+      }
+    },
+    {
+      "name": "Expression",
+      "kind": "record",
+      "fields": {
+        "kind": {
+          "name": "ExpressionKind"
+        },
+        "ty": {
+          "name": "Type"
+        },
+        "source": {
+          "name": "SourceRange"
+        },
+        "checks": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "RuntimeCheck"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "OperationNode",
+      "kind": "record",
+      "fields": {
+        "kind": {
+          "name": "Operation"
+        },
+        "source": {
+          "name": "SourceRange"
+        }
+      }
+    },
+    {
+      "name": "Module",
+      "kind": "record",
+      "fields": {
+        "scope": {
+          "name": "ScopeId"
+        },
+        "declarations": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "OpId"
+            }
+          ]
+        },
+        "valid": {
+          "name": "Bool"
+        }
+      }
+    },
+    {
+      "name": "Flow",
+      "kind": "record",
+      "fields": {
+        "reachable": {
+          "name": "Bool"
+        }
+      }
+    },
+    {
+      "name": "Context",
+      "kind": "record",
+      "fields": {
+        "scopes": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "Scope"
+            }
+          ]
+        },
+        "variables": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "Variable"
+            }
+          ]
+        },
+        "functions": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "Function"
+            }
+          ]
+        },
+        "parameters": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "Parameter"
+            }
+          ]
+        },
+        "structs": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "Struct"
+            }
+          ]
+        },
+        "fields": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "Field"
+            }
+          ]
+        },
+        "places": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "Place"
+            }
+          ]
+        },
+        "diagnostics": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "Diagnostic"
+            }
+          ]
+        },
+        "comments": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "SourceComment"
+            }
+          ]
+        },
+        "expressions": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "Expression"
+            }
+          ]
+        },
+        "operations": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "OperationNode"
+            }
+          ]
+        },
+        "modules": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "Module"
+            }
+          ]
+        },
+        "global_flow": {
+          "name": "Flow"
+        },
+        "current_flow": {
+          "name": "Flow"
+        },
+        "flow_snapshots": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "Flow"
+            }
+          ]
+        },
+        "active_initializer": {
+          "name": "Option",
+          "arguments": [
+            {
+              "name": "SymbolId"
+            }
+          ]
+        },
+        "active_function": {
+          "name": "Option",
+          "arguments": [
+            {
+              "name": "FunctionId"
+            }
+          ]
+        },
+        "active_function_error": {
+          "name": "Bool"
+        },
+        "module_declarations": {
+          "name": "List",
+          "arguments": [
+            {
+              "name": "OpId"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "poisoned_expression",
+      "kind": "method",
+      "parameters": [
+        {
+          "name": "ExprId"
+        }
+      ],
+      "result": {
+        "name": "Bool"
+      },
+      "effect": "pure",
+      "context": "Context"
+    },
+    {
+      "name": "convert",
+      "kind": "method",
+      "parameters": [
+        {
+          "name": "ExprId"
+        },
+        {
+          "name": "Type"
+        }
+      ],
+      "result": {
+        "name": "Result",
+        "arguments": [
+          {
+            "name": "ExprId"
+          }
+        ]
+      },
+      "effect": "mutates",
+      "context": "Context"
+    },
+    {
+      "name": "add_operation",
+      "kind": "method",
+      "parameters": [
+        {
+          "name": "Operation"
+        },
+        {
+          "name": "SourceRange"
+        }
+      ],
+      "result": {
+        "name": "OpId"
+      },
+      "effect": "mutates",
+      "context": "Context"
+    },
+    {
+      "name": "add_expression",
+      "kind": "method",
+      "parameters": [
+        {
+          "name": "ExpressionKind"
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "SourceRange"
+        }
+      ],
+      "result": {
+        "name": "ExprId"
+      },
+      "effect": "mutates",
+      "context": "Context"
+    },
+    {
+      "name": "read",
+      "kind": "method",
+      "parameters": [
+        {
+          "name": "Flow"
+        },
+        {
+          "name": "PlaceId"
+        }
+      ],
+      "result": {
+        "name": "Result",
+        "arguments": [
+          {
+            "name": "Unit"
+          }
+        ]
+      },
+      "effect": "pure",
+      "context": "Context"
+    },
+    {
+      "name": "binary",
+      "kind": "method",
+      "parameters": [
+        {
+          "name": "Operator"
+        },
+        {
+          "name": "ExprId"
+        },
+        {
+          "name": "ExprId"
+        },
+        {
+          "name": "SourceRange"
+        }
+      ],
+      "result": {
+        "name": "Result",
+        "arguments": [
+          {
+            "name": "ExprId"
+          }
+        ]
+      },
+      "effect": "mutates",
+      "context": "Context"
+    },
+    {
+      "name": "mark_initialized",
+      "kind": "method",
+      "parameters": [
+        {
+          "name": "Flow"
+        },
+        {
+          "name": "PlaceId"
+        }
+      ],
+      "result": {
+        "name": "Unit"
+      },
+      "effect": "pure",
+      "context": "Context"
+    },
+    {
+      "name": "merge_flow",
+      "kind": "method",
+      "parameters": [
+        {
+          "name": "Flow"
+        },
+        {
+          "name": "Flow"
+        }
+      ],
+      "result": {
+        "name": "Flow"
+      },
+      "effect": "pure",
+      "context": "Context"
+    },
+    {
+      "name": "record_error",
+      "kind": "method",
+      "parameters": [
+        {
+          "name": "Text"
+        },
+        {
+          "name": "SourceRange"
+        }
+      ],
+      "result": {
+        "name": "Unit"
+      },
+      "effect": "mutates",
+      "context": "Context"
+    },
+    {
+      "name": "integer_literal",
+      "kind": "method",
+      "parameters": [
+        {
+          "name": "Text"
+        },
+        {
+          "name": "SourceRange"
+        }
+      ],
+      "result": {
+        "name": "Result",
+        "arguments": [
+          {
+            "name": "ExprId"
+          }
+        ]
+      },
+      "effect": "mutates",
+      "context": "Context"
+    }
+  ],
+  "execution": [
+    {
+      "name": "AccessError",
+      "kind": "enum",
+      "variants": {
+        "MissingRoot": [],
+        "InvalidPath": []
+      }
+    }
+  ]
+}

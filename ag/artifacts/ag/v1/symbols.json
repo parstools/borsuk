@@ -1,0 +1,416 @@
+{
+  "version": 1,
+  "terminals": [
+    {
+      "id": 0,
+      "name": "GRAMMAR"
+    },
+    {
+      "id": 1,
+      "name": "OPTIONS"
+    },
+    {
+      "id": 2,
+      "name": "CHANNELS"
+    },
+    {
+      "id": 3,
+      "name": "LEXER_CLASSES"
+    },
+    {
+      "id": 4,
+      "name": "CONFLICTS"
+    },
+    {
+      "id": 5,
+      "name": "PREFER"
+    },
+    {
+      "id": 6,
+      "name": "SHIFT"
+    },
+    {
+      "id": 7,
+      "name": "OVER"
+    },
+    {
+      "id": 8,
+      "name": "REDUCE"
+    },
+    {
+      "id": 9,
+      "name": "NODE"
+    },
+    {
+      "id": 10,
+      "name": "INLINE"
+    },
+    {
+      "id": 11,
+      "name": "FRAGMENT"
+    },
+    {
+      "id": 12,
+      "name": "EMPTY"
+    },
+    {
+      "id": 13,
+      "name": "TRUE"
+    },
+    {
+      "id": 14,
+      "name": "FALSE"
+    },
+    {
+      "id": 15,
+      "name": "STRING_LITERAL"
+    },
+    {
+      "id": 16,
+      "name": "LEXER_CHAR_SET"
+    },
+    {
+      "id": 17,
+      "name": "RULE_REF"
+    },
+    {
+      "id": 18,
+      "name": "TOKEN_REF"
+    },
+    {
+      "id": 19,
+      "name": "INTEGER"
+    },
+    {
+      "id": 20,
+      "name": "OR"
+    },
+    {
+      "id": 21,
+      "name": "QUESTION"
+    },
+    {
+      "id": 22,
+      "name": "STAR"
+    },
+    {
+      "id": 23,
+      "name": "PLUS"
+    },
+    {
+      "id": 24,
+      "name": "NOT"
+    },
+    {
+      "id": 25,
+      "name": "LPAREN"
+    },
+    {
+      "id": 26,
+      "name": "RPAREN"
+    },
+    {
+      "id": 27,
+      "name": "SEMI"
+    },
+    {
+      "id": 28,
+      "name": "COLON"
+    },
+    {
+      "id": 29,
+      "name": "RARROW"
+    },
+    {
+      "id": 30,
+      "name": "COMMA"
+    },
+    {
+      "id": 31,
+      "name": "LBRACE"
+    },
+    {
+      "id": 32,
+      "name": "RBRACE"
+    },
+    {
+      "id": 33,
+      "name": "ASSIGN"
+    },
+    {
+      "id": 34,
+      "name": "DOT"
+    },
+    {
+      "id": 35,
+      "name": "HASH"
+    },
+    {
+      "id": 36,
+      "name": "DOC_COMMENT"
+    },
+    {
+      "id": 37,
+      "name": "BLOCK_COMMENT"
+    },
+    {
+      "id": 38,
+      "name": "LINE_COMMENT"
+    },
+    {
+      "id": 39,
+      "name": "WS"
+    }
+  ],
+  "nonterminals": [
+    {
+      "id": 0,
+      "name": "document"
+    },
+    {
+      "id": 1,
+      "name": "grammarDeclaration"
+    },
+    {
+      "id": 2,
+      "name": "topLevelItem"
+    },
+    {
+      "id": 3,
+      "name": "optionsBlock"
+    },
+    {
+      "id": 4,
+      "name": "optionEntry"
+    },
+    {
+      "id": 5,
+      "name": "optionValue"
+    },
+    {
+      "id": 6,
+      "name": "lexerClassesBlock"
+    },
+    {
+      "id": 7,
+      "name": "channelsBlock"
+    },
+    {
+      "id": 8,
+      "name": "channelList"
+    },
+    {
+      "id": 9,
+      "name": "channelTail"
+    },
+    {
+      "id": 10,
+      "name": "conflictsBlock"
+    },
+    {
+      "id": 11,
+      "name": "conflictEntry"
+    },
+    {
+      "id": 12,
+      "name": "parserRuleSpec"
+    },
+    {
+      "id": 13,
+      "name": "treeModifier"
+    },
+    {
+      "id": 14,
+      "name": "parserAlternativeTail"
+    },
+    {
+      "id": 15,
+      "name": "parserAlternative"
+    },
+    {
+      "id": 16,
+      "name": "alternativeLabel"
+    },
+    {
+      "id": 17,
+      "name": "parserElement"
+    },
+    {
+      "id": 18,
+      "name": "elementLabel"
+    },
+    {
+      "id": 19,
+      "name": "parserSymbol"
+    },
+    {
+      "id": 20,
+      "name": "qualifiedReference"
+    },
+    {
+      "id": 21,
+      "name": "parserSuffix"
+    },
+    {
+      "id": 22,
+      "name": "lexerRuleSpec"
+    },
+    {
+      "id": 23,
+      "name": "lexerAltList"
+    },
+    {
+      "id": 24,
+      "name": "lexerAlternativeTail"
+    },
+    {
+      "id": 25,
+      "name": "lexerAlternative"
+    },
+    {
+      "id": 26,
+      "name": "lexerElement"
+    },
+    {
+      "id": 27,
+      "name": "lexerAtom"
+    },
+    {
+      "id": 28,
+      "name": "lexerNegation"
+    },
+    {
+      "id": 29,
+      "name": "lexerNegatable"
+    },
+    {
+      "id": 30,
+      "name": "lexerGroup"
+    },
+    {
+      "id": 31,
+      "name": "lexerSuffix"
+    },
+    {
+      "id": 32,
+      "name": "starSuffix"
+    },
+    {
+      "id": 33,
+      "name": "plusSuffix"
+    },
+    {
+      "id": 34,
+      "name": "lexerCommands"
+    },
+    {
+      "id": 35,
+      "name": "lexerCommandTail"
+    },
+    {
+      "id": 36,
+      "name": "lexerCommand"
+    },
+    {
+      "id": 37,
+      "name": "lexerCommandArgument"
+    },
+    {
+      "id": 38,
+      "name": "identifier"
+    },
+    {
+      "id": 39,
+      "name": "document__ebnf_0_1"
+    },
+    {
+      "id": 40,
+      "name": "optionsBlock__ebnf_0_2"
+    },
+    {
+      "id": 41,
+      "name": "lexerClassesBlock__ebnf_0_2"
+    },
+    {
+      "id": 42,
+      "name": "channelsBlock__ebnf_0_2"
+    },
+    {
+      "id": 43,
+      "name": "channelList__ebnf_0_1"
+    },
+    {
+      "id": 44,
+      "name": "channelList__ebnf_0_2"
+    },
+    {
+      "id": 45,
+      "name": "conflictsBlock__ebnf_0_2"
+    },
+    {
+      "id": 46,
+      "name": "parserRuleSpec__ebnf_0_2"
+    },
+    {
+      "id": 47,
+      "name": "parserRuleSpec__ebnf_0_5"
+    },
+    {
+      "id": 48,
+      "name": "parserAlternative__ebnf_0_1"
+    },
+    {
+      "id": 49,
+      "name": "parserAlternative__ebnf_1_0"
+    },
+    {
+      "id": 50,
+      "name": "parserAlternative__ebnf_1_1"
+    },
+    {
+      "id": 51,
+      "name": "parserElement__ebnf_0_0"
+    },
+    {
+      "id": 52,
+      "name": "parserElement__ebnf_0_2"
+    },
+    {
+      "id": 53,
+      "name": "lexerRuleSpec__ebnf_0_0"
+    },
+    {
+      "id": 54,
+      "name": "lexerRuleSpec__ebnf_0_4"
+    },
+    {
+      "id": 55,
+      "name": "lexerAltList__ebnf_0_1"
+    },
+    {
+      "id": 56,
+      "name": "lexerAlternative__ebnf_1_0"
+    },
+    {
+      "id": 57,
+      "name": "lexerElement__ebnf_0_1"
+    },
+    {
+      "id": 58,
+      "name": "starSuffix__ebnf_0_1"
+    },
+    {
+      "id": 59,
+      "name": "plusSuffix__ebnf_0_1"
+    },
+    {
+      "id": 60,
+      "name": "lexerCommands__ebnf_0_2"
+    },
+    {
+      "id": 61,
+      "name": "lexerCommand__ebnf_0_1"
+    }
+  ],
+  "channels": []
+}

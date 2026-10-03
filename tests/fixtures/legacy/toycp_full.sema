@@ -1,0 +1,1612 @@
+sema ToyCPTyped for "../../../ag/grammars/examples/toycp.ag";
+
+// Typed declarations, classes, methods, object lifetime and definite assignment.
+
+semantic_model {
+    return_policy function_return {
+        target = enclosing_function;
+        value = absent_for_void_otherwise_required;
+        conversion = implicit_conversion;
+        cleanup = exited_automatic_lifetimes;
+        evaluation = capture_value_before_cleanup;
+        flow = unreachable_after_success;
+        ir = Return;
+        errors {
+            missing_target = "return outside function";
+            wrong_presence = "invalid return value";
+            failed_conversion = "incompatible return type";
+        }
+    }
+    model_bindings function_return {
+        active_function = active_function;
+        functions = functions;
+        flow = current_flow;
+        poison = poisoned_expression;
+        convert = convert;
+        emit = add_operation;
+        return_ir = record;
+        cleanup_scopes = active_scopes;
+        scopes = scopes;
+        variables = variables;
+        destructible = type_needs_destruction;
+    }
+    assignment_policy store_value {
+        check = check_assignment_target;
+        increment = increment_value;
+        increment_operand = numeric;
+        increment_step = integer_one;
+        increment_operation = add_or_subtract;
+        target = non_array;
+        simple = implicit_conversion;
+        compound = read_modify_write;
+        result = exact_or_numeric_conversion;
+        flow = initialized_after_success;
+        evaluation = target_once_before_rhs;
+        ir = StoreAndCompoundStore;
+        errors {
+            invalid_target = "invalid assignment target";
+            invalid_increment = "invalid increment operand";
+            dependent = "dependent error";
+            incompatible = "incompatible assignment types";
+        }
+    }
+    assignment_bindings store_value {
+        places = places;
+        expressions = expressions;
+        flow = current_flow;
+        poison = poisoned_expression;
+        read = read;
+        convert = convert;
+        binary = binary;
+        expression_builder = add_expression;
+        integer_literal = integer_literal;
+        emit = add_operation;
+        mark = mark_initialized;
+    }
+    condition_policy condition_bool {
+        target = bool;
+        already = identity;
+        accepted = numeric_or_pointer;
+        conversion = explicit_bool;
+        errors {
+            dependent = "dependent error";
+            incompatible = "condition is not convertible to bool";
+        }
+    }
+    condition_bindings condition_bool {
+        expressions = expressions;
+        poison = poisoned_expression;
+        emit = add_expression;
+    }
+    statement_ir statements {
+        append = append_statement;
+        call = call_statement;
+        if_without_else = make_if_without_else;
+        if_with_else = make_if_with_else;
+        loop_while = make_while;
+        for_initialization = for_initialization;
+        loop_for = make_for;
+        call_ir = Call;
+        if_ir = If;
+        while_ir = While;
+        block_ir = Block;
+        for_ir = For;
+    }
+    statement_bindings statements {
+        scopes = scopes;
+        emit = add_operation;
+    }
+    flow_actions statements {
+        snapshot = snapshot_flow;
+        restore = restore_flow;
+        merge_snapshot = merge_flow_snapshot;
+        recover = recover_statement;
+    }
+    flow_bindings statements {
+        current = current_flow;
+        snapshots = flow_snapshots;
+        merge = merge_flow;
+        record_error = record_error;
+        emit = add_operation;
+        error_ir = Error;
+    }
+    selection_policy constructor_choice {
+        choose = choose_constructor;
+        collect = collect_constructor_candidates;
+        complete = complete_construction;
+        candidate = ConstructorCandidate;
+        receiver = first_parameter;
+        ranking = fewest_conversions;
+        access = after_ranking;
+        fallback = no_declared_and_no_arguments;
+        missing = "constructor not declared";
+        ambiguous = "ambiguous constructor call";
+        inaccessible = "constructor is not accessible";
+        nonclass = "constructor requires class type";
+        missing_default = "default constructor not declared";
+        incompatible = "incompatible argument type";
+    }
+    selection_bindings constructor_choice {
+        structs = structs;
+        constructors = constructors;
+        functions = functions;
+        parameters = parameters;
+        expressions = expressions;
+        expression_type = ty;
+        visibility = visibility;
+        accessible = accessible;
+        convertible = conversion_allowed;
+        variables = variables;
+        variable_type = ty;
+        variable_place = place;
+        fields = fields;
+        field_type = ty;
+        default_constructible = default_constructible;
+        convert = convert;
+        construction_ir = Construct;
+        add_operation = add_operation;
+        scopes = scopes;
+        scope_operations = operations;
+        current_flow = current_flow;
+        mark_initialized = mark_initialized;
+        active_initializer = active_initializer;
+    }
+    modules {
+        statements {
+            rules = [ifStatement, whileStatement, forStatement];
+            functions = [make_if_without_else, make_if_with_else, make_while, make_for];
+        }
+    }
+    rust_context Context;
+    inherited scope: ScopeId;
+    inherited target: DeclarationTarget;
+    inherited owner: StructId;
+    inherited visibility: Visibility;
+    inherited bodies: Bool;
+    inherited parameters: List<ParameterId>;
+    inherited enter: Bool;
+    inherited left: ExprId;
+    inherited base: PlaceId;
+    inherited arguments: List<ExprId>;
+
+    intrinsic copy_text(value: Text) -> OwnedText;
+    intrinsic ordinary_target() -> DeclarationTarget;
+    intrinsic field_target(structure: StructId, visibility: Visibility) -> DeclarationTarget;
+    // Local objects construct when their declarations execute and destruct in reverse order
+    // on normal exit or return. Global objects construct before main and destruct after it.
+    // Arrays construct elements in ascending order and destruct them in descending order.
+    intrinsic declare_object(scope: ScopeId, target: DeclarationTarget, name: Text, type: Type, source: SourceRange) -> Result<Unit> mutates;
+    // Direct construction binds its name before argument analysis, so self-reads see an
+    // uninitialized object. Completion checks overloads and access, then emits construction.
+    intrinsic begin_construction(scope: ScopeId, name: Text, type: Type, source: SourceRange) -> Result<SymbolId> mutates;
+    intrinsic finish_construction(scope: ScopeId, symbol: SymbolId, arguments: List<ExprId>, source: SourceRange) -> Result<Unit> mutates;
+    intrinsic type_int() -> Type;
+    intrinsic type_float() -> Type;
+    intrinsic type_bool() -> Type;
+    intrinsic type_char(pointer: Bool) -> Type;
+    intrinsic type_void() -> Type;
+    intrinsic resolve_type(scope: ScopeId, name: Text) -> Result<Type>;
+    intrinsic parse_array_length(value: Text) -> Result<Int>;
+    intrinsic array_type(element: Type, length: Int) -> Result<Type>;
+    intrinsic empty_parameters() -> List<ParameterId>;
+    intrinsic singleton_parameter(value: ParameterId) -> List<ParameterId>;
+    intrinsic append_parameter(parameters: List<ParameterId>, value: ParameterId) -> List<ParameterId>;
+    intrinsic create_parameter(name: Text, type: Type, source: SourceRange) -> Result<ParameterId> mutates;
+    intrinsic create_header(name: Text, type: Type, parameters: List<ParameterId>) -> Result<FunctionHeader>;
+    // The no-owner sentinel selects global functions; a class owner selects methods.
+    intrinsic no_owner() -> StructId;
+    intrinsic declare_callable(scope: ScopeId, owner: StructId, visibility: Visibility, header: FunctionHeader, source: SourceRange) -> Result<Unit> mutates;
+    intrinsic predeclare_inline_method(owner: StructId, visibility: Visibility, header: FunctionHeader, source: SourceRange) -> Result<Unit> mutates;
+    intrinsic begin_callable_definition(scope: ScopeId, owner: StructId, visibility: Visibility, header: FunctionHeader, source: SourceRange) -> Result<ScopeId> mutates;
+    intrinsic begin_struct(scope: ScopeId, name: Text, source: SourceRange) -> Result<StructId> mutates;
+    intrinsic finish_struct(structure: StructId) -> Result<Unit> mutates;
+    intrinsic begin_class(scope: ScopeId, name: Text, source: SourceRange) -> Result<StructId> mutates;
+    // A single nonvirtual base is allowed; reject cycles and incomplete or unknown base types.
+    // The default inheritance visibility follows the aggregate kind (class or struct).
+    intrinsic set_base(scope: ScopeId, owner: StructId, name: Text, source: SourceRange) -> Result<Unit> mutates;
+    intrinsic finish_class(owner: StructId) -> Result<Unit> mutates;
+    intrinsic public_visibility() -> Visibility;
+    intrinsic private_visibility() -> Visibility;
+    intrinsic protected_visibility() -> Visibility;
+    intrinsic lookup_aggregate(scope: ScopeId, name: Text) -> Result<StructId>;
+    // These validate class names, constructor overloads, and the unique zero-argument destructor.
+    intrinsic create_constructor_header(owner: StructId, name: Text, parameters: List<ParameterId>) -> Result<FunctionHeader>;
+    intrinsic create_destructor_header(owner: StructId, name: Text) -> Result<FunctionHeader>;
+    intrinsic declare_constructor(owner: StructId, visibility: Visibility, header: FunctionHeader, source: SourceRange) -> Result<Unit> mutates;
+    intrinsic declare_destructor(owner: StructId, visibility: Visibility, header: FunctionHeader, source: SourceRange) -> Result<Unit> mutates;
+    intrinsic predeclare_inline_constructor(owner: StructId, visibility: Visibility, header: FunctionHeader, source: SourceRange) -> Result<Unit> mutates;
+    intrinsic predeclare_inline_destructor(owner: StructId, visibility: Visibility, header: FunctionHeader, source: SourceRange) -> Result<Unit> mutates;
+    // Method scopes bind implicit self as the first parameter, followed by declared parameters.
+    // Constructors initialize the base and fields before their body. Destructors execute their
+    // body, then destroy fields in reverse declaration order and finally the base.
+    intrinsic begin_constructor_definition(owner: StructId, visibility: Visibility, header: FunctionHeader, source: SourceRange) -> Result<ScopeId> mutates;
+    intrinsic begin_destructor_definition(owner: StructId, visibility: Visibility, header: FunctionHeader, source: SourceRange) -> Result<ScopeId> mutates;
+    // Out-of-class definitions must match a declared member and may occur only once.
+    intrinsic begin_out_of_method_definition(owner: StructId, header: FunctionHeader, source: SourceRange) -> Result<ScopeId> mutates;
+    intrinsic begin_out_of_constructor_definition(owner: StructId, header: FunctionHeader, source: SourceRange) -> Result<ScopeId> mutates;
+    intrinsic begin_out_of_destructor_definition(owner: StructId, header: FunctionHeader, source: SourceRange) -> Result<ScopeId> mutates;
+    intrinsic nested_scope(parent: ScopeId, enter: Bool, source: SourceRange) -> ScopeId mutates;
+    intrinsic record_error(message: Text, source: SourceRange) -> Unit mutates;
+    intrinsic create_module(scope: ScopeId) -> ModuleId mutates;
+    intrinsic begin_initializer(scope: ScopeId, name: Text, type: Type, source: SourceRange) -> Result<SymbolId> mutates;
+    intrinsic finish_initializer(scope: ScopeId, symbol: SymbolId, value: ExprId, source: SourceRange) -> Result<Unit> mutates;
+    // Finish blocks and returns must emit destructor calls for live locals in reverse order.
+    intrinsic finish_block(scope: ScopeId, entered: Bool, source: SourceRange) -> OpId mutates;
+    intrinsic op_le() -> Operator;
+    intrinsic op_lt() -> Operator;
+    intrinsic op_gt() -> Operator;
+    intrinsic op_ge() -> Operator;
+    intrinsic op_eq() -> Operator;
+    intrinsic op_ne() -> Operator;
+    intrinsic op_add() -> Operator;
+    intrinsic op_sub() -> Operator;
+    intrinsic op_mul() -> Operator;
+    intrinsic op_div() -> Operator;
+    intrinsic binary_expr(operator: Operator, left: ExprId, right: ExprId, source: SourceRange) -> Result<ExprId> mutates;
+    intrinsic integer_literal(value: Text, source: SourceRange) -> Result<ExprId> mutates;
+    intrinsic float_literal(value: Text, source: SourceRange) -> Result<ExprId> mutates;
+    intrinsic string_literal(value: Text, source: SourceRange) -> Result<ExprId> mutates;
+    intrinsic char_literal(value: Text, source: SourceRange) -> Result<ExprId> mutates;
+    intrinsic bool_literal_expr(value: Bool, source: SourceRange) -> ExprId mutates;
+    intrinsic null_literal(source: SourceRange) -> ExprId mutates;
+    intrinsic negate_expr(value: ExprId, source: SourceRange) -> Result<ExprId> mutates;
+    // Unqualified lookup checks current method members through self before enclosing scopes.
+    intrinsic lookup_place(scope: ScopeId, name: Text) -> Result<PlaceId>;
+    // Member lookup enforces public/private/protected access using the requesting scope.
+    intrinsic named_field(scope: ScopeId, base: PlaceId, name: Text) -> Result<PlaceId> mutates;
+    intrinsic index_place(base: PlaceId, index: ExprId, source: SourceRange) -> Result<PlaceId> mutates;
+    intrinsic load_place(place: PlaceId, source: SourceRange) -> Result<ExprId> mutates;
+    // Unqualified method calls resolve in the current class and pass self implicitly.
+    intrinsic lookup_function(scope: ScopeId, name: Text) -> Result<FunctionId>;
+    intrinsic lookup_method(scope: ScopeId, receiver: PlaceId, name: Text) -> Result<FunctionId>;
+    intrinsic empty_arguments() -> List<ExprId>;
+    intrinsic singleton_argument(value: ExprId) -> List<ExprId>;
+    intrinsic append_argument(arguments: List<ExprId>, value: ExprId) -> List<ExprId>;
+    intrinsic create_call(callee: FunctionId, arguments: List<ExprId>, source: SourceRange) -> Result<ExprId> mutates;
+    // The receiver becomes the first runtime argument, followed by explicit arguments.
+    intrinsic create_method_call(callee: FunctionId, receiver: PlaceId, arguments: List<ExprId>, source: SourceRange) -> Result<ExprId> mutates;
+    intrinsic require_value(value: ExprId) -> Result<ExprId>;
+    intrinsic recover_expression(message: Text, source: SourceRange) -> ExprId mutates;
+    intrinsic assignment_set() -> AssignmentOp;
+    intrinsic assignment_add() -> AssignmentOp;
+    intrinsic assignment_subtract() -> AssignmentOp;
+    intrinsic assignment_multiply() -> AssignmentOp;
+    intrinsic assignment_divide() -> AssignmentOp;
+    // Evaluate the return value before destroying all active automatic objects.
+}
+
+execution_model {
+    enum Value {
+        Int(I32), Float(F32), Bool(Bool), Char(U8),
+        Pointer(Option<Index>), Struct(List<Value>), Array(List<Value>),
+        Reference(PlaceView),
+        Void, Uninitialized
+    }
+    enum Control { Continue, Return(Value) }
+    record RuntimeError(message: Text, source: SourceRange);
+    record PlaceView(root: SymbolId, fields: List<Index>);
+    record BoundPlace(place: PlaceId, view: PlaceView, depth: Index);
+    record FunctionView(body: Option<OpId>, parameters: List<Type>, symbols: Option<List<SymbolId>>, result: Type);
+    record Runtime(store: Store<SymbolId, Value>, steps_remaining: Index, globals_finished: Bool, bound_places: List<BoundPlace>);
+    runtime_state runtime: Runtime;
+    intrinsic operation_node(operation: OpId) -> Result<OperationNode, RuntimeError>;
+    intrinsic expression_node(expression: ExprId) -> Result<Expression, RuntimeError>;
+    intrinsic literal_identity(expression: ExprId) -> Result<Index, RuntimeError>;
+    intrinsic module_operations() -> Result<List<OpId>, RuntimeError>;
+    intrinsic variable_type(symbol: SymbolId) -> Result<Type, RuntimeError>;
+    intrinsic variable_place(symbol: SymbolId) -> Result<PlaceId, RuntimeError>;
+    intrinsic field_types(structure: StructId) -> Result<List<Type>, RuntimeError>;
+    intrinsic place_view(place: PlaceId) -> Result<PlaceView, RuntimeError> mutates;
+    intrinsic execute_compound_store(place: PlaceId, value: ExprId, source: SourceRange) -> Result<Unit, RuntimeError> mutates;
+    intrinsic function_view(callee: FunctionId) -> Result<FunctionView, RuntimeError>;
+    intrinsic reference_matches_type(place: PlaceView, ty: Type) -> Result<Bool, RuntimeError>;
+    intrinsic construct(symbol: SymbolId, constructor: Option<FunctionId>, arguments: List<ExprId>, source: SourceRange) -> Result<Control, RuntimeError> mutates;
+    intrinsic destroy(symbol: SymbolId, source: SourceRange) -> Result<Unit, RuntimeError> mutates;
+    intrinsic evaluate_method_call(callee: FunctionId, receiver: PlaceId, arguments: List<ExprId>, source: SourceRange) -> Result<Value, RuntimeError> mutates;
+
+    function initialize_globals() -> Result<Unit, RuntimeError> mutates {
+        let operations = module_operations();
+        foreach operation in operations { initialize_global(operation); }
+        return unit;
+    }
+    function initialize_global(operation: OpId) -> Result<Unit, RuntimeError> mutates {
+        let node = operation_node(operation);
+        match node.kind {
+            Operation.Declare(symbol) => return declare(symbol, node.source);
+            Operation.Construct(symbol, constructor, arguments) => return initialize_global_object(symbol, constructor, arguments, node.source);
+            otherwise => runtime_error "invalid global declaration" at node.source;
+        }
+    }
+    function initialize_global_object(symbol: SymbolId, constructor: Option<FunctionId>, arguments: List<ExprId>, source: SourceRange) -> Result<Unit, RuntimeError> mutates {
+        construct(symbol, constructor, arguments, source);
+        return unit;
+    }
+    function declare(symbol: SymbolId, source: SourceRange) -> Result<Unit, RuntimeError> mutates {
+        let ty = variable_type(symbol);
+        let value = value_for_type(ty, runtime.store.is_global());
+        runtime.store.insert_current(symbol, value);
+        return unit;
+    }
+    function value_for_type(ty: Type, zero: Bool) -> Result<Value, RuntimeError> {
+        match ty {
+            Type.Struct(structure) => return structure_value(structure, zero);
+            Type.Array(element, length) => return array_value(AgSemRuntime.unbox(element), length, zero);
+            otherwise => return scalar_value(ty, zero);
+        }
+    }
+    function structure_value(structure: StructId, zero: Bool) -> Result<Value, RuntimeError> {
+        let types = field_types(structure);
+        let values = AgSemRuntime.list();
+        foreach ty in types {
+            let value = value_for_type(ty, zero);
+            values.push(value);
+        }
+        return Value.Struct(values);
+    }
+    function array_value(element: Type, length: Index, zero: Bool) -> Result<Value, RuntimeError> {
+        let values = AgSemRuntime.list();
+        foreach index in AgSemRuntime.indices(length) {
+            let value = value_for_type(element.clone(), zero);
+            values.push(value);
+        }
+        return Value.Array(values);
+    }
+    function scalar_value(ty: Type, zero: Bool) -> Result<Value, RuntimeError> {
+        if zero == false { return Value.Uninitialized; }
+        match ty {
+            Type.Int => return Value.Int(0);
+            Type.Float => return Value.Float(0.0);
+            Type.Bool => return Value.Bool(false);
+            Type.Char => return Value.Char(0);
+            Type.CharPointer => return Value.Pointer(none);
+            Type.NullPointer => return Value.Pointer(none);
+            Type.Void => return Value.Void;
+            otherwise => return Value.Uninitialized;
+        }
+    }
+    function value_matches_type(value: Value, ty: Type) -> Result<Bool, RuntimeError> {
+        match value {
+            Value.Int(number) => return ty == Type.Int;
+            Value.Float(number) => return ty == Type.Float;
+            Value.Bool(flag) => return ty == Type.Bool;
+            Value.Char(character) => return ty == Type.Char;
+            Value.Void => return ty == Type.Void;
+            Value.Pointer(pointer) => if ty == Type.CharPointer { return true; } else { return ty == Type.NullPointer; }
+            Value.Reference(place) => return reference_matches_type(place, ty);
+            Value.Struct(values) => match ty {
+                Type.Struct(structure) => return structure_matches(values, structure);
+                otherwise => return false;
+            }
+            Value.Array(values) => match ty {
+                Type.Array(element, length) => return array_matches(values, AgSemRuntime.unbox(element), length);
+                otherwise => return false;
+            }
+            otherwise => return false;
+        }
+    }
+    function structure_matches(values: List<Value>, structure: StructId) -> Result<Bool, RuntimeError> {
+        let types = field_types(structure);
+        return values_match(values, types);
+    }
+    function values_match(values: List<Value>, types: List<Type>) -> Result<Bool, RuntimeError> {
+        if values.len() != types.len() { return false; }
+        foreach pair in AgSemRuntime.zip(values, types) {
+            let valid = value_matches_type(pair.first, pair.second);
+            if valid == false { return false; }
+        }
+        return true;
+    }
+    function array_matches(values: List<Value>, element: Type, length: Index) -> Result<Bool, RuntimeError> {
+        if values.len() != length { return false; }
+        foreach value in values {
+            let valid = value_matches_type(value, element.clone());
+            if valid == false { return false; }
+        }
+        return true;
+    }
+    function load(place: PlaceId, source: SourceRange) -> Result<Value, RuntimeError> mutates {
+        let key = place_view(place);
+        match runtime.store.load_path(key.root, key.fields) {
+            Ok(value) => return initialized_value(value, source);
+            Err(fault) => match fault {
+                AccessError.MissingRoot => runtime_error "missing runtime variable" at source;
+                AccessError.InvalidPath => runtime_error "invalid runtime field" at source;
+            }
+        }
+    }
+    function initialized_value(value: Value, source: SourceRange) -> Result<Value, RuntimeError> {
+        match value {
+            Value.Uninitialized => runtime_error "variable used before initialization" at source;
+            otherwise => return value;
+        }
+    }
+    function store(place: PlaceId, value: Value, source: SourceRange) -> Result<Unit, RuntimeError> mutates {
+        let key = place_view(place);
+        match runtime.store.write_path(key.root, key.fields, value) {
+            Ok(done) => return unit;
+            Err(fault) => match fault {
+                AccessError.MissingRoot => runtime_error "missing runtime variable" at source;
+                AccessError.InvalidPath => runtime_error "invalid runtime field" at source;
+            }
+        }
+    }
+    function write_symbol(symbol: SymbolId, value: Value, source: SourceRange) -> Result<Unit, RuntimeError> mutates {
+        let place = variable_place(symbol);
+        return store(place, value, source);
+    }
+    function write(place: PlaceId, value: Value, source: SourceRange) -> Result<Unit, RuntimeError> mutates {
+        return store(place, value, source);
+    }
+    function call(callee: FunctionId, arguments: List<Value>, source: SourceRange) -> Result<Value, RuntimeError> mutates {
+        let signature = function_view(callee);
+        let body = function_body(signature.body, source);
+        if arguments.len() != signature.parameters.len() {
+            runtime_error "wrong number of arguments" at source;
+        }
+        let valid = values_match(arguments.clone(), signature.parameters);
+        if valid == false { runtime_error "incompatible argument type" at source; }
+        if runtime.store.depth() >= 256 { runtime_error "call depth exceeded" at source; }
+        let symbols = function_symbols(signature.symbols, source);
+        runtime.store.push_bindings(symbols, arguments);
+        // Capture the error before releasing the frame, then preserve its source.
+        let outcome = capture(execute(body));
+        runtime.store.pop();
+        return finish_call(outcome, signature.result, source);
+    }
+    function function_body(body: Option<OpId>, source: SourceRange) -> Result<OpId, RuntimeError> {
+        match body {
+            Some(operation) => return operation;
+            none => runtime_error "undefined function" at source;
+        }
+    }
+    function function_symbols(symbols: Option<List<SymbolId>>, source: SourceRange) -> Result<List<SymbolId>, RuntimeError> {
+        match symbols {
+            Some(values) => return values;
+            none => runtime_error "missing function scope" at source;
+        }
+    }
+    function finish_call(outcome: Result<Control, RuntimeError>, result: Type, source: SourceRange) -> Result<Value, RuntimeError> {
+        match outcome {
+            Ok(control) => return finish_control(control, result, source);
+            Err(fault) => runtime_error fault.message at fault.source;
+        }
+    }
+    function finish_control(control: Control, result: Type, source: SourceRange) -> Result<Value, RuntimeError> {
+        match control {
+            Control.Return(value) => return value;
+            Control.Continue => if result == Type.Void { return Value.Void; } else {
+                runtime_error "missing return statement" at source;
+            }
+        }
+    }
+    function evaluate_call(callee: FunctionId, arguments: List<ExprId>, source: SourceRange) -> Result<Value, RuntimeError> mutates {
+        let values = AgSemRuntime.list();
+        foreach argument in arguments {
+            let value = evaluate(argument);
+            values.push(value);
+        }
+        return call(callee, values, source);
+    }
+    function binary_checked(operator: Operator, right: ExprId, lhs: Value, rhs: Value, checks: List<RuntimeCheck>, source: SourceRange) -> Result<Value, RuntimeError> {
+        foreach check in checks {
+            match check {
+                RuntimeCheck.Nonzero(checked) => if checked == right {
+                    if rhs == Value.Int(0) { runtime_error "division by zero" at source; }
+                }
+            }
+        }
+        return binary(operator, lhs, rhs, source);
+    }
+    function char_to_int(value: U8) -> Result<I32, RuntimeError> { return AgSemRuntime.char_to_int(value); }
+    function char_to_float(value: U8) -> Result<F32, RuntimeError> { return AgSemRuntime.char_to_float(value); }
+    function int_to_float(value: I32) -> Result<F32, RuntimeError> { return AgSemRuntime.int_to_float(value); }
+    function int_to_char(value: I32) -> Result<U8, RuntimeError> { return AgSemRuntime.int_to_char(value); }
+    function float_to_int(value: F32) -> Result<I32, RuntimeError> { return AgSemRuntime.float_to_int(value); }
+    function float_to_char(value: F32) -> Result<U8, RuntimeError> { return AgSemRuntime.float_to_char(value); }
+
+    function tick(source: SourceRange) -> Result<Unit, RuntimeError> mutates {
+        if runtime.steps_remaining == 0 {
+            runtime_error "execution limit exceeded" at source;
+        }
+        runtime.steps_remaining = runtime.steps_remaining - 1;
+        return unit;
+    }
+    function checked_neg_i32(number: I32, source: SourceRange) -> Result<I32, RuntimeError> {
+        let result = AgSemRuntime.checked_neg_i32(number);
+        match result {
+            Some(value) => return value;
+            otherwise => runtime_error "integer overflow" at source;
+        }
+    }
+    function checked_add_i32(left: I32, right: I32, source: SourceRange) -> Result<I32, RuntimeError> {
+        let result = AgSemRuntime.checked_add_i32(left, right);
+        match result {
+            Some(value) => return value;
+            otherwise => runtime_error "integer overflow" at source;
+        }
+    }
+    function checked_sub_i32(left: I32, right: I32, source: SourceRange) -> Result<I32, RuntimeError> {
+        let result = AgSemRuntime.checked_sub_i32(left, right);
+        match result {
+            Some(value) => return value;
+            otherwise => runtime_error "integer overflow" at source;
+        }
+    }
+    function checked_mul_i32(left: I32, right: I32, source: SourceRange) -> Result<I32, RuntimeError> {
+        let result = AgSemRuntime.checked_mul_i32(left, right);
+        match result {
+            Some(value) => return value;
+            otherwise => runtime_error "integer overflow" at source;
+        }
+    }
+    function checked_div_i32(left: I32, right: I32, source: SourceRange) -> Result<I32, RuntimeError> {
+        let result = AgSemRuntime.checked_div_i32(left, right);
+        match result {
+            Some(value) => return value;
+            otherwise => if right == 0 {
+                runtime_error "division by zero" at source;
+            } else {
+                runtime_error "integer overflow" at source;
+            }
+        }
+    }
+
+    function execute(operation: OpId) -> Result<Control, RuntimeError> mutates {
+        let node = operation_node(operation);
+        tick(node.source);
+        return execute_generated(node.kind, node.source);
+    }
+    function evaluate(expression: ExprId) -> Result<Value, RuntimeError> mutates {
+        let node = expression_node(expression);
+        tick(node.source);
+        return evaluate_generated(node.kind, node.checks, expression, node.source);
+    }
+
+    function condition_truthy(condition: ExprId, source: SourceRange) -> Result<Bool, RuntimeError> mutates {
+        let value = evaluate(condition);
+        return truthy(value, source);
+    }
+    function truthy(value: Value, source: SourceRange) -> Result<Bool, RuntimeError> {
+        match value {
+            Value.Bool(flag) => return flag;
+            Value.Int(number) => return number != 0;
+            Value.Float(number) => return number != 0.0;
+            Value.Char(number) => return number != 0;
+            Value.Pointer(pointer) => return pointer != none;
+            otherwise => runtime_error "invalid condition value" at source;
+        }
+    }
+    function execute_optional(operation: Option<OpId>) -> Result<Control, RuntimeError> mutates {
+        match operation {
+            Some(child) => return execute(child);
+            none => return Control.Continue;
+        }
+    }
+    function control_return(value: Value) -> Result<Control, RuntimeError> {
+        return Control.Return(value);
+    }
+    function no_op() -> Result<Unit, RuntimeError> {
+        return unit;
+    }
+    function return_value(value: Option<ExprId>) -> Result<Control, RuntimeError> mutates {
+        match value {
+            Some(expression) => return Control.Return(evaluate(expression));
+            none => return Control.Return(Value.Void);
+        }
+    }
+    function return_with_cleanup(value: Option<ExprId>, cleanup: List<SymbolId>, source: SourceRange) -> Result<Control, RuntimeError> mutates {
+        let result = return_value(value);
+        foreach symbol in cleanup { destroy(symbol, source); }
+        return result;
+    }
+    function invalid_operation(source: SourceRange) -> Result<Control, RuntimeError> {
+        runtime_error "invalid semantic IR" at source;
+    }
+    function invalid_value(source: SourceRange) -> Result<Value, RuntimeError> {
+        runtime_error "invalid semantic IR" at source;
+    }
+    function value_from_constant(constant: Constant, expression: ExprId) -> Result<Value, RuntimeError> {
+        match constant {
+            Constant.Int(number) => return Value.Int(number);
+            Constant.Float(number) => return Value.Float(number);
+            Constant.Bool(flag) => return Value.Bool(flag);
+            Constant.Char(character) => return Value.Char(character);
+            Constant.String(literal) => return Value.Pointer(Some(literal_identity(expression)));
+            Constant.Null => return Value.Pointer(none);
+        }
+    }
+    function negate(value: Value, source: SourceRange) -> Result<Value, RuntimeError> {
+        match value {
+            Value.Int(number) => return Value.Int(checked_neg_i32(number, source));
+            Value.Float(number) => return Value.Float(-number);
+            otherwise => runtime_error "invalid unary operand" at source;
+        }
+    }
+    function binary(operator: Operator, left: Value, right: Value, source: SourceRange) -> Result<Value, RuntimeError> {
+        match left {
+            Value.Int(a) => match right {
+                Value.Int(b) => match operator {
+                    Operator.Add => return Value.Int(checked_add_i32(a, b, source));
+                    Operator.Subtract => return Value.Int(checked_sub_i32(a, b, source));
+                    Operator.Multiply => return Value.Int(checked_mul_i32(a, b, source));
+                    Operator.Divide => return Value.Int(checked_div_i32(a, b, source));
+                    Operator.Less => return Value.Bool(a < b);
+                    Operator.LessEqual => return Value.Bool(a <= b);
+                    Operator.Greater => return Value.Bool(a > b);
+                    Operator.GreaterEqual => return Value.Bool(a >= b);
+                    Operator.Equal => return Value.Bool(a == b);
+                    Operator.NotEqual => return Value.Bool(a != b);
+                }
+                otherwise => runtime_error "invalid binary operands" at source;
+            }
+            Value.Float(a) => match right {
+                Value.Float(b) => match operator {
+                    Operator.Add => return Value.Float(a + b);
+                    Operator.Subtract => return Value.Float(a - b);
+                    Operator.Multiply => return Value.Float(a * b);
+                    Operator.Divide => return Value.Float(a / b);
+                    Operator.Less => return Value.Bool(a < b);
+                    Operator.LessEqual => return Value.Bool(a <= b);
+                    Operator.Greater => return Value.Bool(a > b);
+                    Operator.GreaterEqual => return Value.Bool(a >= b);
+                    Operator.Equal => return Value.Bool(a == b);
+                    Operator.NotEqual => return Value.Bool(a != b);
+                }
+                otherwise => runtime_error "invalid binary operands" at source;
+            }
+            Value.Bool(a) => match right {
+                Value.Bool(b) => match operator {
+                    Operator.Equal => return Value.Bool(a == b);
+                    Operator.NotEqual => return Value.Bool(a != b);
+                    otherwise => runtime_error "invalid boolean operation" at source;
+                }
+                otherwise => runtime_error "invalid binary operands" at source;
+            }
+            Value.Pointer(a) => match right {
+                Value.Pointer(b) => match operator {
+                    Operator.Equal => return Value.Bool(a == b);
+                    Operator.NotEqual => return Value.Bool(a != b);
+                    otherwise => runtime_error "invalid pointer operation" at source;
+                }
+                otherwise => runtime_error "invalid binary operands" at source;
+            }
+            otherwise => runtime_error "invalid binary operands" at source;
+        }
+    }
+    function convert(value: Value, target: Type, source: SourceRange) -> Result<Value, RuntimeError> {
+        if target == Type.Bool { return Value.Bool(truthy(value, source)); }
+        match value {
+            Value.Char(number) => match target {
+                Type.Int => return Value.Int(char_to_int(number));
+                Type.Float => return Value.Float(char_to_float(number));
+                Type.Char => return Value.Char(number);
+                otherwise => runtime_error "invalid runtime conversion" at source;
+            }
+            Value.Int(number) => match target {
+                Type.Float => return Value.Float(int_to_float(number));
+                Type.Char => return Value.Char(int_to_char(number));
+                Type.Int => return Value.Int(number);
+                otherwise => runtime_error "invalid runtime conversion" at source;
+            }
+            Value.Float(number) => match target {
+                Type.Int => return Value.Int(float_to_int(number));
+                Type.Char => return Value.Char(float_to_char(number));
+                Type.Float => return Value.Float(number);
+                otherwise => runtime_error "invalid runtime conversion" at source;
+            }
+            Value.Pointer(pointer) => match target {
+                Type.CharPointer => return Value.Pointer(pointer);
+                Type.NullPointer => return Value.Pointer(pointer);
+                otherwise => runtime_error "invalid runtime conversion" at source;
+            }
+            Value.Struct(fields) => match target {
+                Type.Struct(structure) => return Value.Struct(fields);
+                otherwise => runtime_error "invalid runtime conversion" at source;
+            }
+            Value.Array(items) => match target {
+                Type.Array(element, length) => return Value.Array(items);
+                otherwise => runtime_error "invalid runtime conversion" at source;
+            }
+            Value.Void => match target {
+                Type.Void => return Value.Void;
+                otherwise => runtime_error "invalid runtime conversion" at source;
+            }
+            otherwise => runtime_error "invalid runtime conversion" at source;
+        }
+    }
+    properties {
+        forall a: I32, b: I32
+            where mathematical_sum(a, b) fits I32
+            expect checked_add_i32(a, b) == mathematical_sum(a, b);
+        forall a: I32, b: I32
+            where mathematical_sum(a, b) not fits I32
+            expect checked_add_i32(a, b) fails "integer overflow";
+        forall a: I32, b: I32
+            where mathematical_difference(a, b) fits I32
+            expect checked_sub_i32(a, b) == mathematical_difference(a, b);
+        forall a: I32, b: I32
+            where mathematical_difference(a, b) not fits I32
+            expect checked_sub_i32(a, b) fails "integer overflow";
+        forall a: I32, b: I32
+            where mathematical_product(a, b) fits I32
+            expect checked_mul_i32(a, b) == mathematical_product(a, b);
+        forall a: I32, b: I32
+            where mathematical_product(a, b) not fits I32
+            expect checked_mul_i32(a, b) fails "integer overflow";
+        forall a: I32
+            where mathematical_negation(a) fits I32
+            expect checked_neg_i32(a) == mathematical_negation(a);
+        forall a: I32
+            where mathematical_negation(a) not fits I32
+            expect checked_neg_i32(a) fails "integer overflow";
+        forall a: I32, b: I32
+            where b == 0
+            expect checked_div_i32(a, b) fails "division by zero";
+    }
+}
+
+execution_contract {
+    execute Declare(symbol) { declare(symbol, source); }
+    execute Initialize(symbol: symbol, value: value) {
+        let computed = evaluate(value);
+        write_symbol(symbol, computed, source);
+    }
+    execute Store(place: place, value: value) {
+        let computed = evaluate(value);
+        write(place, computed, source);
+    }
+    execute CompoundStore(place: place, value: value) {
+        execute_compound_store(place, value, source);
+    }
+    execute Call(value) { evaluate(value); }
+    execute Block(scope: scope, body: body) {
+        foreach child in body {
+            let flow = execute(child);
+            match flow {
+                Return(value) => return control_return(value);
+                Continue => no_op();
+            }
+        }
+    }
+    execute If(condition: condition, then_branch: then_branch, else_branch: else_branch) {
+        let test = condition_truthy(condition, source);
+        if test { return execute(then_branch); }
+        return execute_optional(else_branch);
+    }
+    execute While(condition: condition, body: body) {
+        while condition_truthy(condition, source) {
+            let flow = execute(body);
+            match flow {
+                Return(value) => return control_return(value);
+                Continue => no_op();
+            }
+        }
+    }
+    execute For(scope: scope, initialization: initialization, condition: condition, body: body, update: update) {
+        let initial = execute(initialization);
+        match initial {
+            Return(value) => return control_return(value);
+            Continue => no_op();
+        }
+        while condition_truthy(condition, source) {
+            let flow = execute(body);
+            match flow {
+                Return(value) => return control_return(value);
+                Continue => no_op();
+            }
+            let step = execute(update);
+            match step {
+                Return(value) => return control_return(value);
+                Continue => no_op();
+            }
+        }
+    }
+    execute Return(value: value, cleanup: cleanup) { return return_with_cleanup(value, cleanup, source); }
+    execute Error() { return invalid_operation(source); }
+
+    evaluate Error() { return invalid_value(source); }
+    evaluate Constant(value) { return value_from_constant(value, expression); }
+    evaluate Load(place) { return load(place, source); }
+    evaluate Convert(value: value, target: target) {
+        let original = evaluate(value);
+        return convert(original, target, source);
+    }
+    evaluate Negate(value) {
+        let original = evaluate(value);
+        return negate(original, source);
+    }
+    evaluate Binary(operator: operator, left: left, right: right) {
+        let lhs = evaluate(left);
+        let rhs = evaluate(right);
+        return binary_checked(operator, right, lhs, rhs, checks, source);
+    }
+    evaluate Call(function: function, arguments: arguments) {
+        return evaluate_call(function, arguments, source);
+    }
+    execute Construct(symbol, constructor, arguments) {
+        return construct(symbol, constructor, arguments, source);
+    }
+    execute Destroy(symbol) { destroy(symbol, source); }
+    evaluate MethodCall(function: function, receiver: receiver, arguments: arguments) {
+        return evaluate_method_call(function, receiver, arguments, source);
+    }
+}
+
+options {
+    generate_interpreter = true;
+}
+
+node program
+    : declarations=declaration+ EOF
+        analysis {
+            let state = unit;
+            foreach item in declarations {
+                analyze item with scope: scope -> state default record_error(failure_message, item.source) continue_on_error;
+            }
+            result = create_module(scope);
+        }
+    ;
+
+inline declaration
+    : value=varDeclaration
+        analysis {
+            let target = ordinary_target();
+            analyze value with scope: scope, target: target -> analyzed;
+            result = analyzed;
+        }
+    | value=funDeclaration
+        analysis {
+            let owner = no_owner();
+            let visibility = public_visibility();
+            analyze value with scope: scope, owner: owner, visibility: visibility -> analyzed; result = analyzed;
+        }
+    | value=funDefinition
+        analysis {
+            let owner = no_owner();
+            let visibility = public_visibility();
+            analyze value with scope: scope, owner: owner, visibility: visibility, bodies: true -> analyzed; result = analyzed;
+        }
+    | value=methodOutOf
+        analysis {
+            analyze value with scope: scope -> analyzed; result = analyzed;
+        }
+    | value=constructorOutOf
+        analysis {
+            analyze value with scope: scope -> analyzed; result = analyzed;
+        }
+    | value=destructorOutOf
+        analysis {
+            analyze value with scope: scope -> analyzed; result = analyzed;
+        }
+    | value=structDeclaration
+        analysis {
+            analyze value with scope: scope -> analyzed; result = analyzed;
+        }
+    | value=classDeclaration
+        analysis {
+            analyze value with scope: scope -> analyzed; result = analyzed;
+        }
+    ;
+
+node declarator
+    : name=ID
+        analysis {
+            result = copy_text(name.text);
+        }
+    ;
+
+node varDeclaration
+    : type=typeSpecifier name=declarator SEMI                                  #ScalarVariable
+        analysis {
+            analyze type with scope: scope -> declared_type;
+            analyze name -> identifier;
+            result = declare_object(scope, target, identifier, declared_type, self.source);
+        }
+    | type=typeSpecifier name=declarator LeftBrack length=NUMBER RightBrack SEMI #ArrayVariable
+        analysis {
+            analyze type with scope: scope -> element_type;
+            analyze name -> identifier;
+            let size = parse_array_length(length.text);
+            let declared_type = array_type(element_type, size);
+            result = declare_object(scope, target, identifier, declared_type, self.source);
+        }
+    ;
+
+node funDeclarator
+    : type=returnType name=ID LPAREN parameters=formalParameters? RPAREN
+        analysis {
+            analyze type with scope: scope -> return_type;
+            analyze parameters? with scope: scope -> params default empty_parameters();
+            result = create_header(name.text, return_type, params);
+        }
+    ;
+
+node funDeclaration
+    : declarator=funDeclarator SEMI
+        analysis {
+            analyze declarator with scope: scope -> header;
+            result = declare_callable(scope, owner, visibility, header, self.source);
+        }
+    ;
+
+node funDefinition
+    : declarator=funDeclarator body=compoundStatement
+        analysis {
+            analyze declarator with scope: scope -> header;
+            if bodies {
+                let function_scope = begin_callable_definition(scope, owner, visibility, header, self.source);
+                analyze body with scope: function_scope, enter: false -> analyzed;
+                result = unit;
+            } else {
+                result = predeclare_inline_method(owner, visibility, header, self.source);
+            }
+        }
+    ;
+
+node constructorDeclarator
+    : name=ID LPAREN parameters=formalParameters? RPAREN
+        analysis {
+            analyze parameters? with scope: scope -> params default empty_parameters();
+            result = create_constructor_header(owner, name.text, params);
+        }
+    ;
+
+node constructorDeclaration
+    : declarator=constructorDeclarator SEMI
+        analysis {
+            analyze declarator with scope: scope, owner: owner -> header;
+            result = declare_constructor(owner, visibility, header, self.source);
+        }
+    ;
+
+node constructorDefinition
+    : declarator=constructorDeclarator body=compoundStatement
+        analysis {
+            analyze declarator with scope: scope, owner: owner -> header;
+            if bodies {
+                let method_scope = begin_constructor_definition(owner, visibility, header, self.source);
+                analyze body with scope: method_scope, enter: false -> analyzed;
+                result = unit;
+            } else {
+                result = predeclare_inline_constructor(owner, visibility, header, self.source);
+            }
+        }
+    ;
+
+node destructorDeclarator
+    : TILDE name=ID LPAREN RPAREN
+        analysis {
+            result = create_destructor_header(owner, name.text);
+        }
+    ;
+
+node destructorDeclaration
+    : declarator=destructorDeclarator SEMI
+        analysis {
+            analyze declarator with owner: owner -> header;
+            result = declare_destructor(owner, visibility, header, self.source);
+        }
+    ;
+
+node destructorDefinition
+    : declarator=destructorDeclarator body=compoundStatement
+        analysis {
+            analyze declarator with owner: owner -> header;
+            if bodies {
+                let method_scope = begin_destructor_definition(owner, visibility, header, self.source);
+                analyze body with scope: method_scope, enter: false -> analyzed;
+                result = unit;
+            } else {
+                result = predeclare_inline_destructor(owner, visibility, header, self.source);
+            }
+        }
+    ;
+
+node methodOutOf
+    : type=returnType class=ID DoubleColon name=ID LPAREN parameters=formalParameters? RPAREN body=compoundStatement
+        analysis {
+            let owner = lookup_aggregate(scope, class.text);
+            analyze type with scope: scope -> return_type;
+            analyze parameters? with scope: scope -> params default empty_parameters();
+            let header = create_header(name.text, return_type, params);
+            let method_scope = begin_out_of_method_definition(owner, header, self.source);
+            analyze body with scope: method_scope, enter: false -> analyzed;
+            result = unit;
+        }
+    ;
+
+node constructorOutOf
+    : class=ID DoubleColon name=ID LPAREN parameters=formalParameters? RPAREN body=compoundStatement
+        analysis {
+            let owner = lookup_aggregate(scope, class.text);
+            analyze parameters? with scope: scope -> params default empty_parameters();
+            let header = create_constructor_header(owner, name.text, params);
+            let method_scope = begin_out_of_constructor_definition(owner, header, self.source);
+            analyze body with scope: method_scope, enter: false -> analyzed;
+            result = unit;
+        }
+    ;
+
+node destructorOutOf
+    : class=ID DoubleColon TILDE name=ID LPAREN RPAREN body=compoundStatement
+        analysis {
+            let owner = lookup_aggregate(scope, class.text);
+            let header = create_destructor_header(owner, name.text);
+            let method_scope = begin_out_of_destructor_definition(owner, header, self.source);
+            analyze body with scope: method_scope, enter: false -> analyzed;
+            result = unit;
+        }
+    ;
+
+// Register every member before analyzing any inline body, so later fields are visible.
+node structDeclaration
+    : STRUCT name=ID base=inheritance? LBRACE members=memberDeclaration* sections=accessSection* RBRACE SEMI
+        analysis {
+            let structure = begin_struct(scope, name.text, self.source);
+            analyze base? with scope: scope, owner: structure -> base_state default unit;
+            let visibility = public_visibility();
+            let state = unit;
+            foreach member in members {
+                analyze member with scope: scope, owner: structure, visibility: visibility, bodies: false -> state default record_error(failure_message, member.source) continue_on_error;
+            }
+            foreach section in sections {
+                analyze section with scope: scope, owner: structure, bodies: false -> state default record_error(failure_message, section.source) continue_on_error;
+            }
+            finish_struct(structure);
+            foreach member in members {
+                analyze member with scope: scope, owner: structure, visibility: visibility, bodies: true -> state default record_error(failure_message, member.source) continue_on_error;
+            }
+            foreach section in sections {
+                analyze section with scope: scope, owner: structure, bodies: true -> state default record_error(failure_message, section.source) continue_on_error;
+            }
+            result = unit;
+        }
+    ;
+
+node classDeclaration
+    : CLASS name=ID base=inheritance? LBRACE members=memberDeclaration* sections=accessSection* RBRACE SEMI
+        analysis {
+            let owner = begin_class(scope, name.text, self.source);
+            analyze base? with scope: scope, owner: owner -> base_state default unit;
+            let visibility = private_visibility();
+            let state = unit;
+            foreach member in members {
+                analyze member with scope: scope, owner: owner, visibility: visibility, bodies: false -> state default record_error(failure_message, member.source) continue_on_error;
+            }
+            foreach section in sections {
+                analyze section with scope: scope, owner: owner, bodies: false -> state default record_error(failure_message, section.source) continue_on_error;
+            }
+            finish_class(owner);
+            foreach member in members {
+                analyze member with scope: scope, owner: owner, visibility: visibility, bodies: true -> state default record_error(failure_message, member.source) continue_on_error;
+            }
+            foreach section in sections {
+                analyze section with scope: scope, owner: owner, bodies: true -> state default record_error(failure_message, section.source) continue_on_error;
+            }
+            result = unit;
+        }
+    ;
+
+inline inheritance
+    : COLON value=ID
+        analysis {
+            result = set_base(scope, owner, value.text, self.source);
+        }
+    ;
+
+node accessSection
+    : access=accessSpecifier COLON members=memberDeclaration*
+        analysis {
+            analyze access -> visibility;
+            let state = unit;
+            foreach member in members {
+                analyze member with scope: scope, owner: owner, visibility: visibility, bodies: bodies -> state default record_error(failure_message, member.source) continue_on_error;
+            }
+            result = unit;
+        }
+    ;
+
+inline accessSpecifier
+    : value=PRIVATE
+        analysis { result = private_visibility(); }
+    | value=PROTECTED
+        analysis { result = protected_visibility(); }
+    | value=PUBLIC
+        analysis { result = public_visibility(); }
+    ;
+
+inline memberDeclaration
+    : value=varDeclaration
+        analysis {
+            if bodies {
+                result = unit;
+            } else {
+                let target = field_target(owner, visibility);
+                analyze value with scope: scope, target: target -> analyzed;
+                result = analyzed;
+            }
+        }
+    | value=method
+        analysis {
+            analyze value with scope: scope, owner: owner, visibility: visibility, bodies: bodies -> analyzed;
+            result = analyzed;
+        }
+    ;
+
+inline method
+    : value=funDeclaration
+        analysis {
+            if bodies {
+                result = unit;
+            } else {
+                analyze value with scope: scope, owner: owner, visibility: visibility -> analyzed;
+                result = analyzed;
+            }
+        }
+    | value=funDefinition
+        analysis { analyze value with scope: scope, owner: owner, visibility: visibility, bodies: bodies -> analyzed; result = analyzed; }
+    | value=constructorDeclaration
+        analysis {
+            if bodies {
+                result = unit;
+            } else {
+                analyze value with scope: scope, owner: owner, visibility: visibility -> analyzed;
+                result = analyzed;
+            }
+        }
+    | value=constructorDefinition
+        analysis { analyze value with scope: scope, owner: owner, visibility: visibility, bodies: bodies -> analyzed; result = analyzed; }
+    | value=destructorDeclaration
+        analysis {
+            if bodies {
+                result = unit;
+            } else {
+                analyze value with scope: scope, owner: owner, visibility: visibility -> analyzed;
+                result = analyzed;
+            }
+        }
+    | value=destructorDefinition
+        analysis { analyze value with scope: scope, owner: owner, visibility: visibility, bodies: bodies -> analyzed; result = analyzed; }
+    ;
+
+inline returnType
+    : value=typeSpecifier
+        analysis {
+            analyze value with scope: scope -> analyzed; result = analyzed;
+        }
+    | value=VOID
+        analysis {
+            result = type_void();
+        }
+    ;
+
+inline typeSpecifier
+    : type=INT
+        analysis {
+            result = type_int();
+        }
+    | type=FLOAT
+        analysis {
+            result = type_float();
+        }
+    | type=BOOL
+        analysis {
+            result = type_bool();
+        }
+    | type=CHAR star=STAR?
+        analysis {
+            result = type_char(star.present);
+        }
+    | type=ID
+        analysis {
+            result = resolve_type(scope, type.text);
+        }
+    ;
+
+node formalParameters
+    : first=formalParameter rest=formalParameterTail*
+        analysis {
+            analyze first with scope: scope -> first_parameter;
+            let parameters = singleton_parameter(first_parameter);
+            foreach tail in rest {
+                analyze tail with scope: scope, parameters: parameters -> parameters;
+            }
+            result = parameters;
+        }
+    ;
+
+inline formalParameterTail
+    : COMMA value=formalParameter
+        analysis {
+            analyze value with scope: scope -> parameter;
+            result = append_parameter(parameters, parameter);
+        }
+    ;
+
+node formalParameter
+    : type=typeSpecifier name=declarator
+        analysis {
+            analyze type with scope: scope -> parameter_type;
+            analyze name -> identifier;
+            result = create_parameter(identifier, parameter_type, self.source);
+        }
+    ;
+
+node compoundStatement
+    : LBRACE items=compoundItem* RBRACE
+        analysis {
+            let block_scope = nested_scope(scope, enter, self.source);
+            let state = unit;
+            foreach item in items {
+                analyze item with scope: block_scope -> state default record_error(failure_message, item.source) continue_on_error;
+            }
+            result = finish_block(block_scope, enter, self.source);
+        }
+    ;
+
+inline compoundItem
+    : value=localDeclaration
+        analysis {
+            analyze value with scope: scope -> analyzed; result = analyzed;
+        }
+    | value=statement
+        analysis {
+            analyze value with scope: scope -> operation;
+            result = append_statement(scope, operation);
+        }
+    ;
+
+inline localDeclaration
+    : value=varDeclaration
+        analysis {
+            let target = ordinary_target();
+            analyze value with scope: scope, target: target -> analyzed;
+            result = analyzed;
+        }
+    | value=varInitialization
+        analysis {
+            analyze value with scope: scope -> analyzed; result = analyzed;
+        }
+    | value=varConstruction
+        analysis {
+            analyze value with scope: scope -> analyzed; result = analyzed;
+        }
+    ;
+
+node varInitialization
+    : type=typeSpecifier name=declarator ASSIGN value=expression SEMI
+        analysis {
+            analyze type with scope: scope -> declared_type;
+            analyze name -> identifier;
+            let symbol = begin_initializer(scope, identifier, declared_type, self.source);
+            analyze value with scope: scope -> initializer default recover_expression(failure_message, value.source) continue_on_error;
+            result = finish_initializer(scope, symbol, initializer, self.source);
+        }
+    ;
+
+node varConstruction
+    : type=typeSpecifier name=declarator LPAREN arguments=argList? RPAREN SEMI
+        analysis {
+            analyze type with scope: scope -> declared_type;
+            analyze name -> identifier;
+            let symbol = begin_construction(scope, identifier, declared_type, self.source);
+            analyze arguments? with scope: scope -> values default empty_arguments();
+            result = finish_construction(scope, symbol, values, self.source);
+        }
+    ;
+
+inline relop
+    : value=LE
+        analysis { result = op_le(); }
+    | value=LT
+        analysis { result = op_lt(); }
+    | value=GT
+        analysis { result = op_gt(); }
+    | value=GE
+        analysis { result = op_ge(); }
+    | value=EQ
+        analysis { result = op_eq(); }
+    | value=NEQ
+        analysis { result = op_ne(); }
+    ;
+
+node expression
+    : left=additiveExpression comparison=comparisonTail?
+        analysis {
+            analyze left with scope: scope -> lhs default recover_expression(failure_message, left.source) continue_on_error;
+            analyze comparison? with scope: scope, left: lhs -> result_value default lhs;
+            result = result_value;
+        }
+    ;
+
+inline comparisonTail
+    : operator=relop right=additiveExpression
+        analysis {
+            analyze operator -> operation;
+            analyze right with scope: scope -> rhs default recover_expression(failure_message, right.source) continue_on_error;
+            result = binary_expr(operation, left, rhs, self.source);
+        }
+    ;
+
+inline addop
+    : value=PLUS
+        analysis { result = op_add(); }
+    | value=MINUS
+        analysis { result = op_sub(); }
+    ;
+
+node additiveExpression
+    : first=term rest=additiveOperation*
+        analysis {
+            analyze first with scope: scope -> acc default recover_expression(failure_message, first.source) continue_on_error;
+            foreach part in rest {
+                analyze part with scope: scope, left: acc -> acc default recover_expression(failure_message, part.source) continue_on_error;
+            }
+            result = acc;
+        }
+    ;
+
+inline additiveOperation
+    : operator=addop operand=term
+        analysis {
+            analyze operator -> operation;
+            analyze operand with scope: scope -> rhs default recover_expression(failure_message, operand.source) continue_on_error;
+            result = binary_expr(operation, left, rhs, self.source);
+        }
+    ;
+
+inline mulop
+    : value=STAR
+        analysis { result = op_mul(); }
+    | value=DIV
+        analysis { result = op_div(); }
+    ;
+
+node term
+    : first=factor rest=multiplicativeOperation*
+        analysis {
+            analyze first with scope: scope -> acc default recover_expression(failure_message, first.source) continue_on_error;
+            foreach part in rest {
+                analyze part with scope: scope, left: acc -> acc default recover_expression(failure_message, part.source) continue_on_error;
+            }
+            result = acc;
+        }
+    ;
+
+inline multiplicativeOperation
+    : operator=mulop operand=factor
+        analysis {
+            analyze operator -> operation;
+            analyze operand with scope: scope -> rhs default recover_expression(failure_message, operand.source) continue_on_error;
+            result = binary_expr(operation, left, rhs, self.source);
+        }
+    ;
+
+node factor
+    : LPAREN value=expression RPAREN         #ParenthesizedFactor
+        analysis {
+            analyze value with scope: scope -> analyzed;
+            result = analyzed;
+        }
+    | value=varUsage                       #VariableFactor
+        analysis {
+            analyze value with scope: scope -> place;
+            result = load_place(place, self.source);
+        }
+    | value=call                           #CallFactor
+        analysis {
+            analyze value with scope: scope -> call_value;
+            result = require_value(call_value);
+        }
+    | value=NUMBER                         #NumberFactor
+        analysis { result = integer_literal(value.text, self.source); }
+    | value=FLOAT_LITERAL                  #FloatFactor
+        analysis { result = float_literal(value.text, self.source); }
+    | value=STRING_LITERAL                 #StringFactor
+        analysis { result = string_literal(value.text, self.source); }
+    | value=CHAR_LITERAL                   #CharFactor
+        analysis { result = char_literal(value.text, self.source); }
+    | value=bool_literal                   #BoolFactor
+        analysis {
+            analyze value -> analyzed;
+            result = analyzed;
+        }
+    | value=NULL                           #NullFactor
+        analysis { result = null_literal(self.source); }
+    | MINUS operand=factor                 #NegatedFactor
+        analysis {
+            analyze operand with scope: scope -> inner;
+            result = negate_expr(inner, self.source);
+        }
+    ;
+
+inline bool_literal
+    : value=FALSE
+        analysis { result = bool_literal_expr(false, self.source); }
+    | value=TRUE
+        analysis { result = bool_literal_expr(true, self.source); }
+    ;
+
+node varUsage
+    : name=ID index=arrayIndex?                    #SimpleVariable
+        analysis {
+            let place = lookup_place(scope, name.text);
+            analyze index? with scope: scope, base: place -> result_place default place;
+            result = result_place;
+        }
+    | receiver=ID DOT name=ID index=arrayIndex?    #MemberVariable
+        analysis {
+            let object = lookup_place(scope, receiver.text);
+            let field = named_field(scope, object, name.text);
+            analyze index? with scope: scope, base: field -> result_place default field;
+            result = result_place;
+        }
+    ;
+
+inline arrayIndex
+    : LeftBrack value=expression RightBrack
+        analysis {
+            analyze value with scope: scope -> index;
+            result = index_place(base, index, self.source);
+        }
+    ;
+
+node call
+    : name=ID LPAREN arguments=argList? RPAREN                    #FunctionCall
+        analysis {
+            analyze arguments? with scope: scope -> values default empty_arguments();
+            let callee = lookup_function(scope, name.text);
+            result = create_call(callee, values, self.source);
+        }
+    | receiver=ID DOT name=ID LPAREN arguments=argList? RPAREN    #MethodCall
+        analysis {
+            let object = lookup_place(scope, receiver.text);
+            analyze arguments? with scope: scope -> values default empty_arguments();
+            let callee = lookup_method(scope, object, name.text);
+            result = create_method_call(callee, object, values, self.source);
+        }
+    ;
+
+node argList
+    : first=argument rest=argumentTail*
+        analysis {
+            analyze first with scope: scope -> first_value default recover_expression(failure_message, first.source) continue_on_error;
+            let values = singleton_argument(first_value);
+            foreach tail in rest {
+                analyze tail with scope: scope, arguments: values -> values;
+            }
+            result = values;
+        }
+    ;
+
+inline argumentTail
+    : COMMA value=argument
+        analysis {
+            analyze value with scope: scope -> next_value default recover_expression(failure_message, value.source) continue_on_error;
+            result = append_argument(arguments, next_value);
+        }
+    ;
+
+inline argument
+    : value=expression
+        analysis {
+            analyze value with scope: scope -> analyzed;
+            result = analyzed;
+        }
+    ;
+
+inline statement
+    : value=whileStatement
+        analysis { analyze value with scope: scope -> analyzed; result = analyzed; }
+    | value=forStatement
+        analysis { analyze value with scope: scope -> analyzed; result = analyzed; }
+    | value=ifStatement
+        analysis { analyze value with scope: scope -> analyzed; result = analyzed; }
+    | value=assignStatement SEMI
+        analysis { analyze value with scope: scope -> analyzed; result = analyzed; }
+    | value=call SEMI
+        analysis {
+            analyze value with scope: scope -> invocation;
+            result = call_statement(invocation, self.source);
+        }
+    | value=compoundStatement
+        analysis {
+            analyze value with scope: scope, enter: true -> analyzed; result = analyzed;
+        }
+    | value=returnStatement
+        analysis { analyze value with scope: scope -> analyzed; result = analyzed; }
+    ;
+
+node whileStatement
+    : WHILE LPAREN condition=expression RPAREN body=statement
+        analysis {
+            analyze condition with scope: scope -> test;
+            let boolean_test = condition_bool(test);
+            let incoming = snapshot_flow();
+            analyze body with scope: scope -> loop_body default recover_statement(incoming, failure_message, body.source) continue_on_error;
+            merge_flow_snapshot(incoming);
+            result = make_while(boolean_test, loop_body, self.source);
+        }
+    ;
+
+node forStatement
+    : FOR LPAREN initialization=varInitialization condition=expression SEMI update=assignStatement RPAREN body=statement
+        analysis {
+            let local = nested_scope(scope, true, self.source);
+            analyze initialization with scope: local -> initialized;
+            let init_operation = for_initialization(local, initialization.source);
+            analyze condition with scope: local -> test;
+            let boolean_test = condition_bool(test);
+            let after_init = snapshot_flow();
+            analyze body with scope: local -> loop_body default recover_statement(after_init, failure_message, body.source) continue_on_error;
+            analyze update with scope: local -> step default recover_statement(after_init, failure_message, update.source) continue_on_error;
+            restore_flow(after_init);
+            result = make_for(local, init_operation, boolean_test, loop_body, step, self.source);
+        }
+    ;
+
+node ifStatement
+    : IF LPAREN condition=expression RPAREN thenBranch=statement                            #IfStatement
+        analysis {
+            analyze condition with scope: scope -> test;
+            let boolean_test = condition_bool(test);
+            let incoming = snapshot_flow();
+            analyze thenBranch with scope: scope -> then_operation default recover_statement(incoming, failure_message, thenBranch.source) continue_on_error;
+            merge_flow_snapshot(incoming);
+            result = make_if_without_else(boolean_test, then_operation, self.source);
+        }
+    | IF LPAREN condition=expression RPAREN thenBranch=statement ELSE elseBranch=statement #IfElseStatement
+        analysis {
+            analyze condition with scope: scope -> test;
+            let boolean_test = condition_bool(test);
+            let incoming = snapshot_flow();
+            analyze thenBranch with scope: scope -> then_operation default recover_statement(incoming, failure_message, thenBranch.source) continue_on_error;
+            let then_flow = snapshot_flow();
+            restore_flow(incoming);
+            analyze elseBranch with scope: scope -> else_operation default recover_statement(incoming, failure_message, elseBranch.source) continue_on_error;
+            merge_flow_snapshot(then_flow);
+            result = make_if_with_else(boolean_test, then_operation, else_operation, self.source);
+        }
+    ;
+
+inline assignop
+    : value=ASSIGN
+        analysis { result = assignment_set(); }
+    | value=ASSIGN_PLUS
+        analysis { result = assignment_add(); }
+    | value=ASSIGN_MINUS
+        analysis { result = assignment_subtract(); }
+    | value=ASSIGN_MUL
+        analysis { result = assignment_multiply(); }
+    | value=ASSIGN_DIV
+        analysis { result = assignment_divide(); }
+    ;
+
+node assignStatement
+    : target=varUsage operator=assignop value=expression         #ValueAssignment
+        analysis {
+            analyze target with scope: scope -> place;
+            analyze operator -> assignment_operator;
+            check_assignment_target(place, assignment_operator);
+            analyze value with scope: scope -> assigned_value;
+            result = store_value(place, assignment_operator, assigned_value, self.source);
+        }
+    | target=varUsage operator=INC                               #PostIncrement
+        analysis {
+            analyze target with scope: scope -> place;
+            result = increment_value(place, true, self.source);
+        }
+    | target=varUsage operator=DEC                               #PostDecrement
+        analysis {
+            analyze target with scope: scope -> place;
+            result = increment_value(place, false, self.source);
+        }
+    ;
+
+node returnStatement
+    : RETURN value=expression? SEMI
+        analysis {
+            analyze value? with scope: scope -> returned;
+            result = function_return(returned, self.source);
+        }
+    ;

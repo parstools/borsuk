@@ -1,0 +1,1011 @@
+/*
+ * Szkic akcji AgSem dla ToyC. Każda alternatywa ma opis po polsku i zapis
+ * symboliczny po angielsku. To projekt semantyki, nie składnia kompilowana przez
+ * obecny generator Agas. `analyze` wykonuje analizę dziecka w podanym miejscu;
+ * błąd dziecka przerywa akcję, a diagnostyka ma zakres źródłowy dziecka.
+ * Kolejne bloki `analysis` tej samej alternatywy dzielą lokalne wiązania `let`.
+ * `result` zwraca opis typu, wyrażenia lub instrukcji i zmiany stanu analizy.
+ * `require ... else error` zapisuje podany komunikat po angielsku.
+ * Błąd dziecka propaguje się bez dodatkowej diagnostyki. Operacje IR nie
+ * wykonują się podczas analizy.
+ * Wszystkie wiązania odwołań używają SymbolId, nie późniejszego szukania nazwy.
+ *
+ * Polityka zakresów odpowiada C++: nazwa lokalnej zmiennej jest widoczna od
+ * punktu deklaracji, także we własnym inicjalizatorze. Odczyt przed zakończeniem
+ * inicjalizacji jest błędem, więc zewnętrzne x nie zostaje wybrane. Dwa symbole
+ * o tej samej nazwie w jednym zakresie są zabronione; zakres zagnieżdżony może
+ * przesłonić nazwę zewnętrzną. Globalne zmienne bez inicjalizatora mają zero,
+ * lokalne pozostają niezainicjalizowane. Dotyczy to także pól i elementów
+ * tablic; `read` i `mark_initialized` śledzą miejsce z dokładnością do pola.
+ * Parametry są zainicjalizowane przy wejściu do funkcji. Gałęzie łączą stan
+ * definite assignment przez przecięcie;
+ * pętle nie gwarantują wykonania ciała choć raz.
+ *
+ * Kontrakt modelu: Scope ma parent, ordinary bindings i osobną tablicę tagów
+ * `struct`; Variable ma id, type, storage i place. Typy: int, float, bool,
+ * char, char*, void, array(element,length), struct(tag), null-pointer.
+ * `declare_variable` sprawdza powtórzenie w bieżącym zakresie, zwraca symbol
+ * z miejscem i ustawia flow na Initialized albo Uninitialized.
+ * Globalny obiekt bez inicjalizatora jest zerowany. Tryb `field` tworzy pole
+ * i offset w układzie struktury, bez miejsca lokalnego.
+ * `declare_function` scala prototypy o zgodnych typach parametrów i wyniku,
+ * odrzuca konflikt sygnatury i drugą definicję. `convert` zapisuje jawną
+ * konwersję zgodną z ToyC/C++; odrzuca
+ * niedozwoloną. `flow_out` niepodane w IR oznacza bieżące flow. `read` sprawdza
+ * stan inicjalizacji miejsca, a Initializing jest błędem odczytu. Poisoned
+ * tłumi wtórne błędy. `mark_initialized` uaktualnia dokładnie zapisane pole;
+ * pełny zapis struktury uaktualnia wszystkie pola. `merge_flow` pomija drogę
+ * nieosiągalną i na pozostałych zachowuje Initialized tylko gdy tak jest na
+ * każdej drodze. `type_binary` ustala
+ * promocję liczbową i typ wyniku; dzielenie całkowite sprawdza zero przy wykonaniu.
+ * Tablice nie mają w tej gramatyce składni indeksowania. Struktura ma pola,
+ * lecz nie ma metod ani wskaźników do struktur. Wynik analizy programu jest IR
+ * z tablicą symboli, definicjami typów i funkcji oraz grafem operacji.
+ */
+
+node program
+    : declarations=declaration+ EOF
+        /*
+         * Alternatywa 1, punkt 1: Utwórz globalny zakres nazw i pusty moduł operacji.
+         */
+        analysis {
+            let global = new Scope(parent: none);
+            let module = Module(scope: global);
+        }
+        /*
+         * Alternatywa 1, punkt 2: Analizuj deklaracje w kolejności źródłowej; zarejestruj symbole, typy i ciała
+         *   funkcji.
+         */
+        analysis {
+            for declaration in declarations in source_order { analyze declaration with scope: global, module: module -> item;
+            module.items.append(item);
+            }
+        }
+        /*
+         * Alternatywa 1, punkt 3: Zbierz diagnostykę oraz zwróć moduł z tabelami nazw i opisami operacji.
+         */
+        analysis {
+            module.valid = not contains_error(module);
+            result = module;
+        }
+    ;
+
+inline declaration
+    : value=varDeclaration
+        /*
+         * Alternatywa 2, punkt 1: Przekaż deklarację zmiennej do bieżącego zakresu i modułu.
+         */
+        analysis {
+            analyze value with scope: scope, module: module -> result;
+        }
+    | value=funDeclaration
+        /*
+         * Alternatywa 3, punkt 1: Przekaż prototyp funkcji do globalnej tablicy funkcji.
+         */
+        analysis {
+            analyze value with scope: scope, module: module -> result;
+        }
+    | value=funDefinition
+        /*
+         * Alternatywa 4, punkt 1: Przekaż definicję funkcji do modułu.
+         */
+        analysis {
+            analyze value with scope: scope, module: module -> result;
+        }
+    | value=structDeclaration
+        /*
+         * Alternatywa 5, punkt 1: Przekaż definicję struktury do tablicy tagów.
+         */
+        analysis {
+            analyze value with scope: scope, module: module -> result;
+        }
+    ;
+
+node declarator
+    : name=ID
+        /*
+         * Alternatywa 6, punkt 1: Zachowaj nazwę i jej pozycję źródłową do diagnostyki.
+         */
+        analysis {
+            result = Identifier(text: name.text, source: name.source);
+        }
+    ;
+
+node varDeclaration
+    : type=typeSpecifier name=declarator SEMI                                  #ScalarVariable
+        /*
+         * Alternatywa 7, punkt 1: Ustal typ i nazwę; typ void oraz niekompletna struktura nie mogą być typem
+         *   obiektu.
+         */
+        analysis {
+            analyze type -> declared_type;
+            analyze name -> id;
+            require complete_object_type(declared_type) else error "invalid variable type";
+        }
+        /*
+         * Alternatywa 7, punkt 2: Utwórz symbol i miejsce albo pole struktury; odrzuć powtórzenie nazwy w tym
+         *   samym zakresie.
+         */
+        analysis {
+            require not contains_local(scope, id.text, namespace: ordinary_or_field) else error "identifier already declared";
+            let declared = declare_variable(scope, id, declared_type, target: declaration_target);
+            result = declaration_target == field ? declared : Declare(symbol: declared.id, initializer: none);
+        }
+    | type=typeSpecifier name=declarator LeftBrack length=NUMBER RightBrack SEMI #ArrayVariable
+        /*
+         * Alternatywa 8, punkt 1: Ustal typ elementu, nazwę i stałą długość tablicy.
+         */
+        analysis {
+            analyze type -> element_type;
+            analyze name -> id;
+            let size = parse_integer(length.text, radix: 10);
+            require size > 0 else error "invalid array length";
+        }
+        /*
+         * Alternatywa 8, punkt 2: Sprawdź kompletny typ elementu i wolną nazwę, następnie przydziel tablicy jedno
+         *   miejsce o obliczonym rozmiarze.
+         */
+        analysis {
+            require complete_object_type(element_type) else error "invalid array element type";
+            require not contains_local(scope, id.text, namespace: ordinary_or_field) else error "identifier already declared";
+            let declared = declare_variable(scope, id, Array(element_type, size), target: declaration_target);
+            result = declaration_target == field ? declared : Declare(symbol: declared.id, initializer: none);
+        }
+    ;
+
+node funDeclarator
+    : type=returnType name=ID LPAREN parameters=formalParameters? RPAREN
+        /*
+         * Alternatywa 9, punkt 1: Ustal typ wyniku, nazwę oraz uporządkowaną listę parametrów bez umieszczania ich
+         *   jeszcze w zakresie funkcji.
+         */
+        analysis {
+            analyze type -> return_type;
+            analyze parameters? -> params default [];
+            require unique_names(params) else error "duplicate parameter name";
+            result = FunctionHeader(name: name.text, return_type: return_type, parameters: params);
+        }
+    ;
+
+node funDeclaration
+    : declarator=funDeclarator SEMI
+        /*
+         * Alternatywa 10, punkt 1: Zarejestruj prototyp; ponowna deklaracja jest poprawna tylko przy identycznej
+         *   sygnaturze.
+         */
+        analysis {
+            analyze declarator -> header;
+            result = declare_function(scope, header, kind: prototype) else error "conflicting function declaration";
+        }
+    ;
+
+node funDefinition
+    : declarator=funDeclarator body=compoundStatement
+        /*
+         * Alternatywa 11, punkt 1: Przed analizą ciała zarejestruj funkcję w zakresie globalnym, aby dopuszczać
+         *   rekurencję.
+         */
+        analysis {
+            analyze declarator -> header;
+            let fn = declare_function(scope, header, kind: definition) else error "function already defined or conflicting declaration";
+        }
+        /*
+         * Alternatywa 11, punkt 2: Utwórz zakres funkcji, zwiąż parametry jako zainicjalizowane i analizuj ciało w
+         *   tym samym zakresie.
+         */
+        analysis {
+            let local = new Scope(parent: scope);
+            bind_parameters(local, header.parameters, state: Initialized);
+            analyze body with scope: local, scope_mode: reuse, function: fn, flow: parameter_flow(local) -> block;
+        }
+        /*
+         * Alternatywa 11, punkt 3: Sprawdź zakończenie wszystkich dróg funkcji zwracającej wartość i zapisz IR
+         *   ciała.
+         */
+        analysis {
+            require fn.return_type == Void or always_returns(block) else error "missing return statement";
+            fn.body = block;
+            result = fn;
+        }
+    ;
+
+node structDeclaration
+    : STRUCT name=ID LBRACE fields=varDeclaration+ RBRACE SEMI
+        /*
+         * Alternatywa 12, punkt 1: Zarezerwuj tag struktury przed polami, by rozpoznać własną nazwę i wykryć
+         *   duplikat tagu.
+         */
+        analysis {
+            require not contains_local(scope, name.text, namespace: tags) else error "struct already declared";
+            let tag = declare_incomplete_struct(scope, name.text);
+        }
+        /*
+         * Alternatywa 12, punkt 2: Analizuj pola po kolei w osobnej tablicy; sprawdź nazwy, typy i rozmiary.
+         */
+        analysis {
+            for field in fields in source_order { analyze field with scope: tag.fields, declaration_target: field -> member;
+            tag.members.append(member);
+            }
+        }
+        /*
+         * Alternatywa 12, punkt 3: Oblicz układ pamięci i oznacz typ jako kompletny.
+         */
+        analysis {
+            tag.layout = layout_struct(tag.members);
+            tag.complete = true;
+            result = tag;
+        }
+    ;
+
+inline returnType
+    : value=typeSpecifier
+        /*
+         * Alternatywa 13, punkt 1: Przekaż ustalony typ wyniku funkcji.
+         */
+        analysis {
+            analyze value -> result;
+        }
+    | value=VOID
+        /*
+         * Alternatywa 14, punkt 1: Ustal typ void, czyli brak zwracanej wartości.
+         */
+        analysis {
+            result = Type.Void;
+        }
+    ;
+
+inline typeSpecifier
+    : type=INT
+        /*
+         * Alternatywa 15, punkt 1: Zwróć wbudowany typ int.
+         */
+        analysis {
+            result = Type.Int;
+        }
+    | type=FLOAT
+        /*
+         * Alternatywa 16, punkt 1: Zwróć wbudowany typ float.
+         */
+        analysis {
+            result = Type.Float;
+        }
+    | type=BOOL
+        /*
+         * Alternatywa 17, punkt 1: Zwróć wbudowany typ bool.
+         */
+        analysis {
+            result = Type.Bool;
+        }
+    | type=CHAR star=STAR?
+        /*
+         * Alternatywa 18, punkt 1: Rozpoznaj char albo char* zależnie od obecności gwiazdki.
+         */
+        analysis {
+            result = star.present ? Type.CharPointer : Type.Char;
+        }
+    | type=ID
+        /*
+         * Alternatywa 19, punkt 1: Odszukaj tag struktury w zasięgu leksykalnym i zwróć jego tożsamość.
+         */
+        analysis {
+            let tag = lookup_tag_lexical(scope, type.text);
+            require tag != none else error "unknown type name";
+            result = StructType(tag.id);
+        }
+    ;
+
+node formalParameters
+    : first=formalParameter rest=formalParameterTail*
+        /*
+         * Alternatywa 20, punkt 1: Zbierz parametry w kolejności; nazwy muszą być unikalne w jednej sygnaturze.
+         */
+        analysis {
+            analyze first -> head;
+            let params = [head];
+            for tail in rest { analyze tail -> param;
+            require not contains_name(params, param.name) else error "duplicate parameter name";
+            params.append(param);
+            } result = params;
+        }
+    ;
+
+inline formalParameterTail
+    : COMMA value=formalParameter
+        /*
+         * Alternatywa 21, punkt 1: Przekaż opis kolejnego parametru.
+         */
+        analysis {
+            analyze value -> result;
+        }
+    ;
+
+node formalParameter
+    : type=typeSpecifier name=declarator
+        /*
+         * Alternatywa 22, punkt 1: Ustal typ i nazwę parametru; parametr nie może mieć typu void ani typu
+         *   niekompletnego.
+         */
+        analysis {
+            analyze type -> parameter_type;
+            analyze name -> id;
+            require complete_object_type(parameter_type) else error "invalid parameter type";
+            result = Parameter(name: id.text, type: parameter_type, source: id.source);
+        }
+    ;
+
+node compoundStatement
+    : LBRACE items=compoundItem* RBRACE
+        /*
+         * Alternatywa 23, punkt 1: Utwórz zakres bloku; ciało funkcji może użyć przekazanego zakresu parametrów.
+         */
+        analysis {
+            let local = scope_mode == reuse ? scope : new Scope(parent: scope);
+            let state = copy(flow);
+            let operations = [];
+        }
+        /*
+         * Alternatywa 23, punkt 2: Analizuj elementy po kolei; następny widzi wcześniejsze deklaracje i ich stan
+         *   inicjalizacji.
+         */
+        analysis {
+            for item in items in source_order { analyze item with scope: local, flow: state, function: function -> op;
+            operations.append(op);
+            state = op.flow_out;
+            }
+        }
+        /*
+         * Alternatywa 23, punkt 3: Zwróć blok z symbolami i przepływem; usuń lokalne symbole ze stanu widocznego
+         *   po bloku.
+         */
+        analysis {
+            result = Block(scope: local, symbols: local.symbols, body: operations, flow_out: hide_locals(state, local));
+        }
+    ;
+
+inline compoundItem
+    : value=localDeclaration
+        /*
+         * Alternatywa 24, punkt 1: Przekaż deklarację lokalną i jej wpływ na stan inicjalizacji.
+         */
+        analysis {
+            analyze value with scope: scope, flow: flow -> result;
+        }
+    | value=statement
+        /*
+         * Alternatywa 25, punkt 1: Przekaż instrukcję i jej wynik przepływu.
+         */
+        analysis {
+            analyze value with scope: scope, flow: flow, function: function -> result;
+        }
+    ;
+
+inline localDeclaration
+    : value=varDeclaration
+        /*
+         * Alternatywa 26, punkt 1: Analizuj lokalną deklarację bez inicjalizatora.
+         */
+        analysis {
+            analyze value with scope: scope, flow: flow, declaration_target: local -> result;
+        }
+    | value=varInitialization
+        /*
+         * Alternatywa 27, punkt 1: Analizuj lokalną deklarację z inicjalizatorem.
+         */
+        analysis {
+            analyze value with scope: scope, flow: flow -> result;
+        }
+    ;
+
+node varInitialization
+    : type=typeSpecifier name=declarator ASSIGN value=expression SEMI
+        /*
+         * Alternatywa 28, punkt 1: Najpierw ustal typ i nazwę oraz odrzuć powtórzenie nazwy w bieżącym zakresie.
+         */
+        analysis {
+            analyze type -> declared_type;
+            analyze name -> id;
+            require complete_object_type(declared_type) else error "invalid variable type";
+            require not contains_local(scope, id.text, namespace: ordinary) else error "identifier already declared";
+        }
+        /*
+         * Alternatywa 28, punkt 2: Wprowadź nowy symbol przed analizą inicjalizatora; przesłania zewnętrzny symbol
+         *   także we własnym inicjalizatorze.
+         */
+        analysis {
+            let symbol = declare_variable(scope, id, declared_type, target: local);
+            flow[symbol.id] = Initializing;
+        }
+        /*
+         * Alternatywa 28, punkt 3: Sprawdź odczyty i konwersję wartości, a następnie zapisz instrukcję
+         *   inicjalizacji.
+         */
+        analysis {
+            analyze value with scope: scope, flow: flow -> expr on failure { flow[symbol.id] = Poisoned;
+            propagate_error;
+            } let converted = convert(expr, declared_type) else error "incompatible initializer type";
+            flow[symbol.id] = Initialized;
+            result = Initialize(symbol: symbol.id, value: converted);
+        }
+    ;
+
+inline relop
+    : value=LE
+        /*
+         * Alternatywa 29, punkt 1: Zapisz operator porównania LE w opisie wyrażenia.
+         */
+        analysis {
+            result = Operator.LessEqual;
+        }
+    | value=LT
+        /*
+         * Alternatywa 30, punkt 1: Zapisz operator porównania LT w opisie wyrażenia.
+         */
+        analysis {
+            result = Operator.Less;
+        }
+    | value=GT
+        /*
+         * Alternatywa 31, punkt 1: Zapisz operator porównania GT w opisie wyrażenia.
+         */
+        analysis {
+            result = Operator.Greater;
+        }
+    | value=GE
+        /*
+         * Alternatywa 32, punkt 1: Zapisz operator porównania GE w opisie wyrażenia.
+         */
+        analysis {
+            result = Operator.GreaterEqual;
+        }
+    | value=EQ
+        /*
+         * Alternatywa 33, punkt 1: Zapisz operator porównania EQ w opisie wyrażenia.
+         */
+        analysis {
+            result = Operator.Equal;
+        }
+    | value=NEQ
+        /*
+         * Alternatywa 34, punkt 1: Zapisz operator porównania NEQ w opisie wyrażenia.
+         */
+        analysis {
+            result = Operator.NotEqual;
+        }
+    ;
+
+node expression
+    : left=additiveExpression comparison=comparisonTail?
+        /*
+         * Alternatywa 35, punkt 1: Analizuj lewą stronę; jeśli jest porównanie, ustal zgodność operandów i typ
+         *   bool wyniku.
+         */
+        analysis {
+            analyze left -> lhs;
+            if comparison.present { analyze comparison with left: lhs -> result;
+            } else { result = lhs;
+            }
+        }
+    ;
+
+inline comparisonTail
+    : operator=relop right=additiveExpression
+        /*
+         * Alternatywa 36, punkt 1: Sprawdź operator i prawy operand; wykonaj dozwolone promocje liczbowe lub
+         *   porównanie zgodnych wskaźników.
+         */
+        analysis {
+            analyze operator -> op;
+            analyze right -> rhs;
+            let operands = comparable(left, rhs, op) else error "incompatible comparison operands";
+            result = Compare(op, operands.left, operands.right, type: Bool);
+        }
+    ;
+
+inline addop
+    : value=PLUS
+        /*
+         * Alternatywa 37, punkt 1: Zwróć operator dodawania.
+         */
+        analysis {
+            result = Operator.Add;
+        }
+    | value=MINUS
+        /*
+         * Alternatywa 38, punkt 1: Zwróć operator odejmowania.
+         */
+        analysis {
+            result = Operator.Subtract;
+        }
+    ;
+
+node additiveExpression
+    : first=term rest=additiveOperation*
+        /*
+         * Alternatywa 39, punkt 1: Zwijaj składniki od lewej do prawej, zapisując konwersje i typ wyniku każdego
+         *   działania.
+         */
+        analysis {
+            analyze first -> acc;
+            for part in rest in source_order { analyze part with left: acc -> acc;
+            } result = acc;
+        }
+    ;
+
+inline additiveOperation
+    : operator=addop operand=term
+        /*
+         * Alternatywa 40, punkt 1: Sprawdź dwa operandy arytmetyczne i zbuduj operację dodawania lub odejmowania.
+         */
+        analysis {
+            analyze operator -> op;
+            analyze operand -> rhs;
+            result = type_binary(op, left, rhs) else error "invalid arithmetic operands";
+        }
+    ;
+
+inline mulop
+    : value=STAR
+        /*
+         * Alternatywa 41, punkt 1: Zwróć operator mnożenia.
+         */
+        analysis {
+            result = Operator.Multiply;
+        }
+    | value=DIV
+        /*
+         * Alternatywa 42, punkt 1: Zwróć operator dzielenia.
+         */
+        analysis {
+            result = Operator.Divide;
+        }
+    ;
+
+node term
+    : first=factor rest=multiplicativeOperation*
+        /*
+         * Alternatywa 43, punkt 1: Zwijaj czynniki od lewej do prawej; nie przestawiaj działań mających skutki
+         *   uboczne.
+         */
+        analysis {
+            analyze first -> acc;
+            for part in rest in source_order { analyze part with left: acc -> acc;
+            } result = acc;
+        }
+    ;
+
+inline multiplicativeOperation
+    : operator=mulop operand=factor
+        /*
+         * Alternatywa 44, punkt 1: Ustal wspólny typ liczbowy, a dla dzielenia zapisz kontrolę niezerowego
+         *   dzielnika.
+         */
+        analysis {
+            analyze operator -> op;
+            analyze operand -> rhs;
+            result = type_binary(op, left, rhs) else error "invalid arithmetic operands";
+            if op == Divide and integer(result.type) { result.checks.append(Nonzero(rhs, "division by zero"));
+            }
+        }
+    ;
+
+node factor
+    : LPAREN value=expression RPAREN         #ParenthesizedFactor
+        /*
+         * Alternatywa 45, punkt 1: Zwróć wyrażenie w nawiasie z jego typem i skutkami ubocznymi.
+         */
+        analysis {
+            analyze value -> result;
+        }
+    | value=varUsage                       #VariableFactor
+        /*
+         * Alternatywa 46, punkt 1: Rozwiąż zmienną lub pole jako lvalue, sprawdź inicjalizację i utwórz odczyt.
+         */
+        analysis {
+            analyze value -> place;
+            require place.type is not Array else error "array value is not supported";
+            result = read(place, flow) else error "variable used before initialization";
+        }
+    | value=call                           #CallFactor
+        /*
+         * Alternatywa 47, punkt 1: Zanalizuj wywołanie; w pozycji wyrażenia wynik void jest niedozwolony.
+         */
+        analysis {
+            analyze value -> call_ir;
+            require call_ir.type != Void else error "void value used as expression";
+            result = call_ir;
+        }
+    | value=NUMBER                         #NumberFactor
+        /*
+         * Alternatywa 48, punkt 1: Zamień liczbę całkowitą na stałą typu int; zgłoś przekroczenie obsługiwanego
+         *   zakresu.
+         */
+        analysis {
+            result = IntegerConstant(parse_integer(value.text, radix: 10)) else error "integer literal out of range";
+        }
+    | value=FLOAT_LITERAL                  #FloatFactor
+        /*
+         * Alternatywa 49, punkt 1: Zamień zapis liczby zmiennoprzecinkowej na stałą typu float.
+         */
+        analysis {
+            result = FloatConstant(parse_float(value.text)) else error "invalid floating literal";
+        }
+    | value=STRING_LITERAL                 #StringFactor
+        /*
+         * Alternatywa 50, punkt 1: Zdekoduj tekst i zbuduj niemodyfikowalny obiekt literału o typie char*.
+         */
+        analysis {
+            result = StringConstant(decode_string(value.text), type: CharPointer);
+        }
+    | value=CHAR_LITERAL                   #CharFactor
+        /*
+         * Alternatywa 51, punkt 1: Zdekoduj jeden znak i zbuduj stałą typu char.
+         */
+        analysis {
+            result = CharConstant(decode_char(value.text), type: Char) else error "invalid character literal";
+        }
+    | value=bool_literal                   #BoolFactor
+        /*
+         * Alternatywa 52, punkt 1: Zwróć stałą logiczną.
+         */
+        analysis {
+            analyze value -> result;
+        }
+    | value=NULL                           #NullFactor
+        /*
+         * Alternatywa 53, punkt 1: Zwróć stałą null-pointer dopuszczalną przy zgodnym wskaźniku.
+         */
+        analysis {
+            result = NullConstant(type: NullPointer);
+        }
+    | MINUS operand=factor                 #NegatedFactor
+        /*
+         * Alternatywa 54, punkt 1: Sprawdź typ liczbowy, zastosuj promocję i zbuduj negację.
+         */
+        analysis {
+            analyze operand -> expr;
+            require numeric(expr.type) else error "invalid unary operand";
+            result = Negate(promote_numeric(expr));
+        }
+    ;
+
+inline bool_literal
+    : value=FALSE
+        /*
+         * Alternatywa 55, punkt 1: Zwróć stałą false typu bool.
+         */
+        analysis {
+            result = BoolConstant(false);
+        }
+    | value=TRUE
+        /*
+         * Alternatywa 56, punkt 1: Zwróć stałą true typu bool.
+         */
+        analysis {
+            result = BoolConstant(true);
+        }
+    ;
+
+node varUsage
+    : name=ID fields=fieldAccess*
+        /*
+         * Alternatywa 57, punkt 1: Odszukaj najbliższą zmienną w zwykłej przestrzeni nazw, bez dopuszczania
+         *   funkcji jako miejsca zapisu.
+         */
+        analysis {
+            let symbol = lookup_lexical(scope, name.text, namespace: ordinary);
+            require symbol is Variable else error "variable not declared";
+            let place = Place(symbol.id);
+        }
+        /*
+         * Alternatywa 57, punkt 2: Rozwiąż kolejne pola struktury i zachowaj ich offsety oraz typ końcowego
+         *   lvalue.
+         */
+        analysis {
+            for field in fields in source_order { analyze field with base: place -> place;
+            } result = place;
+        }
+    ;
+
+inline fieldAccess
+    : DOT value=ID
+        /*
+         * Alternatywa 58, punkt 1: Sprawdź kompletny typ struktury oraz istnienie pola; wylicz miejsce składowej.
+         */
+        analysis {
+            require base.type is StructType and complete(base.type) else error "member access on non-struct";
+            let field = lookup_field(base.type, value.text);
+            require field != none else error "unknown struct field";
+            result = FieldPlace(base, field.id, field.offset, field.type);
+        }
+    ;
+
+node call
+    : name=ID LPAREN arguments=argList? RPAREN
+        /*
+         * Alternatywa 59, punkt 1: Znajdź widoczną funkcję i ustal jej sygnaturę; zmienna o tej nazwie przesłania
+         *   funkcję.
+         */
+        analysis {
+            let fn = lookup_lexical(scope, name.text, namespace: ordinary);
+            require fn is Function else error "function not declared";
+        }
+        /*
+         * Alternatywa 59, punkt 2: Analizuj argumenty w kolejności, sprawdź liczbę i skonwertuj każdy do
+         *   odpowiedniego parametru.
+         */
+        analysis {
+            analyze arguments? -> args default [];
+            require length(args) == length(fn.parameters) else error "wrong number of arguments";
+            let converted = convert_arguments(args, fn.parameters) else error "incompatible argument type";
+            result = Call(fn.id, converted, type: fn.return_type);
+        }
+    ;
+
+node argList
+    : first=argument rest=argumentTail*
+        /*
+         * Alternatywa 60, punkt 1: Zbierz wyrażenia argumentów w ich kolejności źródłowej.
+         */
+        analysis {
+            analyze first -> head;
+            let args = [head];
+            for tail in rest { analyze tail -> arg;
+            args.append(arg);
+            } result = args;
+        }
+    ;
+
+inline argumentTail
+    : COMMA value=argument
+        /*
+         * Alternatywa 61, punkt 1: Przekaż wartość następnego argumentu.
+         */
+        analysis {
+            analyze value -> result;
+        }
+    ;
+
+inline argument
+    : value=expression
+        /*
+         * Alternatywa 62, punkt 1: Przeanalizuj wyrażenie argumentu i zachowaj jego typ.
+         */
+        analysis {
+            analyze value -> result;
+        }
+    ;
+
+inline statement
+    : value=whileStatement
+        /*
+         * Alternatywa 63, punkt 1: Pętla while przekazuje operację i stan przepływu do otaczającego bloku.
+         */
+        analysis {
+            analyze value with scope: scope, flow: flow, function: function -> result;
+        }
+    | value=forStatement
+        /*
+         * Alternatywa 64, punkt 1: Pętla for przekazuje operację i stan przepływu do otaczającego bloku.
+         */
+        analysis {
+            analyze value with scope: scope, flow: flow, function: function -> result;
+        }
+    | value=ifStatement
+        /*
+         * Alternatywa 65, punkt 1: Instrukcja warunkowa przekazuje operację i stan przepływu do otaczającego
+         *   bloku.
+         */
+        analysis {
+            analyze value with scope: scope, flow: flow, function: function -> result;
+        }
+    | value=assignStatement SEMI
+        /*
+         * Alternatywa 66, punkt 1: Przypisanie przekazuje operację i stan przepływu do otaczającego bloku.
+         */
+        analysis {
+            analyze value with scope: scope, flow: flow, function: function -> result;
+        }
+    | value=call SEMI
+        /*
+         * Alternatywa 67, punkt 1: Wywołanie jako instrukcja przekazuje operację i stan przepływu do otaczającego
+         *   bloku.
+         */
+        analysis {
+            analyze value with scope: scope, flow: flow, function: function -> result;
+        }
+    | value=compoundStatement
+        /*
+         * Alternatywa 68, punkt 1: Blok przekazuje operację i stan przepływu do otaczającego bloku.
+         */
+        analysis {
+            analyze value with scope: scope, flow: flow, function: function -> result;
+        }
+    | value=returnStatement
+        /*
+         * Alternatywa 69, punkt 1: Instrukcja return przekazuje operację i stan przepływu do otaczającego bloku.
+         */
+        analysis {
+            analyze value with scope: scope, flow: flow, function: function -> result;
+        }
+    ;
+
+node whileStatement
+    : WHILE LPAREN condition=expression RPAREN body=statement
+        /*
+         * Alternatywa 70, punkt 1: Warunek musi dać się przekształcić do bool; analizuj go przed ciałem.
+         */
+        analysis {
+            analyze condition -> test;
+            let bool_test = to_bool(test) else error "condition is not convertible to bool";
+        }
+        /*
+         * Alternatywa 70, punkt 2: Ciało analizuj w kopii stanu, bo pętla może wykonać się zero razy; zbuduj węzeł
+         *   przepływu.
+         */
+        analysis {
+            analyze body with scope: scope, flow: copy(flow), function: function -> loop_body;
+            result = While(bool_test, loop_body, flow_out: flow);
+        }
+    ;
+
+node forStatement
+    : FOR LPAREN initialization=varInitialization condition=expression SEMI update=assignStatement RPAREN body=statement
+        /*
+         * Alternatywa 71, punkt 1: Utwórz zakres pętli; deklarowana w nagłówku zmienna jest widoczna w warunku,
+         *   aktualizacji i ciele.
+         */
+        analysis {
+            let local = new Scope(parent: scope);
+            let loop_flow = copy(flow);
+            analyze initialization with scope: local, flow: loop_flow -> init;
+        }
+        /*
+         * Alternatywa 71, punkt 2: Sprawdź warunek po inicjalizacji, następnie ciało i aktualizację w kolejności
+         *   wykonania.
+         */
+        analysis {
+            analyze condition with scope: local, flow: loop_flow -> test;
+            let bool_test = to_bool(test) else error "condition is not convertible to bool";
+            analyze body with scope: local, flow: copy(loop_flow), function: function -> loop_body;
+            analyze update with scope: local, flow: loop_body.flow_out -> step;
+        }
+        /*
+         * Alternatywa 71, punkt 3: Zbuduj pętlę; po wyjściu zachowaj tylko gwarantowane skutki inicjalizatora, bez
+         *   lokalnych nazw pętli.
+         */
+        analysis {
+            result = For(scope: local, init: init, condition: bool_test, body: loop_body, update: step, flow_out: hide_locals(loop_flow, local));
+        }
+    ;
+
+node ifStatement
+    : IF LPAREN condition=expression RPAREN thenBranch=statement                            #IfStatement
+        /*
+         * Alternatywa 72, punkt 1: Sprawdź warunek i analizuj gałąź then w kopii stanu; bez else wynik stanu
+         *   pozostaje wejściowy.
+         */
+        analysis {
+            analyze condition -> test;
+            let bool_test = to_bool(test) else error "condition is not convertible to bool";
+            analyze thenBranch with scope: scope, flow: copy(flow), function: function -> then_ir;
+            result = If(bool_test, then_ir, else_branch: none, flow_out: merge_flow(flow, then_ir.flow_out));
+        }
+    | IF LPAREN condition=expression RPAREN thenBranch=statement ELSE elseBranch=statement #IfElseStatement
+        /*
+         * Alternatywa 73, punkt 1: Sprawdź warunek i obie gałęzie osobno; po if zachowaj tylko zmienne
+         *   zainicjalizowane na obu drogach.
+         */
+        analysis {
+            analyze condition -> test;
+            let bool_test = to_bool(test) else error "condition is not convertible to bool";
+            analyze thenBranch with scope: scope, flow: copy(flow), function: function -> then_ir;
+            analyze elseBranch with scope: scope, flow: copy(flow), function: function -> else_ir;
+            result = If(bool_test, then_ir, else_ir, flow_out: merge_flow(then_ir.flow_out, else_ir.flow_out));
+        }
+    ;
+
+inline assignop
+    : value=ASSIGN
+        /*
+         * Alternatywa 74, punkt 1: Zwróć rodzaj operatora przypisania ASSIGN.
+         */
+        analysis {
+            result = AssignmentOperator.Set;
+        }
+    | value=ASSIGN_PLUS
+        /*
+         * Alternatywa 75, punkt 1: Zwróć rodzaj operatora przypisania ASSIGN_PLUS.
+         */
+        analysis {
+            result = AssignmentOperator.Add;
+        }
+    | value=ASSIGN_MINUS
+        /*
+         * Alternatywa 76, punkt 1: Zwróć rodzaj operatora przypisania ASSIGN_MINUS.
+         */
+        analysis {
+            result = AssignmentOperator.Subtract;
+        }
+    | value=ASSIGN_MUL
+        /*
+         * Alternatywa 77, punkt 1: Zwróć rodzaj operatora przypisania ASSIGN_MUL.
+         */
+        analysis {
+            result = AssignmentOperator.Multiply;
+        }
+    | value=ASSIGN_DIV
+        /*
+         * Alternatywa 78, punkt 1: Zwróć rodzaj operatora przypisania ASSIGN_DIV.
+         */
+        analysis {
+            result = AssignmentOperator.Divide;
+        }
+    ;
+
+node assignStatement
+    : target=varUsage operator=assignop value=expression         #ValueAssignment
+        /*
+         * Alternatywa 79, punkt 1: Rozwiąż cel jako modyfikowalne lvalue; dla złożonego przypisania najpierw
+         *   odczytaj starą wartość.
+         */
+        analysis {
+            analyze target -> place;
+            require assignable(place) else error "invalid assignment target";
+            analyze operator -> op;
+            if op != Set { let old = read(place, flow) else error "variable used before initialization";
+            }
+        }
+        /*
+         * Alternatywa 79, punkt 2: Sprawdź prawą stronę i konwersje, zbuduj zapis; dzielenie wymaga niezerowego
+         *   dzielnika.
+         */
+        analysis {
+            analyze value -> rhs;
+            let assigned = op == Set ? convert(rhs, place.type) : compound_value(op, old, rhs, place.type) else error "incompatible assignment types";
+            if op == Divide and integer(assigned.type) { assigned.checks.append(Nonzero(rhs, "division by zero"));
+            } mark_initialized(flow, place);
+            result = Store(place, assigned);
+        }
+    | target=varUsage operator=INC                               #PostIncrement
+        /*
+         * Alternatywa 80, punkt 1: Sprawdź inicjalizację i liczbowy typ lvalue; zbuduj zwiększenie o jeden.
+         */
+        analysis {
+            analyze target -> place;
+            require assignable(place) and numeric(place.type) else error "invalid increment operand";
+            let old = read(place, flow) else error "variable used before initialization";
+            result = Store(place, type_binary(Add, old, IntegerConstant(1)));
+        }
+    | target=varUsage operator=DEC                               #PostDecrement
+        /*
+         * Alternatywa 81, punkt 1: Sprawdź inicjalizację i liczbowy typ lvalue; zbuduj zmniejszenie o jeden.
+         */
+        analysis {
+            analyze target -> place;
+            require assignable(place) and numeric(place.type) else error "invalid decrement operand";
+            let old = read(place, flow) else error "variable used before initialization";
+            result = Store(place, type_binary(Subtract, old, IntegerConstant(1)));
+        }
+    ;
+
+node returnStatement
+    : RETURN value=expression? SEMI
+        /*
+         * Alternatywa 82, punkt 1: Sprawdź obecność instrukcji wewnątrz funkcji oraz zgodność obecności wartości z
+         *   typem wyniku.
+         */
+        analysis {
+            require function != none else error "return outside function";
+            require value.present == (function.return_type != Void) else error "invalid return value";
+        }
+        /*
+         * Alternatywa 82, punkt 2: Przeanalizuj i skonwertuj wartość, a następnie zbuduj krawędź powrotu z
+         *   funkcji.
+         */
+        analysis {
+            if value.present { analyze value -> expr;
+            let returned = convert(expr, function.return_type) else error "incompatible return type";
+            } else { let returned = none;
+            } result = Return(returned, flow_out: unreachable);
+        }
+    ;

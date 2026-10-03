@@ -1,0 +1,17 @@
+int x;
+x = 10;
+int n = x + 2;
+while (n>0) {
+    n = n - 1;
+    x = x + 1;
+}
+print(x);
+x = add(add(3, 4), 5);
+print(add(add(3, 4), 10));
+
+// should print 12
+print(x);
+
+x = -add(x, 2);
+// should print -14
+print(x);

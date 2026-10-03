@@ -1,0 +1,11 @@
+grammar BadContext;
+options { parser = LALR; lookahead = 2; }
+lexerClasses { SHIFT = false; }
+node start : X shifted | X separated;
+inline shifted -> enable(SHIFT) : SHR B;
+inline separated : GT GT D;
+X : 'x';
+SHR : '>>' -> require(SHIFT);
+GT : '>';
+B : 'b';
+D : 'd';

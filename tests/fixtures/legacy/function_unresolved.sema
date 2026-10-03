@@ -1,0 +1,11 @@
+sema FunctionUnresolved for "function_unresolved.ag";
+
+semantic_model {
+    function outer(value) {
+        return unknown_operation(value);
+    }
+}
+
+node program
+    : EOF analysis {}
+    ;

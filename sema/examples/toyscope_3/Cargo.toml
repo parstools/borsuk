@@ -1,0 +1,11 @@
+[package]
+name = "borsuk-toyscope-3"
+version = "1.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+borsuk-toyscope-1 = { path = "../toyscope_1" }
+
+[lints.rust]
+unsafe_code = "forbid"

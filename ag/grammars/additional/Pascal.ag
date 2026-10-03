@@ -1,0 +1,463 @@
+// Syntax transcribed from Pascal.ebnf (Pascal.aladin rules r1-r143).
+// Pascal keywords are matched case-insensitively for ASCII letters.
+grammar Pascal;
+
+options {
+    parser = LR;
+    lookahead = 1;
+    ast = explicit;
+}
+
+conflicts {
+    prefer shift ELSE over reduce if_statement#IfStatement;
+}
+
+node program
+    : f_program_0_0=PROGRAM f_program_0_1=NAME f_program_0_2=program_part_1? f_program_0_3=SEMI f_program_0_4=block f_program_0_5=DOT #R1 // r1
+    ;
+
+node prog_params
+    : f_prog_params_0_0=prog_param f_prog_params_0_1=prog_params_part_2* #R2 // r2
+    ;
+
+node prog_param
+    : f_prog_param_0_0=NAME #R3 // r3
+    ;
+
+node block
+    : f_block_0_0=label_decl_part f_block_0_1=const_def_part f_block_0_2=type_def_part f_block_0_3=var_decl_part f_block_0_4=proc_decl_part f_block_0_5=BEGIN f_block_0_6=statement_seq f_block_0_7=END #R4 // r4
+    ;
+
+node label_decl_part
+    : empty #R5 // r5
+    | f_label_decl_part_1_0=LABEL f_label_decl_part_1_1=label_decl f_label_decl_part_1_2=label_decl_part_part_3* f_label_decl_part_1_3=SEMI #R6 // r6
+    ;
+
+node label_decl
+    : f_label_decl_0_0=INTEGER_NUMBER #R7 // r7
+    ;
+
+node const_def_part
+    : empty #R8 // r8
+    | f_const_def_part_1_0=CONST f_const_def_part_1_1=const_def_list #R9 // r9
+    ;
+
+node const_def_list
+    : f_const_def_list_0_0=const_def f_const_def_list_0_1=SEMI #R10 // r10
+    | f_const_def_list_1_0=const_def_list f_const_def_list_1_1=const_def f_const_def_list_1_2=SEMI #R11 // r11
+    ;
+
+node const_def
+    : f_const_def_0_0=NAME f_const_def_0_1=EQ f_const_def_0_2=constant #R12 // r12
+    ;
+
+node type_def_part
+    : empty #R13 // r13
+    | f_type_def_part_1_0=TYPE f_type_def_part_1_1=type_def_list #R14 // r14
+    ;
+
+node type_def_list
+    : f_type_def_list_0_0=type_def f_type_def_list_0_1=SEMI #R15 // r15
+    | f_type_def_list_1_0=type_def_list f_type_def_list_1_1=type_def f_type_def_list_1_2=SEMI #R16 // r16
+    ;
+
+node type_def
+    : f_type_def_0_0=NAME f_type_def_0_1=EQ f_type_def_0_2=type_denoter #R17 // r17
+    ;
+
+node var_decl_part
+    : empty #R18 // r18
+    | f_var_decl_part_1_0=var_sym f_var_decl_part_1_1=var_decl_list #R19 // r19
+    ;
+
+node var_sym
+    : f_var_sym_0_0=VAR #R20 // r20
+    ;
+
+node var_decl_list
+    : f_var_decl_list_0_0=var_decl f_var_decl_list_0_1=SEMI #R21 // r21
+    | f_var_decl_list_1_0=var_decl_list f_var_decl_list_1_1=var_decl f_var_decl_list_1_2=SEMI #R22 // r22
+    ;
+
+node var_decl
+    : f_var_decl_0_0=NAME f_var_decl_0_1=var_decl_part_4* f_var_decl_0_2=COLON f_var_decl_0_3=type_denoter #R23 // r23
+    ;
+
+node proc_decl_part
+    : empty #R24 // r24
+    | f_proc_decl_part_1_0=proc_decl_part f_proc_decl_part_1_1=proc_decl #R25 // r25
+    ;
+
+node type_denoter
+    : f_type_denoter_0_0=type_identifier #R26 // r26
+    | f_type_denoter_1_0=record_type #R27 // r27
+    | f_type_denoter_2_0=pointer_type #R28 // r28
+    | f_type_denoter_3_0=constant f_type_denoter_3_1=DOTDOT f_type_denoter_3_2=constant #R30 // r30
+    | f_type_denoter_4_0=LPAREN f_type_denoter_4_1=enumeration f_type_denoter_4_2=RPAREN #R31 // r31
+    | f_type_denoter_5_0=packed_sym? f_type_denoter_5_1=ARRAY f_type_denoter_5_2=LBRACK f_type_denoter_5_3=subscr_tp_list f_type_denoter_5_4=RBRACK f_type_denoter_5_5=OF f_type_denoter_5_6=type_denoter #R35 // r35
+    | f_type_denoter_6_0=packed_sym? f_type_denoter_6_1=SET f_type_denoter_6_2=OF f_type_denoter_6_3=type_denoter #R39 // r39
+    | f_type_denoter_7_0=packed_sym? f_type_denoter_7_1=FILE f_type_denoter_7_2=OF f_type_denoter_7_3=type_denoter #R40 // r40
+    ;
+
+node type_identifier
+    : f_type_identifier_0_0=NAME #R29 // r29
+    ;
+
+node enumeration
+    : f_enumeration_0_0=NAME #R32 // r32
+    | f_enumeration_1_0=enumeration f_enumeration_1_1=COMMA f_enumeration_1_2=NAME #R33 // r33
+    ;
+
+node pointer_type
+    : f_pointer_type_0_0=AT f_pointer_type_0_1=NAME #R34 // r34
+    ;
+
+node packed_sym
+    : f_packed_sym_0_0=PACKED #R36 // r36
+    ;
+
+node subscr_tp_list
+    : f_subscr_tp_list_0_0=type_denoter #R37 // r37
+    | f_subscr_tp_list_1_0=type_denoter f_subscr_tp_list_1_1=COMMA f_subscr_tp_list_1_2=subscr_tp_list #R38 // r38
+    ;
+
+node record_type
+    : f_record_type_0_0=packed_sym? f_record_type_0_1=RECORD f_record_type_0_2=field_list f_record_type_0_3=END #R41 // r41
+    ;
+
+node field_list
+    : f_field_list_0_0=record_section #R42 // r42
+    | f_field_list_1_0=variant_part #R43 // r43
+    | f_field_list_2_0=record_section f_field_list_2_1=SEMI f_field_list_2_2=field_list #R44 // r44
+    | empty #R45 // r45
+    ;
+
+node record_section
+    : f_record_section_0_0=NAME f_record_section_0_1=record_section_part_5* f_record_section_0_2=COLON f_record_section_0_3=type_denoter #R46 // r46
+    ;
+
+node variant_part
+    : f_variant_part_0_0=CASE f_variant_part_0_1=tag_field f_variant_part_0_2=OF f_variant_part_0_3=variants f_variant_part_0_4=SEMI? #R47 // r47
+    ;
+
+node tag_field
+    : f_tag_field_0_0=NAME f_tag_field_0_1=COLON f_tag_field_0_2=type_identifier #R48 // r48
+    | f_tag_field_1_0=type_identifier #R49 // r49
+    ;
+
+node variants
+    : f_variants_0_0=variant #R50 // r50
+    | f_variants_1_0=variants f_variants_1_1=SEMI f_variants_1_2=variant #R51 // r51
+    ;
+
+node variant
+    : f_variant_0_0=case_label f_variant_0_1=variant_part_6* f_variant_0_2=COLON f_variant_0_3=LPAREN f_variant_0_4=field_list f_variant_0_5=RPAREN #R52 // r52
+    ;
+
+node proc_decl
+    : f_proc_decl_0_0=proc_funct f_proc_decl_0_1=NAME f_proc_decl_0_2=proc_type f_proc_decl_0_3=SEMI f_proc_decl_0_4=block f_proc_decl_0_5=SEMI #R53 // r53
+    | f_proc_decl_1_0=proc_funct f_proc_decl_1_1=NAME f_proc_decl_1_2=proc_type f_proc_decl_1_3=SEMI f_proc_decl_1_4=NAME f_proc_decl_1_5=SEMI #R54 // r54
+    ;
+
+node proc_type
+    : f_proc_type_0_0=proc_type_part_7? f_proc_type_0_1=proc_type_part_8? #R55 // r55
+    ;
+
+node form_parms
+    : f_form_parms_0_0=form_parm_sect #R56 // r56
+    | f_form_parms_1_0=form_parms f_form_parms_1_1=SEMI f_form_parms_1_2=form_parm_sect #R57 // r57
+    ;
+
+node form_parm_sect
+    : f_form_parm_sect_0_0=proc_funct f_form_parm_sect_0_1=NAME f_form_parm_sect_0_2=proc_type #R58 // r58
+    | f_form_parm_sect_1_0=var_sym? f_form_parm_sect_1_1=NAME f_form_parm_sect_1_2=form_parm_sect_part_9* f_form_parm_sect_1_3=COLON f_form_parm_sect_1_4=type_identifier #R59 // r59
+    ;
+
+node proc_funct
+    : f_proc_funct_0_0=PROCEDURE #R60 // r60
+    | f_proc_funct_1_0=FUNCTION #R61 // r61
+    ;
+
+node call_with_params
+    : f_call_with_params_0_0=identifier f_call_with_params_0_1=LPAREN f_call_with_params_0_2=expr f_call_with_params_0_3=format? f_call_with_params_0_4=act_params f_call_with_params_0_5=RPAREN #R62 // r62
+    ;
+
+node act_params
+    : f_act_params_0_0=COMMA f_act_params_0_1=expr f_act_params_0_2=format? f_act_params_0_3=act_params #R63 // r63
+    | empty #R64 // r64
+    ;
+
+node format
+    : f_format_0_0=COLON f_format_0_1=expr f_format_0_2=format_part_10? #R65 // r65
+    ;
+
+node expr
+    : f_expr_0_0=simp_expr #R66 // r66
+    | f_expr_1_0=simp_expr f_expr_1_1=rel_opr f_expr_1_2=simp_expr #R69 // r69
+    ;
+
+node simp_expr
+    : f_simp_expr_0_0=term #R67 // r67
+    | f_simp_expr_1_0=simp_expr f_simp_expr_1_1=add_opr f_simp_expr_1_2=term #R70 // r70
+    | f_simp_expr_2_0=add_opr f_simp_expr_2_1=term #R71 // r71
+    ;
+
+node term
+    : f_term_0_0=factor #R68 // r68
+    | f_term_1_0=term f_term_1_1=mul_opr f_term_1_2=factor #R72 // r72
+    ;
+
+node factor
+    : f_factor_0_0=LPAREN f_factor_0_1=expr f_factor_0_2=RPAREN #R73 // r73
+    | f_factor_1_0=call_with_params #R74 // r74
+    | f_factor_2_0=NOT f_factor_2_1=factor #R75 // r75
+    | f_factor_3_0=var_denot #R76 // r76
+    | f_factor_4_0=identifier #R77 // r77
+    | f_factor_5_0=NIL #R78 // r78
+    | f_factor_6_0=LBRACK f_factor_6_1=element_list? f_factor_6_2=RBRACK #R79 // r79
+    | f_factor_7_0=INTEGER_NUMBER #R80 // r80
+    | f_factor_8_0=REAL_NUMBER #R81 // r81
+    | f_factor_9_0=CHARACTER #R82 // r82
+    | f_factor_10_0=STRING #R83 // r83
+    ;
+
+node variable
+    : f_variable_0_0=var_denot #R84 // r84
+    | f_variable_1_0=identifier #R85 // r85
+    ;
+
+node var_denot
+    : f_var_denot_0_0=variable f_var_denot_0_1=DOT f_var_denot_0_2=NAME #R86 // r86
+    | f_var_denot_1_0=variable f_var_denot_1_1=LBRACK f_var_denot_1_2=subscript_list f_var_denot_1_3=RBRACK #R87 // r87
+    | f_var_denot_2_0=variable f_var_denot_2_1=AT #R88 // r88
+    ;
+
+node element_list
+    : f_element_list_0_0=element #R89 // r89
+    | f_element_list_1_0=element_list f_element_list_1_1=COMMA f_element_list_1_2=element #R90 // r90
+    ;
+
+node element
+    : f_element_0_0=expr f_element_0_1=element_part_11? #R91 // r91
+    ;
+
+node subscript_list
+    : f_subscript_list_0_0=subscript #R92 // r92
+    | f_subscript_list_1_0=subscript_list f_subscript_list_1_1=COMMA f_subscript_list_1_2=subscript #R93 // r93
+    ;
+
+node subscript
+    : f_subscript_0_0=expr #R94 // r94
+    ;
+
+node identifier
+    : f_identifier_0_0=NAME #R95 // r95
+    ;
+
+node constant_ident
+    : f_constant_ident_0_0=NAME #R96 // r96
+    ;
+
+node constant
+    : f_constant_0_0=unsigned_const #R97 // r97
+    | f_constant_1_0=add_opr f_constant_1_1=unsigned_const #R98 // r98
+    ;
+
+node unsigned_const
+    : f_unsigned_const_0_0=constant_ident #R99 // r99
+    | f_unsigned_const_1_0=INTEGER_NUMBER #R100 // r100
+    | f_unsigned_const_2_0=REAL_NUMBER #R101 // r101
+    | f_unsigned_const_3_0=CHARACTER #R102 // r102
+    | f_unsigned_const_4_0=STRING #R103 // r103
+    ;
+
+node rel_opr
+    : f_rel_opr_0_0=EQ #R104 // r104
+    | f_rel_opr_1_0=NEQ #R105 // r105
+    | f_rel_opr_2_0=LE #R106 // r106
+    | f_rel_opr_3_0=GE #R107 // r107
+    | f_rel_opr_4_0=LT #R108 // r108
+    | f_rel_opr_5_0=GT #R109 // r109
+    | f_rel_opr_6_0=IN #R110 // r110
+    ;
+
+node add_opr
+    : f_add_opr_0_0=PLUS #R111 // r111
+    | f_add_opr_1_0=MINUS #R112 // r112
+    | f_add_opr_2_0=OR #R113 // r113
+    ;
+
+node mul_opr
+    : f_mul_opr_0_0=STAR #R114 // r114
+    | f_mul_opr_1_0=SLASH #R115 // r115
+    | f_mul_opr_2_0=DIV #R116 // r116
+    | f_mul_opr_3_0=MOD #R117 // r117
+    | f_mul_opr_4_0=AND #R118 // r118
+    ;
+
+node statement_seq
+    : f_statement_seq_0_0=statement #R119 // r119
+    | f_statement_seq_1_0=statement_seq f_statement_seq_1_1=SEMI f_statement_seq_1_2=statement #R120 // r120
+    ;
+
+node label
+    : f_label_0_0=INTEGER_NUMBER #R121 // r121
+    ;
+
+node statement
+    : f_statement_0_0=label f_statement_0_1=COLON f_statement_0_2=statement #R122 // r122
+    | f_statement_1_0=var_denot f_statement_1_1=ASSIGN f_statement_1_2=expr #R123 // r123
+    | f_statement_2_0=identifier f_statement_2_1=ASSIGN f_statement_2_2=expr #R124 // r124
+    | f_statement_3_0=call_with_params #R125 // r125
+    | f_statement_4_0=identifier #R126 // r126
+    | f_statement_5_0=GOTO f_statement_5_1=INTEGER_NUMBER #R127 // r127
+    | empty #R128 // r128
+    | f_statement_7_0=BEGIN f_statement_7_1=statement_seq f_statement_7_2=END #R129 // r129
+    | f_statement_8_0=CASE f_statement_8_1=expr f_statement_8_2=OF f_statement_8_3=case_limbs f_statement_8_4=SEMI? f_statement_8_5=END #R130 // r130
+    | f_statement_9_0=WHILE f_statement_9_1=expr f_statement_9_2=DO f_statement_9_3=statement #R131 // r131
+    | f_statement_10_0=REPEAT f_statement_10_1=statement_seq f_statement_10_2=UNTIL f_statement_10_3=expr #R132 // r132
+    | f_statement_11_0=FOR f_statement_11_1=identifier f_statement_11_2=ASSIGN f_statement_11_3=expr f_statement_11_4=to_downto f_statement_11_5=expr f_statement_11_6=DO f_statement_11_7=statement #R133 // r133
+    | f_statement_12_0=WITH f_statement_12_1=variable f_statement_12_2=with_clause #R134 // r134
+    | f_statement_13_0=if_statement #R135 // r135
+    ;
+
+node if_statement
+    : f_if_statement_0_0=IF f_if_statement_0_1=expr f_if_statement_0_2=THEN f_if_statement_0_3=statement                #IfStatement
+    | f_if_statement_1_0=IF f_if_statement_1_1=expr f_if_statement_1_2=THEN f_if_statement_1_3=statement f_if_statement_1_4=ELSE f_if_statement_1_5=statement #IfElseStatement
+    ;
+
+node with_clause
+    : f_with_clause_0_0=COMMA f_with_clause_0_1=variable f_with_clause_0_2=with_clause #R136 // r136
+    | f_with_clause_1_0=DO f_with_clause_1_1=statement #R137 // r137
+    ;
+
+node case_limbs
+    : f_case_limbs_0_0=case_limbs f_case_limbs_0_1=SEMI f_case_limbs_0_2=case_limb #R138 // r138
+    | f_case_limbs_1_0=case_limb #R139 // r139
+    ;
+
+node case_limb
+    : f_case_limb_0_0=case_label f_case_limb_0_1=case_limb_part_13* f_case_limb_0_2=COLON f_case_limb_0_3=statement #R140 // r140
+    ;
+
+node case_label
+    : f_case_label_0_0=constant #R141 // r141
+    ;
+
+node to_downto
+    : f_to_downto_0_0=DOWNTO #R142 // r142
+    | f_to_downto_1_0=TO #R143 // r143
+    ;
+
+inline program_part_1
+    : f_program_part_1_0_0=LPAREN f_program_part_1_0_1=prog_params f_program_part_1_0_2=RPAREN
+    ;
+
+inline prog_params_part_2
+    : f_prog_params_part_2_0_0=COMMA f_prog_params_part_2_0_1=prog_param
+    ;
+
+inline label_decl_part_part_3
+    : f_label_decl_part_part_3_0_0=COMMA f_label_decl_part_part_3_0_1=label_decl
+    ;
+
+inline var_decl_part_4
+    : f_var_decl_part_4_0_0=COMMA f_var_decl_part_4_0_1=NAME
+    ;
+
+inline record_section_part_5
+    : f_record_section_part_5_0_0=COMMA f_record_section_part_5_0_1=NAME
+    ;
+
+inline variant_part_6
+    : f_variant_part_6_0_0=COMMA f_variant_part_6_0_1=case_label
+    ;
+
+inline proc_type_part_7
+    : f_proc_type_part_7_0_0=LPAREN f_proc_type_part_7_0_1=form_parms f_proc_type_part_7_0_2=RPAREN
+    ;
+
+inline proc_type_part_8
+    : f_proc_type_part_8_0_0=COLON f_proc_type_part_8_0_1=type_identifier
+    ;
+
+inline form_parm_sect_part_9
+    : f_form_parm_sect_part_9_0_0=COMMA f_form_parm_sect_part_9_0_1=NAME
+    ;
+
+inline format_part_10
+    : f_format_part_10_0_0=COLON f_format_part_10_0_1=expr
+    ;
+
+inline element_part_11
+    : f_element_part_11_0_0=DOTDOT f_element_part_11_0_1=expr
+    ;
+
+inline case_limb_part_13
+    : f_case_limb_part_13_0_0=COMMA f_case_limb_part_13_0_1=case_label
+    ;
+
+PROGRAM : [Pp] [Rr] [Oo] [Gg] [Rr] [Aa] [Mm];
+BEGIN : [Bb] [Ee] [Gg] [Ii] [Nn];
+END : [Ee] [Nn] [Dd];
+LABEL : [Ll] [Aa] [Bb] [Ee] [Ll];
+CONST : [Cc] [Oo] [Nn] [Ss] [Tt];
+TYPE : [Tt] [Yy] [Pp] [Ee];
+VAR : [Vv] [Aa] [Rr];
+ARRAY : [Aa] [Rr] [Rr] [Aa] [Yy];
+OF : [Oo] [Ff];
+PACKED : [Pp] [Aa] [Cc] [Kk] [Ee] [Dd];
+SET : [Ss] [Ee] [Tt];
+FILE : [Ff] [Ii] [Ll] [Ee];
+RECORD : [Rr] [Ee] [Cc] [Oo] [Rr] [Dd];
+CASE : [Cc] [Aa] [Ss] [Ee];
+PROCEDURE : [Pp] [Rr] [Oo] [Cc] [Ee] [Dd] [Uu] [Rr] [Ee];
+FUNCTION : [Ff] [Uu] [Nn] [Cc] [Tt] [Ii] [Oo] [Nn];
+NOT : [Nn] [Oo] [Tt];
+NIL : [Nn] [Ii] [Ll];
+IN : [Ii] [Nn];
+OR : [Oo] [Rr];
+DIV : [Dd] [Ii] [Vv];
+MOD : [Mm] [Oo] [Dd];
+AND : [Aa] [Nn] [Dd];
+GOTO : [Gg] [Oo] [Tt] [Oo];
+WHILE : [Ww] [Hh] [Ii] [Ll] [Ee];
+DO : [Dd] [Oo];
+REPEAT : [Rr] [Ee] [Pp] [Ee] [Aa] [Tt];
+UNTIL : [Uu] [Nn] [Tt] [Ii] [Ll];
+FOR : [Ff] [Oo] [Rr];
+WITH : [Ww] [Ii] [Tt] [Hh];
+IF : [Ii] [Ff];
+THEN : [Tt] [Hh] [Ee] [Nn];
+ELSE : [Ee] [Ll] [Ss] [Ee];
+DOWNTO : [Dd] [Oo] [Ww] [Nn] [Tt] [Oo];
+TO : [Tt] [Oo];
+
+LPAREN : '(';
+RPAREN : ')';
+LBRACK : '[';
+RBRACK : ']';
+SEMI : ';';
+COMMA : ',';
+COLON : ':';
+DOT : '.';
+DOTDOT : '..';
+EQ : '=';
+AT : '@';
+ASSIGN : ':=';
+NEQ : '<>';
+LE : '<=';
+GE : '>=';
+LT : '<';
+GT : '>';
+PLUS : '+';
+MINUS : '-';
+STAR : '*';
+SLASH : '/';
+
+REAL_NUMBER : [0-9]+ '.' [0-9]+;
+INTEGER_NUMBER : [0-9]+;
+CHARACTER : '\'' ~['\r\n] '\'';
+STRING : '\'' (~['\r\n] | '\'\'')* '\'';
+NAME : [a-zA-Z_] [a-zA-Z_0-9]*;
+WS : [ \t\r\n]+ -> skip;

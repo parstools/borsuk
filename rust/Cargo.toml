@@ -1,0 +1,3 @@
+[workspace]
+members = ["crates/ag-runtime", "crates/sema-runtime"]
+resolver = "3"

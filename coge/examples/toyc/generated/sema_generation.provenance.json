@@ -1,0 +1,17 @@
+{
+  "format": "agsem-generation-provenance-v1",
+  "source_sha256": "bca4857e3716ba4257cea97a21755ccaf678b71ad3f84f5d3dd61d6c37fe600d",
+  "contracts_sha256": "87db8d01ff35c4d99ba05d01821ad648717880989b8052d4297597416c2be3a7",
+  "binding_schema": {
+    "id": "standard_semantic_v1",
+    "version": "1",
+    "sha256": "c3d719549c082acd9179e51199de908f1553f7f522121590affe4ad4e6ce8472"
+  },
+  "execution_profiles": [
+    {
+      "id": "shared_value_v1",
+      "version": "1",
+      "sha256": "80c205f2ddad75b67a00762cf8ce41638744a719748753850cd4157c7f6f2b99"
+    }
+  ]
+}

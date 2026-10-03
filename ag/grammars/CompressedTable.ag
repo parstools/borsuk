@@ -1,0 +1,104 @@
+grammar CompressedTable;
+
+// Agas counterpart of CompressedTable.g4, matching dumpDsl().
+// The importer must validate parser names, indices and table semantics.
+options {
+    parser = LR;
+    lookahead = 1;
+    ast = explicit;
+}
+
+node document
+    : COMPRESSED_TABLE parserName=STRING LBRACE
+      START_STATE startState=UINT SEMI
+      actionRows=actionRow+
+      ACTION_STATE_ROWS actionStateRows=indices SEMI
+      gotoRows=gotoRow+
+      GOTO_STATE_ROWS gotoStateRows=indices SEMI
+      RBRACE EOF
+    ;
+
+node actionRow
+    : ACTION_ROW id=UINT LBRACE entries=actionEntry* fallback=defaultEntry RBRACE
+    ;
+
+node actionEntry
+    : key=lookahead ARROW value=action SEMI
+    ;
+
+inline defaultEntry
+    : ANY ARROW value=defaultAction SEMI
+    ;
+
+// Shifts and acceptance must remain explicit entries.
+node defaultAction
+    : REDUCE ruleId=UINT #DefaultReduction
+    | ERROR #DefaultError
+    ;
+
+node action
+    : SHIFT stateId=UINT #ShiftAction
+    | REDUCE ruleId=UINT #ReduceAction
+    | ACCEPT #AcceptAction
+    ;
+
+node lookahead
+    : LBRACKET first=lookaheadSymbol rest=lookaheadTail* RBRACKET
+    ;
+
+inline lookaheadTail
+    : COMMA value=lookaheadSymbol
+    ;
+
+// Quoted "EOF" is a terminal; END_OF_INPUT is the DSL marker.
+// The built-in EOF in document instead terminates the table file.
+node lookaheadSymbol
+    : value=STRING #TerminalSymbol
+    | END_OF_INPUT #EndOfInputSymbol
+    ;
+
+node gotoRow
+    : GOTO_ROW id=UINT LBRACE entries=gotoEntry* RBRACE
+    ;
+
+node gotoEntry
+    : nonterminal=STRING ARROW stateId=UINT SEMI
+    ;
+
+node indices
+    : LBRACKET first=UINT rest=indexTail* RBRACKET
+    ;
+
+inline indexTail
+    : COMMA value=UINT
+    ;
+
+COMPRESSED_TABLE : 'compressed-table';
+START_STATE : 'start-state';
+ACTION_ROW : 'action-row';
+ACTION_STATE_ROWS : 'action-state-rows';
+GOTO_ROW : 'goto-row';
+GOTO_STATE_ROWS : 'goto-state-rows';
+ANY : 'any';
+SHIFT : 'shift';
+REDUCE : 'reduce';
+ACCEPT : 'accept';
+ERROR : 'error';
+END_OF_INPUT : 'EOF';
+
+LBRACE : '{';
+RBRACE : '}';
+LBRACKET : '[';
+RBRACKET : ']';
+COMMA : ',';
+SEMI : ';';
+ARROW : '=>';
+
+UINT : '0' | [1-9] [0-9]*;
+
+// JSON string escaping, shared with the DSL exporter.
+STRING : '"' (ESCAPE | ~["\\\u0000-\u001F])* '"';
+fragment ESCAPE : '\\' (["\\/bfnrt] | 'u' HEX HEX HEX HEX);
+fragment HEX : [0-9a-fA-F];
+
+WS : [ \t\r\n]+ -> skip;

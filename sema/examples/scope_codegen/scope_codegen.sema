@@ -1,0 +1,322 @@
+sema ScopeCodegen for "scope_codegen.ag";
+
+semantic_model {
+    rust_context SemaContext;
+    analyzer program(flow: FlowId, scope: ScopeId) -> SymbolId;
+    analyzer statement(flow: FlowId, scope: ScopeId) -> FlowId;
+    analyzer block(flow: FlowId, scope: ScopeId) -> FlowId;
+    intrinsic scope_lookup(scope: ScopeId, name: Text) -> Option<SymbolId>;
+    intrinsic scope_chain(scope: ScopeId) -> List<ScopeId>;
+    intrinsic scope_new_child(parent: ScopeId) -> ScopeId mutates;
+    intrinsic scope_symbols(scope: ScopeId) -> List<SymbolId>;
+    intrinsic parameter_name(parameter: ParameterId) -> Text;
+    intrinsic copy_text(value: Text) -> OwnedText;
+    intrinsic scope_insert(scope: ScopeId, name: Text, symbol: SymbolId) -> Unit mutates;
+    intrinsic fresh_variable(scope: ScopeId, name: Text) -> SymbolId mutates;
+    intrinsic flow_declare_variable(flow: FlowId, symbol: SymbolId) -> Unit mutates;
+    intrinsic flow_copy(flow: FlowId) -> FlowId mutates;
+    intrinsic flow_symbols(flow: FlowId) -> List<SymbolId>;
+    intrinsic flow_contains(flow: FlowId, symbol: SymbolId) -> Bool;
+    intrinsic flow_remove(flow: FlowId, symbol: SymbolId) -> Unit mutates;
+    intrinsic scope_lookup_tag(scope: ScopeId, name: Text) -> Option<StructTagId>;
+    intrinsic scope_insert_tag(scope: ScopeId, name: Text, tag: StructTagId) -> Unit mutates;
+    intrinsic fresh_struct_tag(scope: ScopeId, name: Text) -> StructTagId mutates;
+    intrinsic option_symbol(value: Option<SymbolId>) -> SymbolId;
+    intrinsic symbol_is_function(symbol: SymbolId) -> Bool;
+    intrinsic function_signature(symbol: SymbolId) -> Text;
+    intrinsic function_is_defined(symbol: SymbolId) -> Bool;
+    intrinsic mark_function_defined(symbol: SymbolId) -> Unit mutates;
+    intrinsic fresh_function(scope: ScopeId, name: Text, signature: Text, definition: Bool) -> SymbolId mutates;
+    intrinsic flow_mark_initialized(flow: FlowId, symbol: SymbolId) -> Unit mutates;
+    intrinsic flow_mark_uninitialized(flow: FlowId, symbol: SymbolId) -> Unit mutates;
+    intrinsic flow_mark_zero_initialized(flow: FlowId, symbol: SymbolId) -> Unit mutates;
+    intrinsic flow_is_initialized(flow: FlowId, symbol: SymbolId) -> Bool;
+    intrinsic flow_is_zero_initialized(flow: FlowId, symbol: SymbolId) -> Bool;
+    intrinsic parse_integer(value: Text) -> Result<Int>;
+    intrinsic record_declaration(flow: FlowId, symbol: SymbolId) -> Unit mutates;
+    intrinsic record_read(flow: FlowId, symbol: SymbolId) -> Unit mutates;
+    intrinsic record_integer_assignment(flow: FlowId, symbol: SymbolId, value: Int) -> Unit mutates;
+    intrinsic record_block(result: FlowId, base: FlowId, scope: ScopeId) -> Unit mutates;
+    intrinsic record_if(merged: FlowId, base: FlowId, condition: SymbolId, then_flow: FlowId, else_flow: FlowId) -> Unit mutates;
+    intrinsic record_program_flow(flow: FlowId) -> Unit mutates;
+
+    function contains_local(scope: ScopeId, name: Text) -> Bool {
+        let found = scope_lookup(scope, name);
+        return found != none;
+    }
+
+    function lookup_lexical(scope: ScopeId, name: Text) -> Option<SymbolId> {
+        foreach current in scope_chain(scope) {
+            if contains_local(current, name) {
+                return scope_lookup(current, name);
+            }
+        }
+        return none;
+    }
+
+    function read_symbol(flow: FlowId, symbol: SymbolId) -> Result<SymbolId> {
+        if symbol_is_function(symbol) {
+            return symbol;
+        }
+        if flow_is_initialized(flow, symbol) == false {
+            error "uninitialized variable";
+        }
+        return symbol;
+    }
+
+    function merge_flow(left: FlowId, right: FlowId) -> FlowId mutates {
+        let merged = flow_copy(left);
+        foreach symbol in flow_symbols(left) {
+            if flow_contains(right, symbol) == false {
+                flow_remove(merged, symbol);
+            } else {
+                let left_ready = flow_is_initialized(left, symbol);
+                let right_ready = flow_is_initialized(right, symbol);
+                if left_ready and right_ready {
+                    let left_zero = flow_is_zero_initialized(left, symbol);
+                    let right_zero = flow_is_zero_initialized(right, symbol);
+                    if left_zero and right_zero {
+                        flow_mark_zero_initialized(merged, symbol);
+                    } else {
+                        flow_mark_initialized(merged, symbol);
+                    }
+                } else {
+                    flow_mark_uninitialized(merged, symbol);
+                }
+            }
+        }
+        return merged;
+    }
+
+    function leave_scope(flow: FlowId, scope: ScopeId) -> Unit mutates {
+        foreach symbol in scope_symbols(scope) {
+            flow_remove(flow, symbol);
+        }
+        return unit;
+    }
+
+    function assign_integer(flow: FlowId, scope: ScopeId, name: Text, literal: Text) -> Result<SymbolId> mutates {
+        let found = lookup_lexical(scope, name);
+        if found == none {
+            error "undeclared identifier";
+        }
+        let target = option_symbol(found);
+        if symbol_is_function(target) {
+            error "not assignable";
+        }
+        let value = parse_integer(literal);
+        record_integer_assignment(flow, target, value);
+        flow_mark_initialized(flow, target);
+        return target;
+    }
+
+    function contains_name(parameters: List<ParameterId>, name: Text) -> Bool {
+        foreach parameter in parameters {
+            if parameter_name(parameter) == name {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function unique_names(parameters: List<ParameterId>) -> Bool {
+        foreach first in parameters {
+            foreach second in parameters {
+                if (first != second) and (parameter_name(first) == parameter_name(second)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    function bind(scope: ScopeId, name: Text, symbol: SymbolId) -> Result<SymbolId> mutates {
+        if contains_local(scope, name) {
+            error "identifier already declared";
+        }
+        scope_insert(scope, name, symbol);
+        return symbol;
+    }
+
+    function declare_variable(flow: FlowId, scope: ScopeId, name: Text) -> Result<SymbolId> mutates {
+        if contains_local(scope, name) {
+            error "identifier already declared";
+        }
+        let symbol = fresh_variable(scope, name);
+        let bound = bind(scope, name, symbol);
+        flow_declare_variable(flow, bound);
+        return bound;
+    }
+
+    function bind_tag(scope: ScopeId, name: Text, tag: StructTagId) -> Result<StructTagId> mutates {
+        if scope_lookup_tag(scope, name) != none {
+            error "tag already declared";
+        }
+        scope_insert_tag(scope, name, tag);
+        return tag;
+    }
+
+    function declare_incomplete_struct(scope: ScopeId, name: Text) -> Result<StructTagId> mutates {
+        if scope_lookup_tag(scope, name) != none {
+            error "tag already declared";
+        }
+        let tag = fresh_struct_tag(scope, name);
+        return bind_tag(scope, name, tag);
+    }
+
+    function lookup_tag_lexical(scope: ScopeId, name: Text) -> Option<StructTagId> {
+        foreach current in scope_chain(scope) {
+            let tag = scope_lookup_tag(current, name);
+            if tag != none {
+                return tag;
+            }
+        }
+        return none;
+    }
+
+    function declare_function(scope: ScopeId, name: Text, signature: Text, definition: Bool) -> Result<SymbolId> mutates {
+        let existing = scope_lookup(scope, name);
+        if existing != none {
+            let symbol = option_symbol(existing);
+            if symbol_is_function(symbol) == false {
+                error "identifier already declared";
+            }
+            if function_signature(symbol) != signature {
+                error "conflicting function declaration";
+            }
+            if definition {
+                if function_is_defined(symbol) {
+                    error "function already defined";
+                }
+                mark_function_defined(symbol);
+            }
+            return symbol;
+        }
+        let symbol = fresh_function(scope, name, signature, definition);
+        return bind(scope, name, symbol);
+    }
+
+    function bind_parameters(flow: FlowId, scope: ScopeId, parameters: List<ParameterId>) -> Result<Unit> mutates {
+        if unique_names(parameters) == false {
+            error "duplicate parameter";
+        }
+        foreach parameter in parameters {
+            let name = copy_text(parameter_name(parameter));
+            if contains_local(scope, name) {
+                error "identifier already declared";
+            }
+        }
+        foreach parameter in parameters {
+            let name = copy_text(parameter_name(parameter));
+            let symbol = declare_variable(flow, scope, name);
+            flow_mark_initialized(flow, symbol);
+        }
+        return unit;
+    }
+}
+
+node program
+    : name=ID EOF #Lookup analysis {
+        let symbol = lookup_lexical(scope, name.text);
+        require symbol != none else error "undeclared identifier";
+        let checked = read_symbol(flow, option_symbol(symbol));
+        record_read(flow, checked);
+        result = checked;
+      }
+    | INT declared=ID SEMI target=ID ASSIGN value=NUMBER SEMI used=ID EOF #DeclareAssignRead analysis {
+        let declared_symbol = declare_variable(flow, scope, declared.text);
+        record_declaration(flow, declared_symbol);
+        let assigned_symbol = assign_integer(flow, scope, target.text, value.text);
+        let symbol = lookup_lexical(scope, used.text);
+        require symbol != none else error "undeclared identifier";
+        let checked = read_symbol(flow, option_symbol(symbol));
+        record_read(flow, checked);
+        result = checked;
+      }
+    | INT declared=ID SEMI EOF #DeclareOnly analysis {
+        let declared_symbol = declare_variable(flow, scope, declared.text);
+        record_declaration(flow, declared_symbol);
+        result = declared_symbol;
+      }
+    | statement_node=statement used=ID EOF #StatementAndRead analysis {
+        analyze statement_node with flow: flow, scope: scope -> after_statement;
+        let symbol = lookup_lexical(scope, used.text);
+      }
+      analysis {
+        require symbol != none else error "undeclared identifier";
+        let checked = read_symbol(after_statement, option_symbol(symbol));
+        result = checked;
+      }
+      analysis {
+        record_read(after_statement, result);
+        record_program_flow(after_statement);
+      }
+    ;
+
+node statement
+    : IF LPAREN condition=ID RPAREN then_target=ID ASSIGN then_value=NUMBER SEMI ELSE else_target=ID ASSIGN else_value=NUMBER SEMI #IfElseAssign analysis {
+        let condition_symbol = lookup_lexical(scope, condition.text);
+        require condition_symbol != none else error "undeclared identifier";
+        let checked_condition = read_symbol(flow, option_symbol(condition_symbol));
+        let then_flow = flow_copy(flow);
+        let else_flow = flow_copy(flow);
+        let then_assignment = assign_integer(then_flow, scope, then_target.text, then_value.text);
+        let else_assignment = assign_integer(else_flow, scope, else_target.text, else_value.text);
+        let merged = merge_flow(then_flow, else_flow);
+        record_if(merged, flow, checked_condition, then_flow, else_flow);
+        result = merged;
+      }
+    | IF LPAREN condition=ID RPAREN then_target=ID ASSIGN then_value=NUMBER SEMI ELSE SEMI #IfElseEmpty analysis {
+        let condition_symbol = lookup_lexical(scope, condition.text);
+        require condition_symbol != none else error "undeclared identifier";
+        let checked_condition = read_symbol(flow, option_symbol(condition_symbol));
+        let then_flow = flow_copy(flow);
+        let else_flow = flow_copy(flow);
+        let then_assignment = assign_integer(then_flow, scope, then_target.text, then_value.text);
+        let merged = merge_flow(then_flow, else_flow);
+        record_if(merged, flow, checked_condition, then_flow, else_flow);
+        result = merged;
+      }
+    | IF LPAREN condition=ID RPAREN then_branch=block ELSE else_branch=block #IfElseBlocks analysis {
+        let condition_symbol = lookup_lexical(scope, condition.text);
+        require condition_symbol != none else error "undeclared identifier";
+        let checked_condition = read_symbol(flow, option_symbol(condition_symbol));
+        let then_flow = flow_copy(flow);
+        let else_flow = flow_copy(flow);
+        analyze then_branch with flow: then_flow, scope: scope -> then_result;
+        analyze else_branch with flow: else_flow, scope: scope -> else_result;
+        let merged = merge_flow(then_result, else_result);
+        record_if(merged, flow, checked_condition, then_result, else_result);
+        result = merged;
+      }
+    | target=ID ASSIGN value=NUMBER SEMI #Assign analysis {
+        let assigned = assign_integer(flow, scope, target.text, value.text);
+        result = flow;
+      }
+    | used=ID SEMI #Read analysis {
+        let symbol = lookup_lexical(scope, used.text);
+        require symbol != none else error "undeclared identifier";
+        let checked = read_symbol(flow, option_symbol(symbol));
+        record_read(flow, checked);
+        result = flow;
+      }
+    | INT declared=ID SEMI #Declare analysis {
+        let declared_symbol = declare_variable(flow, scope, declared.text);
+        record_declaration(flow, declared_symbol);
+        result = flow;
+      }
+    | nested=block #NestedBlock analysis {}
+    ;
+
+node block
+    : LBRACE items=statement* RBRACE #Statements analysis {
+        let local = scope_new_child(scope);
+        let state = flow_copy(flow);
+        foreach item in items {
+            analyze item with flow: state, scope: local -> state;
+        }
+        leave_scope(state, local);
+        record_block(state, flow, local);
+        result = state;
+      }
+    ;

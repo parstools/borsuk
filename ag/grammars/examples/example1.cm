@@ -1,0 +1,45 @@
+int factorial_recursive(int n) {
+    if (n <= 1)
+        return 1;
+    else
+        return n * factorial_recursive(n - 1);
+}
+
+int factorial_iterative(int n) {
+     int result = 1;
+     for (int i = 2; i <= n; i++) {
+        result *= i;
+     }
+     return result;
+}
+
+string name() {
+   return "this is name";
+}
+
+
+/* block
+   comment */
+int main()
+{
+    int n1 = factorial_recursive(10);
+    print(n1);
+    int n2 = factorial_iterative(10);
+    print(n2);
+    print(name());
+    x = 10;
+    name = "chris";
+
+    print(name);
+    print(x);
+    print(add(add(3, 4), 5));
+
+    // should print 10
+    print(x);
+
+    x = -add(x, 0);
+    // should print -10
+    print(x);
+
+    return 0;
+}

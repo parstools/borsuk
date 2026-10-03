@@ -1,0 +1,40 @@
+{
+  "format": 1,
+  "id": "toyscope-runtime",
+  "version": "1",
+  "semantic": [
+    {
+      "name": "ToyScopeContext",
+      "kind": "opaque"
+    },
+    {
+      "name": "ScopeId",
+      "kind": "opaque"
+    },
+    {
+      "name": "SymbolId",
+      "kind": "opaque"
+    },
+    {
+      "name": "ExprId",
+      "kind": "opaque"
+    },
+    {
+      "name": "OpId",
+      "kind": "opaque"
+    },
+    {
+      "name": "ProgramId",
+      "kind": "opaque"
+    },
+    {
+      "name": "OperatorKind",
+      "kind": "opaque"
+    },
+    {
+      "name": "BigInt",
+      "kind": "opaque"
+    }
+  ],
+  "execution": []
+}

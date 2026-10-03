@@ -1,0 +1,13 @@
+grammar Shift;
+options { parser = LALR; lookahead = 2; }
+lexerClasses { SHIFT = false; }
+node start : A shifted | C separated;
+inline shifted -> enable(SHIFT) : SHR B;
+inline separated : GT GT D;
+A : 'a';
+C : 'c';
+SHR : '>>' -> require(SHIFT);
+GT : '>';
+B : 'b';
+D : 'd';
+WS : [ \t\r\n]+ -> skip;

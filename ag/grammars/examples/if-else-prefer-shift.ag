@@ -1,0 +1,43 @@
+grammar ToyC;
+
+options {
+    parser = LR;
+    lookahead = 1;
+    ast = explicit;
+}
+
+channels {
+    HIDDEN
+}
+
+conflicts {
+    prefer shift ELSE over reduce ifStatement#IfStatement;
+}
+
+node compilationUnit
+    : value=ifStatement EOF
+    ;
+
+node ifStatement
+    : IF B thenBranch=statement                           #IfStatement
+    | IF B thenBranch=statement ELSE elseBranch=statement #IfElseStatement
+    ;
+
+inline statement
+    : value=ifStatement
+    | value=compoundStatement
+    ;
+
+node compoundStatement
+    : LBRACE RBRACE
+    ;
+
+B      : 'b';
+LBRACE : '{';
+RBRACE : '}';
+IF     : 'if';
+ELSE   : 'else';
+
+BLOCK_COMMENT : '/*' .*? '*/' -> channel(HIDDEN);
+LINE_COMMENT  : '//' ~[\r\n]* -> channel(HIDDEN);
+WS            : [ \t\r\n]+ -> channel(HIDDEN);

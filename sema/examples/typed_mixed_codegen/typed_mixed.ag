@@ -1,0 +1,27 @@
+grammar TypedMixed;
+
+options {
+    parser = LALR;
+    lookahead = 1;
+    ast = explicit;
+}
+
+node program
+    : type=returnType EOF
+    ;
+
+inline returnType
+    : value=typeSpecifier
+    | value=VOID
+    ;
+
+inline typeSpecifier
+    : value=INT
+    | value=CHAR star=STAR?
+    ;
+
+VOID : 'void';
+INT : 'int';
+CHAR : 'char';
+STAR : '*';
+WS : [ \t\r\n]+ -> skip;

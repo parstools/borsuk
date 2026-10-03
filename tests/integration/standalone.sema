@@ -1,0 +1,10 @@
+sema Standalone;
+format 1;
+grammar StandaloneGrammar;
+options { parser = LALR; lookahead = 2; ast = explicit; }
+channels { HIDDEN }
+lexerClasses { WORD = true; }
+node start -> enable(WORD) : value=ID EOF analysis {};
+ID : [a-z]+ -> require(WORD);
+COMMENT : '/*' .*? '*/' -> channel(HIDDEN);
+WS : [ \t\r\n]+ -> skip;

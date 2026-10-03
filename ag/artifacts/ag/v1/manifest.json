@@ -1,0 +1,71 @@
+{
+  "formatVersion": 1,
+  "parserAlgorithm": "lalr",
+  "lookahead": 2,
+  "startSymbol": "document",
+  "rootType": "document",
+  "generatorVersion": "0.1.0",
+  "zbikRevision": "990db096416b35be5d5f50de22d8c9193d009e85",
+  "unicodeVersion": "17.0",
+  "exactSourceSha256": "2edc146aebaf4ea0dd1e7389e5fa77f6a7f1ff2df248749f3672e469595b84a2",
+  "expandedSourceSha256": "2edc146aebaf4ea0dd1e7389e5fa77f6a7f1ff2df248749f3672e469595b84a2",
+  "settingsSha256": "9cf8a2230ca3a75d4477735b8211947130c250d34fa4d825b2334a9506e062a9",
+  "sections": [
+    {
+      "kind": "symbols",
+      "version": 1,
+      "file": "symbols.json",
+      "required": true,
+      "byteLength": 6070,
+      "sha256": "be31507974151fbbb1e54955ff6b784b9166d485349794905c82b3eb3c804b6f"
+    },
+    {
+      "kind": "lexer",
+      "version": 1,
+      "file": "lexer.json",
+      "required": true,
+      "byteLength": 178763,
+      "sha256": "bfd6b73f67f769ae975bc12837e37d6d4ed2fc43c9a03d379688c979c5bcf094"
+    },
+    {
+      "kind": "parser-table",
+      "version": 1,
+      "file": "parser.dsl",
+      "required": true,
+      "byteLength": 36222,
+      "sha256": "9ed0beb86676b44160916f9fae02562300662d644f2a86578492f665cd53e43e"
+    },
+    {
+      "kind": "productions",
+      "version": 1,
+      "file": "productions.json",
+      "required": true,
+      "byteLength": 19783,
+      "sha256": "2db6fb72dbaf024525874fa97d6815b57c40d25b165cd6f54c98decec4a2b498"
+    },
+    {
+      "kind": "reductions",
+      "version": 1,
+      "file": "reductions.json",
+      "required": true,
+      "byteLength": 29284,
+      "sha256": "326799745c01e198e6d15281bb723c037779103a27572ea6fa76f7e32fde2e18"
+    },
+    {
+      "kind": "ast-schema",
+      "version": 1,
+      "file": "ast-schema.json",
+      "required": true,
+      "byteLength": 74840,
+      "sha256": "11644520cbd6809c26c5e9bb4bbc71a6a99ed0e07a102dfc8a55ab9c49e632bc"
+    },
+    {
+      "kind": "diagnostics",
+      "version": 1,
+      "file": "diagnostics.json",
+      "required": false,
+      "byteLength": 41054,
+      "sha256": "dedf3f6f6ad421440b5408a29e76ecb1e6d8580227a570ab031a709952a2d4d2"
+    }
+  ]
+}

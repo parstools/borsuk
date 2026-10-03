@@ -1,0 +1,23 @@
+{
+  "format": "coge-explicit-execution-rust-sha256-v1",
+  "baseline_commit": "27799bc",
+  "files": {
+    "toyc": {
+      "backend_c_gen.rs": "3fd15cd002a134dcf30173d948d85311c6cda2554e5d83140309930fc63c8dad",
+      "backend_llvm_gen.rs": "e6271d9994c31bce30d8197a69649bb164fb68a7a8c0f07ab59e7cfeef10587e",
+      "interpreter_gen.rs": "48741c2f4570a8065954cc95ce42a69f07d095319573cab3e792bc284921fd4d",
+      "interpreter_properties_gen.rs": "8d9da73a9029b913ddfb469f64ba0ba56ea0d0a92d24a1f7fe2078b19ce8db80",
+      "lowering_gen.rs": "9bc0baaad6c0ba7a7af3619388c34b378bc012d6710c99b39ca1d39f6044a1f9",
+      "sema_gen.rs": "06f0d50b3c3a290f630baba68cc3a29333af95ba3038ad01138b56243a29814a",
+      "sema_lib_gen.rs": "bcf6a055734dcbd7cbfd9121a1d6da5f4f9e312777156643779e15c6534b1b6e",
+      "sema_statements_gen.rs": "284079b05bcca5cfd335ed188ee2399a000b33a5dea6e97470803b27b6ca2f9c"
+    },
+    "toycp": {
+      "interpreter_gen.rs": "f9940518ef284bed59754b5137077f93562d8528339d056f56a2c1b2effa6764",
+      "interpreter_properties_gen.rs": "8d9da73a9029b913ddfb469f64ba0ba56ea0d0a92d24a1f7fe2078b19ce8db80",
+      "sema_gen.rs": "9578fd490aa91a5023c415625442f017cf21924af95c1b2dfa9a3b4cea74d3a5",
+      "sema_lib_gen.rs": "681a7b6abe96f2ed66e7216857e58adfa82efdf2a2e246c66742f7cceb1e996a",
+      "sema_statements_gen.rs": "284079b05bcca5cfd335ed188ee2399a000b33a5dea6e97470803b27b6ca2f9c"
+    }
+  }
+}

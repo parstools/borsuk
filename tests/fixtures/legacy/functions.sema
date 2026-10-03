@@ -1,0 +1,33 @@
+sema FunctionLayers for "functions.ag";
+
+semantic_model {
+    intrinsic map_contains(bindings, name);
+    intrinsic map_get(bindings, name);
+    intrinsic lexical_chain(scope);
+
+    function contains_local(scope, name) {
+        return map_contains(scope.bindings, name);
+    }
+
+    function lookup_lexical(scope, name) {
+        foreach current in lexical_chain(scope) {
+            if contains_local(current, name) {
+                return map_get(current.bindings, name);
+            }
+        }
+        return none;
+    }
+
+    function require_symbol(scope, name) {
+        let symbol = lookup_lexical(scope, name);
+        require symbol != none else error "undeclared identifier";
+        return symbol;
+    }
+}
+
+node function
+    : name=ID EOF
+      analysis {
+          result = require_symbol(scope, name.text);
+      }
+    ;

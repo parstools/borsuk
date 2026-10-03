@@ -1,0 +1,67 @@
+// Small XML subset. Matching element names is a check on the resulting AST.
+grammar Xml;
+
+options { parser = LR; lookahead = 1; ast = explicit; }
+
+lexerClasses {
+    ROOT = true;
+    TEXT = false;
+    TAG = false;
+    DOUBLE = false;
+    SINGLE = false;
+}
+
+node document : ROOT_SPACE? body=prelude EOF;
+node prelude
+    : prolog=declaration ROOT_SPACE? root=element ROOT_SPACE? #WithDeclaration
+    | root=element ROOT_SPACE? #WithoutDeclaration
+    ;
+node declaration : DECL_OPEN attributes=declarationBody;
+inline declarationBody -> enable(TAG), disable(ROOT)
+    : TAG_SPACE first=attribute rest=declarationRest;
+inline declarationRest
+    : TAG_SPACE next=declarationAfterSpace
+    | DECL_CLOSE
+    ;
+inline declarationAfterSpace
+    : first=attribute rest=declarationRest
+    | DECL_CLOSE
+    ;
+
+node element : LT value=tag;
+node tag -> enable(TAG), disable(ROOT), disable(TEXT)
+    : name=NAME tail=tagRest;
+inline tagRest : TAG_SPACE value=tagAfterSpace | value=ending;
+inline tagAfterSpace : attribute=attribute rest=tagRest | value=ending;
+node attribute : name=NAME TAG_SPACE? EQ TAG_SPACE? value=attributeValue;
+node attributeValue : DQUOTE value=doubleValue | SQUOTE value=singleValue;
+node doubleValue -> enable(DOUBLE), disable(TAG)
+    : text=DOUBLE_TEXT? DQUOTE_END;
+node singleValue -> enable(SINGLE), disable(TAG)
+    : text=SINGLE_TEXT? SQUOTE_END;
+node ending
+    : EMPTY_CLOSE #Empty
+    | GT content=content END_OPEN close=NAME TAG_SPACE? GT #Paired
+    ;
+node content -> enable(TEXT), disable(TAG) : items=item*;
+inline item : value=element | text=TEXT_DATA;
+
+// Whitespace in tags is syntax; whitespace in element content is data.
+// Explicit TAG_SPACE avoids requiring context on skipped/hidden tokens.
+DECL_OPEN : '<?xml' -> require(ROOT);
+DECL_CLOSE : '?>' -> require(TAG);
+END_OPEN : '</';
+LT : '<';
+EMPTY_CLOSE : '/>' -> require(TAG);
+GT : '>' -> require(TAG);
+EQ : '=' -> require(TAG);
+NAME : [a-zA-Z_:] [a-zA-Z_0-9:.\-]* -> require(TAG);
+TAG_SPACE : [ \t\r\n]+ -> require(TAG);
+ROOT_SPACE : [ \t\r\n]+ -> require(ROOT);
+TEXT_DATA : ~[<&]+ -> require(TEXT);
+DQUOTE : '"' -> require(TAG);
+SQUOTE : '\'' -> require(TAG);
+DQUOTE_END : '"' -> require(DOUBLE);
+SQUOTE_END : '\'' -> require(SINGLE);
+DOUBLE_TEXT : ~["<&]+ -> require(DOUBLE);
+SINGLE_TEXT : ~['<&]+ -> require(SINGLE);

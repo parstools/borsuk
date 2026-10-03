@@ -1,0 +1,1084 @@
+/*
+ [The "BSD licence"]
+ Copyright (c) 2023 Andrzej Borucki
+ All rights reserved.
+ Parts from C grammar Copyright (c) 2013 Sam Harwell
+
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ 3. The name of the author may not be used to endorse or promote products
+    derived from this software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+/*
+ * Mechanical conversion of a legacy ANTLR4 grammar to restricted Agas.
+ * Source: agas-cpp/grammars/c/C90LargestExprLegacy.g4
+ * Source SHA-256: f6fc8f708577ac87cfba50827977214351b0ea501191c88c2b32ac8e42df592d
+ * Anonymous parser groups were extracted into named inline rules.
+ */
+
+grammar C90LargestExprLegacy;
+
+options {
+    parser = LR;
+    lookahead = 1;
+    ast = concrete;
+    legacy = true;
+}
+
+channels {
+    HIDDEN
+}
+
+node compilationUnit
+    : declaration* EOF
+    ;
+
+node declaration
+    : functionDefinition
+    | varFuncDeclaration
+    | varDeclaration
+    | typeDeclaration ';'
+    | typeDefinition
+    | typeWillBeDeclared
+    | ';'
+    ;
+
+node storageFuncSpecifier
+    : 'static'
+    | '__inline__'
+    | '__inline'
+    | 'extern'
+    | '__thread'
+    | 'register'
+    | 'auto'
+    | '_Thread_local'
+    ;
+
+node typeWillBeDeclared
+    : typeWillBeDeclaredGroup1 Identifier ';'
+    ;
+
+inline typeWillBeDeclaredGroup1
+    : 'struct'
+    | 'union'
+    ;
+
+node type
+    : '__extension__'? typeGroup1* typeGroup2 typeGroup3*
+    ;
+
+inline typeGroup1
+    : storageFuncSpecifier
+    | typeQualifier
+    | gccDeclaratorExtension
+    ;
+
+inline typeGroup2
+    : typeName
+    | typeofExpr
+    | typeQualifier
+    | storageFuncSpecifier
+    ;
+
+inline typeGroup3
+    : storageFuncSpecifier
+    | typeQualifier
+    ;
+
+node typeOrDecl
+    : type
+    | typeQualifier* typeDeclaration
+    ;
+
+node functionDefinition
+    : type? functionDeclarator parametersKandRlist? compoundStatement
+    ;
+
+node varListKandR
+    : Identifier varListKandRGroup1*
+    ;
+
+inline varListKandRGroup1
+    : ',' Identifier
+    ;
+
+node typeQualifier
+    : 'const'
+    | '__const'
+    | '__restrict'
+    | '__restrict__'
+    | volatile
+    ;
+
+node typeDeclaration
+    : structDeclaration
+    | enumDeclaration
+    ;
+
+node complex
+    : '_Complex'
+    | '__complex__'
+    ;
+
+node signedUnsigned
+    : 'unsigned'
+    | 'signed'
+    ;
+
+node longShort
+    : 'long'
+    | 'short'
+    ;
+
+node intTypeName
+    : intTypeNameGroup1+
+    ;
+
+inline intTypeNameGroup1
+    : 'int'
+    | complex
+    | signedUnsigned
+    | longShort
+    ;
+
+node int128TypeName
+    : '__int128' complex? signedUnsigned?
+    | '__int128' signedUnsigned complex
+    | signedUnsigned '__int128' complex?
+    | signedUnsigned complex '__int128'
+    | complex '__int128' signedUnsigned?
+    | complex signedUnsigned '__int128'
+    ;
+
+node charTypeName
+    : 'char' complex? signedUnsigned?
+    | 'char' signedUnsigned complex
+    | signedUnsigned 'char' complex?
+    | signedUnsigned complex 'char'
+    | complex 'char' signedUnsigned?
+    | complex signedUnsigned 'char'
+    ;
+
+node floatTypeName
+    : 'float'
+    | 'double'
+    | 'long' 'double'
+    | 'double' 'long'
+    | complex 'float'
+    | complex 'double'
+    | complex 'long' 'double'
+    | complex 'double' 'long'
+    | 'float' complex
+    | 'double' complex
+    | 'long' 'double' complex
+    | 'dobile' 'long' complex
+    | 'long' complex 'double'
+    | 'double' complex 'long'
+    | '__float128'
+    | '__float80'
+    | '_Decimal32'
+    | '_Decimal64'
+    | '_Decimal128'
+    ;
+
+node typeName
+    : intTypeName
+    | int128TypeName
+    | charTypeName
+    | floatTypeName
+    | 'void'
+    | typeNameGroup1 Identifier
+    | 'enum' Identifier
+    | '__builtin_va_list'
+    | Identifier
+    ;
+
+inline typeNameGroup1
+    : 'struct'
+    | 'union'
+    ;
+
+node typeModifier
+    : '*'
+    ;
+
+node fixedParameterOrTypeList
+    : parameterOrType fixedParameterOrTypeListGroup1*
+    ;
+
+inline fixedParameterOrTypeListGroup1
+    : ',' parameterOrType
+    ;
+
+node parameterOrTypeList
+    : fixedParameterOrTypeList parameterOrTypeListGroup1?
+    ;
+
+inline parameterOrTypeListGroup1
+    : ',' '...'
+    ;
+
+node parametersKandRlist
+    : parametersKandRlistGroup1+
+    ;
+
+inline parametersKandRlistGroup1
+    : parametersKandR ';'
+    ;
+
+node parametersKandR
+    : typeOrDecl gccAttributeSpecifier* parametersKandRGroup1 parametersKandRGroup2*
+    ;
+
+inline parametersKandRGroup1
+    : variableDeclarator
+    | functionDeclarator
+    ;
+
+inline parametersKandRGroup3
+    : variableDeclarator
+    | functionDeclarator
+    ;
+
+inline parametersKandRGroup2
+    : ',' gccAttributeSpecifier* parametersKandRGroup3
+    ;
+
+node parameterOrType
+    : typeOrDecl parameterOrTypeGroup1 gccDeclaratorExtension*
+    ;
+
+inline parameterOrTypeGroup1
+    : variableDeclarator
+    | variableDeclaratorPlace
+    | functionDeclarator
+    | functionDeclaratorPlace
+    ;
+
+node compoundStatement
+    : '{' compoundStatementGroup1* '}'
+    ;
+
+inline compoundStatementGroup1
+    : declaration
+    | labeledStatement
+    ;
+
+node gotoLabel
+    : Identifier ':'
+    ;
+
+node varFuncDeclaration
+    : type varFuncList ';'
+    ;
+
+node varDeclaration
+    : typeDeclaration varList ';'
+    ;
+
+node varFuncList
+    : attributedDeclarator varFuncListGroup1*
+    ;
+
+inline varFuncListGroup1
+    : ',' attributedDeclarator
+    ;
+
+node varList
+    : attributedVarDeclarator varListGroup1*
+    ;
+
+inline varListGroup1
+    : ',' attributedVarDeclarator
+    ;
+
+node attributedVarDeclarator
+    : gccAttributeSpecifier* variableDeclarator gccDeclaratorExtension* attributedVarDeclaratorGroup1?
+    ;
+
+inline attributedVarDeclaratorGroup1
+    : '=' initializer
+    ;
+
+node attributedDeclarator
+    : attributedVarDeclarator
+    | functionDeclarator gccDeclaratorExtension*
+    ;
+
+node variableDeclarator
+    : typeQualifier* name
+    | variablePtrDeclarator
+    ;
+
+node variablePtrDeclarator
+    : gccAttributeSpecifier* ptrname
+    | variablePtrDeclaratorGroup1* variableSubDeclarator
+    ;
+
+inline variablePtrDeclaratorGroup1
+    : typeModifier
+    | gccAttributeSpecifier
+    ;
+
+node variableSubDeclarator
+    : '(' variablePtrDeclarator ')' functionParameters
+    ;
+
+node variableDeclaratorPlace
+    : typeQualifier* namePlace
+    | variablePtrDeclaratorPlace
+    ;
+
+node variablePtrDeclaratorPlace
+    : ptrnamePlace
+    | typeModifier* variableSubDeclaratorPlace
+    ;
+
+node variableSubDeclaratorPlace
+    : '(' variablePtrDeclaratorPlace ')' functionParameters
+    ;
+
+node functionDeclarator
+    : gccDeclaratorExtension* functionSubDeclarator
+    | typeModifier+ functionDeclarator
+    | '(' functionDeclarator ')' functionDeclaratorGroup1
+    ;
+
+inline functionDeclaratorGroup1
+    : functionParameters
+    | array
+    ;
+
+node functionSubDeclarator
+    : '(' functionDeclarator ')'
+    | name functionParameters
+    ;
+
+node functionDeclaratorPlace
+    : gccDeclaratorExtension* functionSubDeclaratorPlace
+    | typeModifier+ gccDeclaratorExtension* functionDeclaratorPlace
+    | '(' functionDeclaratorPlace ')' functionDeclaratorPlaceGroup1
+    ;
+
+inline functionDeclaratorPlaceGroup1
+    : functionParameters
+    | array
+    ;
+
+node functionSubDeclaratorPlace
+    : '(' functionDeclarator ')'
+    | namePlace functionParameters
+    ;
+
+node name
+    : '(' name ')'
+    | Identifier
+    ;
+
+node arrname
+    : name array
+    | '(' ptrname ')' array
+    ;
+
+node ptrname
+    : typeModifier ptrnameGroup1* name
+    | ptrnameGroup2* arrname
+    | ptrnameGroup3* '(' ptrname ')'
+    ;
+
+inline ptrnameGroup1
+    : typeModifier
+    | gccAttributeSpecifier
+    | typeQualifier
+    ;
+
+inline ptrnameGroup2
+    : typeModifier
+    | gccAttributeSpecifier
+    | typeQualifier
+    ;
+
+inline ptrnameGroup3
+    : typeModifier
+    | gccAttributeSpecifier
+    | typeQualifier
+    ;
+
+node namePlace
+    : '(' namePlace ')'
+    | empty
+    ;
+
+node arrnamePlace
+    : namePlace array
+    | '(' ptrnamePlace ')' array
+    ;
+
+node ptrnamePlace
+    : typeModifier ptrnamePlaceGroup1* namePlace
+    | ptrnamePlaceGroup2* arrnamePlace
+    | ptrnamePlaceGroup3* '(' ptrnamePlace ')'
+    ;
+
+inline ptrnamePlaceGroup1
+    : typeModifier
+    | gccAttributeSpecifier
+    | typeQualifier
+    ;
+
+inline ptrnamePlaceGroup2
+    : typeModifier
+    | gccAttributeSpecifier
+    | typeQualifier
+    ;
+
+inline ptrnamePlaceGroup3
+    : typeModifier
+    | gccAttributeSpecifier
+    | typeQualifier
+    ;
+
+node initializer
+    : expr
+    | arrayStructInitializer
+    ;
+
+node fieldInitializer
+    : initializer
+    | '.' Identifier '=' initializer
+    | Identifier ':' initializer
+    ;
+
+node arrayStructInitializer
+    : '{' arrayStructInitializerGroup1? '}'
+    | '{' arrayCellInitializer arrayStructInitializerGroup3* '}'
+    ;
+
+inline arrayStructInitializerGroup2
+    : ',' fieldInitializer
+    ;
+
+inline arrayStructInitializerGroup1
+    : fieldInitializer arrayStructInitializerGroup2* ','?
+    ;
+
+inline arrayStructInitializerGroup3
+    : ',' arrayCellInitializer
+    ;
+
+node arrayCellInitializer
+    : '[' expr ']' arrayCellInitializerGroup1? '=' expr
+    | '[' expr '...' expr ']' '=' expr
+    ;
+
+inline arrayCellInitializerGroup1
+    : '.' Identifier
+    ;
+
+node surroundedVariableName
+    : '(' surroundedVariableName ')'
+    | typeModifier surroundedVariableName
+    | '(' variableName ')'
+    ;
+
+node variableName
+    : typeModifier variableName
+    | variableName arrayOneDim
+    | Identifier
+    ;
+
+node fieldDeclaration
+    : typeOrDecl fieldDeclarationGroup1? gccDeclaratorExtension*
+    ;
+
+inline fieldDeclarationGroup1
+    : fieldList
+    | bitField
+    ;
+
+node fieldList
+    : fieldDeclarator fieldListGroup1*
+    ;
+
+inline fieldListGroup1
+    : ',' fieldDeclarator
+    ;
+
+node fieldDeclarator
+    : attributedDeclarator bitField?
+    ;
+
+node functionParameters
+    : '(' parameterOrTypeList? ')'
+    ;
+
+node array
+    : arrayOneDim+
+    ;
+
+node arrayOneDim
+    : '[' typeQualifier* arrayOneDimGroup1? ']'
+    ;
+
+inline arrayOneDimGroup1
+    : expr
+    | '*'
+    ;
+
+node bitField
+    : ':' expr
+    ;
+
+node structDeclaration
+    : '__extension__'? structDeclarationGroup1 gccDeclaratorExtension* Identifier? '{' fieldDeclarations? '}' gccDeclaratorExtension*
+    ;
+
+inline structDeclarationGroup1
+    : 'struct'
+    | 'union'
+    ;
+
+node fieldDeclarations
+    : fieldDeclaration fieldDeclarationsGroup1*
+    | ';'+
+    ;
+
+inline fieldDeclarationsGroup1
+    : ';' fieldDeclaration?
+    ;
+
+node labeledStatement
+    : attributedLabel* statement
+    ;
+
+node statement
+    : compoundStatement
+    | expressionStatement
+    | loopStatement
+    | ifStatement
+    | switchStatement
+    | asmStatement
+    | 'goto' Identifier ';'
+    | 'goto' '*' expr ';'
+    | 'return' expr? ';'
+    | 'continue' ';'
+    | 'break' ';'
+    | gccAttributeSpecifier* ';'
+    ;
+
+node label
+    : gotoLabel
+    | caseLabel
+    | defaulLabel
+    ;
+
+node attributedLabel
+    : label attributedLabelGroup1?
+    ;
+
+inline attributedLabelGroup1
+    : gccAttributeSpecifier* ';'
+    ;
+
+node asm
+    : '__asm__'
+    | '__asm'
+    ;
+
+node volatile
+    : 'volatile'
+    | '__volatile__'
+    ;
+
+node asmStatement
+    : asm volatile? '(' StringLiteral asmStatementGroup1* ')' ';'
+    ;
+
+inline asmStatementGroup1
+    : ':' asmPart?
+    ;
+
+node asmPart
+    : asmElement asmPartGroup1*
+    | StringLiteral
+    ;
+
+inline asmPartGroup1
+    : ',' asmElement
+    ;
+
+node asmElement
+    : StringLiteral '(' expr ')'
+    ;
+
+node ifStatement
+    : 'if' '(' expr ')' labeledStatement ifStatementGroup1?
+    ;
+
+inline ifStatementGroup1
+    : 'else' labeledStatement
+    ;
+
+node switchStatement
+    : 'switch' '(' expr ')' labeledStatement
+    ;
+
+node caseLabel
+    : 'case' expr caseLabelGroup1? ':'
+    ;
+
+inline caseLabelGroup1
+    : '...' expr
+    ;
+
+node defaulLabel
+    : 'default' ':'
+    ;
+
+node loopStatement
+    : 'while' '(' expr ')' labeledStatement
+    | 'do' labeledStatement 'while' '(' expr ')' ';'
+    | 'for' '(' expr? ';' expr? ';' expr? ')' labeledStatement
+    ;
+
+node expressionStatement
+    : expr ';'
+    ;
+
+node alignof
+    : '_Alignof'
+    | '__alignof__'
+    ;
+
+node sizeofOrAlignof
+    : 'sizeof'
+    | alignof
+    ;
+
+node typeSpecifier
+    : typeOrDecl variableDeclaratorPlace
+    ;
+
+node assgignOp
+    : '='
+    | '*='
+    | '/='
+    | '%='
+    | '+='
+    | '-='
+    | '<<='
+    | '>>='
+    | '&='
+    | '^='
+    | '|='
+    ;
+
+node eqOp
+    : '=='
+    | '!='
+    ;
+
+node relOp
+    : '<'
+    | '>'
+    | '<='
+    | '>='
+    ;
+
+node shiftOp
+    : '<<'
+    | '>>'
+    ;
+
+node addOp
+    : '+'
+    | '-'
+    ;
+
+node mulOp
+    : '*'
+    | '/'
+    | '%'
+    ;
+
+node unaryOp
+    : '&'
+    | '*'
+    | '+'
+    | '-'
+    | '~'
+    | '!'
+    ;
+
+node lvalue
+    : Identifier
+    | lvalue '.' Identifier
+    | lvalue '->' Identifier
+    | lvalue '[' expr ']'
+    ;
+
+node expr
+    : atom #Atom
+    | '__extension__'? '(' compoundStatement ')' #GroupedExpression1
+    | expr '(' argumentExpressionList? ')' #PostfixExpression1
+    | expr '.' Identifier #PostfixExpression2
+    | expr '->' Identifier #PostfixExpression3
+    | expr '[' expr ']' #PostfixExpression4
+    | expr '++' #PostfixExpression5
+    | expr '--' #PostfixExpression6
+    | '++' expr #UnaryExpression1
+    | '--' expr #UnaryExpression2
+    | '&&' Identifier #UnaryExpression3
+    | unaryOp expr #UnaryExpression4
+    | sizeofOrAlignof '(' typeSpecifier ')' #UnaryExpression5
+    | sizeofOrAlignof '(' expr ')' #UnaryExpression6
+    | sizeofOrAlignof typeSpecifier #UnaryExpression7
+    | sizeofOrAlignof expr #UnaryExpression8
+    | '__builtin_offsetof' '(' typeOrDecl ',' expr ')' #UnaryExpression9
+    | '__builtin_va_arg' '(' expr ',' typeSpecifier ')' #UnaryExpression10
+    | exprGroup1 expr #UnaryExpression11
+    | '__extension__'? '(' typeSpecifier ')' exprGroup2 #CastExpression
+    | expr mulOp expr #MultiplicativeExpression
+    | expr addOp expr #AdditiveExpression
+    | expr shiftOp expr #ShiftExpression
+    | expr relOp expr #RelationalExpression
+    | expr eqOp expr #EqualityExpression
+    | expr '&' expr #AndExpression
+    | expr '^' expr #ExclusiveOrExpression
+    | expr '|' expr #InclusiveOrExpression
+    | expr '&&' expr #LogicalAndExpression
+    | expr '||' expr #LogicalOrExpression
+    | expr '?' expr? ':' expr #ConditionalExpression
+    | lvalue assgignOp expr #AssignmentExpression
+    | expr ',' expr #CommaExpression
+    | '(' expr ')' #GroupedExpression2
+    ;
+
+inline exprGroup1
+    : '__real__'
+    | '__imag__'
+    ;
+
+inline exprGroup2
+    : expr
+    | arrayStructInitializer
+    ;
+
+node argumentExpressionList
+    : expr argumentExpressionListGroup1* argumentExpressionListGroup2?
+    ;
+
+inline argumentExpressionListGroup1
+    : ',' expr
+    ;
+
+inline argumentExpressionListGroup2
+    : ',' '__extension__' '__PRETTY_FUNCTION__'
+    ;
+
+node atom
+    : Identifier
+    | literal
+    | StringLiteral+
+    ;
+
+node primaryExpression
+    : '(' expr ')'
+    | '__extension__'? '(' compoundStatement ')'
+    ;
+
+node literal
+    : integerConstant
+    | FloatingConstant
+    | CharacterConstant
+    ;
+
+node typeDefinition
+    : '__extension__'? 'typedef' gccDeclaratorExtension* typeQualifier* typeOrDecl attributedDeclarator typeDefinitionGroup1* ';'
+    ;
+
+inline typeDefinitionGroup1
+    : ',' attributedDeclarator
+    ;
+
+node typeofKeyword
+    : '__typeof'
+    | '__typeof__'
+    ;
+
+node typeofExpr
+    : typeofKeyword '(' typeofExprGroup1 ')'
+    ;
+
+inline typeofExprGroup1
+    : typeSpecifier
+    | expr
+    ;
+
+node visualExtensionFCall
+    : '__cdecl'
+    ;
+
+node gccDeclaratorExtension
+    : gccAttributeSpecifier
+    | asm '(' StringLiteral+ ')'
+    | '_Alignas' '(' expr ')'
+    ;
+
+node attribute
+    : '__attribute__'
+    | '__attribute'
+    ;
+
+node gccAttributeSpecifier
+    : attribute '(' '(' gccAttributeList? ')' ')'
+    ;
+
+node gccAttributeList
+    : gccAttribute gccAttributeListGroup1*
+    ;
+
+inline gccAttributeListGroup1
+    : ',' gccAttribute
+    ;
+
+node gccAttribute
+    : Identifier
+    | 'const'
+    | Identifier '(' integerConstant gccAttributeGroup1* ')'
+    | Identifier '(' StringLiteral+ ')'
+    | Identifier '(' Identifier gccAttributeGroup2* ')'
+    | Identifier '(' alignof '(' typeName ')' ')'
+    | Identifier '(' expr '==' integerConstant ')'
+    | Identifier '(' integerConstant '*' 'sizeof' '(' typeName ')' ')'
+    ;
+
+inline gccAttributeGroup1
+    : ',' integerConstant
+    ;
+
+inline gccAttributeGroup2
+    : ',' integerConstant
+    ;
+
+node enumDeclaration
+    : 'enum' Identifier? '{' enumList '}'
+    ;
+
+node enumList
+    : enumItem enumListGroup1* ','?
+    ;
+
+inline enumListGroup1
+    : ',' enumItem
+    ;
+
+node enumItem
+    : Identifier gccAttributeSpecifier* enumItemGroup1?
+    ;
+
+inline enumItemGroup1
+    : '=' expr
+    ;
+
+Identifier
+    : Nondigit ( Nondigit | Digit ) *
+    ;
+
+fragment Digit
+    : [0-9]
+    ;
+
+fragment NonzeroDigit
+    : [1-9]
+    ;
+
+fragment Nondigit
+    : [a-zA-Z_]
+    ;
+
+node integerConstant
+    : sign? DecimalConstant
+    | BinaryConstant
+    | OctalConstant
+    | HexadecimalConstant
+    ;
+
+node sign
+    : '+'
+    | '-'
+    ;
+
+DecimalConstant
+    : ( NonzeroDigit Digit * | '0' ) IntegerSuffix ?
+    ;
+
+fragment IntegerSuffix
+    : UnsignedSuffix ( LongSuffix | LongLongSuffix ) ? | ( LongSuffix | LongLongSuffix ) UnsignedSuffix ?
+    ;
+
+fragment UnsignedSuffix
+    : [uU]
+    ;
+
+fragment LongSuffix
+    : [lL]
+    ;
+
+fragment LongLongSuffix
+    : 'll' | 'LL'
+    ;
+
+fragment FloatingSuffix
+    : 'f' | 'l' | 'F' | 'L' | 'fi' | 'fj' | 'i'
+    ;
+
+fragment Sign
+    : '+' | '-'
+    ;
+
+fragment OctalDigit
+    : [0-7]
+    ;
+
+fragment BinaryDigit
+    : [01]
+    ;
+
+fragment HexadecimalDigit
+    : [0-9a-fA-F]
+    ;
+
+OctalConstant
+    : '0' OctalDigit * IntegerSuffix ?
+    ;
+
+BinaryConstant
+    : '0' [Bb] BinaryDigit * IntegerSuffix ?
+    ;
+
+HexadecimalConstant
+    : HexadecimalPrefix HexadecimalDigitSequence IntegerSuffix ?
+    ;
+
+fragment HexadecimalPrefix
+    : '0' [xX]
+    ;
+
+FloatingConstant
+    : DecimalFloatingConstant | HexadecimalFloatingConstant
+    ;
+
+fragment DecimalFloatingConstant
+    : ( FractionalConstant ExponentPart ? | DigitSequence ExponentPart ) FloatingSuffix ?
+    ;
+
+fragment HexadecimalDigitSequence
+    : HexadecimalDigit +
+    ;
+
+fragment HexadecimalFractionalConstant
+    : HexadecimalDigitSequence ? '.' HexadecimalDigitSequence | HexadecimalDigitSequence '.'
+    ;
+
+fragment BinaryExponentPart
+    : [pP] Sign ? DigitSequence
+    ;
+
+fragment HexadecimalFloatingConstant
+    : HexadecimalPrefix ( HexadecimalFractionalConstant | HexadecimalDigitSequence ) BinaryExponentPart FloatingSuffix ?
+    ;
+
+fragment DigitSequence
+    : Digit +
+    ;
+
+fragment ExponentPart
+    : [eE] Sign ? DigitSequence
+    ;
+
+fragment FractionalConstant
+    : DigitSequence ? '.' DigitSequence | DigitSequence '.'
+    ;
+
+fragment StringLiteralOne
+    : '"' SChar * '"'
+    ;
+
+fragment StringLiteralMulti
+    : '"' SChar * '\\' Newline ( SChar * '\\' Newline ) * SChar * '"'
+    ;
+
+StringLiteral
+    : 'L' ? ( StringLiteralOne | StringLiteralMulti )
+    ;
+
+fragment SChar
+    : ~ ["\\\r\n] | EscapeSequence
+    ;
+
+CharacterConstant
+    : 'L' ? '\'' CChar '\''
+    ;
+
+fragment CChar
+    : ~ ['\\\r\n] | EscapeSequence
+    ;
+
+fragment EscapeSequence
+    : SimpleEscapeSequence | OctalEscapeSequence | HexadecimalEscapeSequence | UnicodeEscapeSequence
+    ;
+
+fragment SimpleEscapeSequence
+    : '\\' ['"?abfnrtvhe\\]
+    ;
+
+fragment OctalEscapeSequence
+    : '\\' OctalDigit ( OctalDigit OctalDigit ? ) ?
+    ;
+
+fragment HexadecimalEscapeSequence
+    : '\\x' HexadecimalDigit HexadecimalDigit ?
+    ;
+
+fragment UnicodeEscapeSequence
+    : '\\u' HexQuad | '\\U' HexQuad HexQuad
+    ;
+
+fragment HexQuad
+    : HexadecimalDigit HexadecimalDigit HexadecimalDigit HexadecimalDigit
+    ;
+
+Whitespace
+    : [ \t] + -> channel ( HIDDEN )
+    ;
+
+Newline
+    : ( '\r' '\n' ? | '\n' ) -> channel ( HIDDEN )
+    ;
+
+BlockComment
+    : '/*' . * ? '*/' -> channel ( HIDDEN )
+    ;
+
+Preprocessor
+    : '#' ~ [\r\n] * -> channel ( HIDDEN )
+    ;

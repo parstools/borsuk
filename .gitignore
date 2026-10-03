@@ -43,6 +43,8 @@
 build/
 Build/
 build-*/
+cmake-build-*/
+/rust/target/
 
 # CMake generated files
 CMakeFiles/
@@ -57,6 +59,8 @@ compile_commands.json
 *.log
 *.bak
 *.swp
+*.pyc
+__pycache__/
 
 # vcpkg
 vcpkg_installed/
@@ -67,3 +71,12 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+
+# IDE configuration
+.idea/
+
+# Local assistant configuration and session notes
+.agents/
+.codex/
+.aws/
+HANDOFF-*.md

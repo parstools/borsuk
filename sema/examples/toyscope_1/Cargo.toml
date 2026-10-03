@@ -1,0 +1,12 @@
+[package]
+name = "borsuk-toyscope-1"
+version = "1.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+agas-runtime = { path = "../../../rust/crates/ag-runtime" }
+num-bigint = "0.5"
+
+[lints.rust]
+unsafe_code = "forbid"

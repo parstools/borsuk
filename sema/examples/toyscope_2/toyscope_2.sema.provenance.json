@@ -1,0 +1,42 @@
+{
+  "format": 1,
+  "document_format": 1,
+  "projection": "sema",
+  "specification": "ToyScope2Typed",
+  "grammar": "ToyScope",
+  "source": "agsem/toyscope_2_typed.coge",
+  "source_sha256": "5751818df285e041615bb27bfe55fb578f7a2c4eb325de6c1aa9a9f6aa76c02e",
+  "output_sha256": "12cb2d79ca526c35ce2e2af3b007133164916d7b1619c7ae73e0b90532c75e30",
+  "tool_sha256": "ebe3f129dcde18c766c400de8d3adc150f17ea92e542f09d69a854765dbbe0a4",
+  "contracts": [
+    {
+      "id": "toyscope-runtime",
+      "version": "1",
+      "sha256": "2cb94e059c9a96af173195ac8ccddfdde14029ddc6427c56d76bc4476801f50c"
+    }
+  ],
+  "binding_schema": null,
+  "origins": [
+    {
+      "output_begin": 0,
+      "output_end": 4,
+      "input_begin": 0,
+      "input_end": 4,
+      "replacement": true
+    },
+    {
+      "output_begin": 4,
+      "output_end": 3707,
+      "input_begin": 4,
+      "input_end": 3707,
+      "replacement": false
+    },
+    {
+      "output_begin": 3707,
+      "output_end": 9601,
+      "input_begin": 5283,
+      "input_end": 11177,
+      "replacement": false
+    }
+  ]
+}

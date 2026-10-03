@@ -1,0 +1,868 @@
+/*
+ * Draft parser for .sema files. Parser productions follow the restricted Agas
+ * syntax; the contents of analysis blocks are parsed as statements and calls.
+ * Semantic validation against the referenced .ag file is a separate phase.
+ */
+
+grammar Sema;
+
+options {
+    parser = LALR;
+    lookahead = 1;
+    ast = explicit;
+}
+
+lexerClasses {
+    ACTION = false;
+    MODEL = false;
+}
+
+node document
+    : header=semaDeclaration? model=semanticModel? lowering=loweringModel? backendC=cBackend? backendLlvm=llvmBackend? execution=executionModel? contract=executionContract? legacy=legacyGrammarDeclaration? settings=optionsBlock? rules=parserRuleSpec+ EOF
+    ;
+
+node semaDeclaration
+    : SEMA name=identifier FOR source=STRING_LITERAL SEMI
+    ;
+
+node legacyGrammarDeclaration
+    : GRAMMAR name=identifier SEMI
+    ;
+
+node optionsBlock -> enable(ACTION)
+    : OPTIONS LBRACE entries=optionEntry* RBRACE
+    ;
+
+node optionEntry
+    : name=identifier ASSIGN value=actionExpression SEMI
+    ;
+
+node parserRuleSpec -> disable(ACTION), disable(MODEL)
+    : kind=treeModifier name=RULE_REF COLON first=parserAlternative rest=parserAlternativeTail* SEMI
+    ;
+
+inline treeModifier
+    : value=NODE
+    | value=INLINE
+    ;
+
+inline parserAlternativeTail
+    : OR value=parserAlternative
+    ;
+
+node parserAlternative
+    : EMPTY label=alternativeLabel? actions=ruleAction*               #EmptyAlternative
+    | elements=parserElement+ label=alternativeLabel? actions=ruleAction* #NonemptyAlternative
+    ;
+
+node alternativeLabel
+    : HASH name=identifier
+    ;
+
+node parserElement
+    : field=elementLabel symbol=parserSymbol suffix=parserSuffix? #Labeled
+    | symbol=parserSymbol suffix=parserSuffix? #Bare
+    ;
+
+inline elementLabel
+    : name=identifier ASSIGN
+    ;
+
+inline parserSymbol
+    : value=RULE_REF
+    | value=TOKEN_REF
+    | value=STRING_LITERAL
+    | value=qualifiedReference
+    ;
+
+node qualifiedReference
+    : scope=TOKEN_REF DOT name=identifier
+    ;
+
+inline parserSuffix
+    : value=QUESTION
+    | value=STAR
+    | value=PLUS
+    ;
+
+node analysisBlock
+    : ANALYSIS body=actionBlock
+    ;
+
+inline ruleAction
+    : value=analysisBlock
+    | value=executionResult
+    | value=analysisStatus
+    ;
+
+node analysisStatus -> enable(ACTION), enable(MODEL)
+    : ANALYSIS_STATUS LBRACE entries=analysisStatusEntry* RBRACE
+    ;
+node analysisStatusEntry
+    : name=identifier value=analysisStatusValue SEMI
+    ;
+inline analysisStatusValue
+    : value=STRING_LITERAL
+    | value=identifier
+    ;
+node executionObligations -> enable(ACTION), enable(MODEL)
+    : EXECUTION_OBLIGATIONS LBRACE entries=executionObligationEntry* RBRACE
+    ;
+node executionObligationEntry
+    : name=identifier values=obligationString* SEMI
+    ;
+inline obligationString
+    : value=STRING_LITERAL
+    ;
+
+node executionResult
+    : EXECUTION RESULT body=actionBlock
+    ;
+
+node semanticModel -> enable(MODEL), enable(ACTION)
+    : SEMANTIC_MODEL LBRACE declarations=modelDeclaration* RBRACE
+    ;
+
+node executionModel -> enable(MODEL), enable(ACTION)
+    : EXECUTION_MODEL LBRACE declarations=executionDeclaration* RBRACE
+    ;
+
+node loweringModel -> enable(MODEL), enable(ACTION)
+    : LOWERING_MODEL LBRACE entries=returnPolicyField* RBRACE
+    ;
+
+node cBackend -> enable(MODEL), enable(ACTION)
+    : BACKEND_C LBRACE entries=returnPolicyField* RBRACE
+    ;
+
+node llvmBackend -> enable(MODEL), enable(ACTION)
+    : BACKEND_LLVM LBRACE entries=returnPolicyField* RBRACE
+    ;
+
+node executionProfileDeclaration
+    : EXECUTION_PROFILE name=identifier SEMI
+    ;
+
+inline executionDeclaration
+    : value=executionProfileDeclaration
+    | value=typeAlias
+    | value=executionEnumDeclaration
+    | value=recordDeclaration
+    | value=intrinsicDeclaration
+    | value=functionDeclaration
+    | value=executionInputDeclaration
+    | value=executionStateDeclaration
+    | value=propertyBlock
+    ;
+
+node propertyBlock
+    : PROPERTIES LBRACE entries=propertyDeclaration+ RBRACE
+    ;
+
+node propertyDeclaration
+    : FORALL parameters=functionParameterList constraint=propertyConstraint? EXPECT actual=actionUnary assertion=propertyAssertion SEMI
+    ;
+
+node propertyConstraint
+    : WHERE value=actionExpression range=propertyRange?
+    ;
+
+node propertyRange
+    : negated=NOT? FITS type=identifier
+    ;
+
+node propertyAssertion
+    : EQEQ expected=actionExpression #Equal
+    | FAILS message=STRING_LITERAL #Failure
+    ;
+
+node executionInputDeclaration
+    : INPUT name=identifier LBRACE methods=executionInputMethod* RBRACE
+    ;
+
+node executionInputMethod
+    : name=identifier LPAREN parameters=functionParameterList? RPAREN result=functionResult SEMI
+    ;
+
+node executionStateDeclaration
+    : RUNTIME_STATE name=identifier COLON type=typeExpression SEMI
+    ;
+
+node executionEnumDeclaration
+    : ENUM name=identifier LBRACE values=executionEnumValueList RBRACE
+    ;
+
+node executionEnumValueList
+    : first=executionEnumValue rest=executionEnumValueTail*
+    ;
+
+inline executionEnumValueTail
+    : COMMA value=executionEnumValue
+    ;
+
+node executionEnumValue
+    : name=identifier payload=executionEnumPayload?
+    ;
+
+node executionEnumPayload
+    : LPAREN fields=typeExpressionList RPAREN
+    ;
+
+node typeExpressionList
+    : first=typeExpression rest=typeArgumentTail*
+    ;
+
+node modelSchemaDeclaration
+    : MODEL_SCHEMA name=identifier SEMI
+    ;
+
+inline modelDeclaration
+    : value=rustContextDeclaration
+    | value=returnPolicy
+    | value=assignmentPolicy
+    | value=conditionPolicy
+    | value=statementIrPolicy
+    | value=flowActions
+    | value=selectionPolicy
+    | value=selectionBindings
+    | value=modulesDeclaration
+    | value=modelSchemaDeclaration
+    | value=modelBindings
+    | value=assignmentBindings
+    | value=conditionBindings
+    | value=statementIrBindings
+    | value=flowBindings
+    | value=analyzerSignature
+    | value=inheritedDeclaration
+    | value=typeAlias
+    | value=enumDeclaration
+    | value=entityDeclaration
+    | value=recordDeclaration
+    | value=intrinsicDeclaration
+    | value=queryDeclaration
+    | value=functionDeclaration
+    ;
+
+node returnPolicy
+    : RETURN_POLICY name=identifier LBRACE entries=returnPolicyField* errors=returnPolicyErrors? RBRACE
+    ;
+
+node assignmentPolicy
+    : ASSIGNMENT_POLICY name=identifier LBRACE entries=returnPolicyField* errors=returnPolicyErrors? RBRACE
+    ;
+
+node assignmentBindings
+    : ASSIGNMENT_BINDINGS name=identifier LBRACE entries=returnPolicyField* RBRACE
+    ;
+
+node conditionPolicy
+    : CONDITION_POLICY name=identifier LBRACE entries=returnPolicyField* errors=returnPolicyErrors? RBRACE
+    ;
+
+node conditionBindings
+    : CONDITION_BINDINGS name=identifier LBRACE entries=returnPolicyField* RBRACE
+    ;
+
+node statementIrPolicy
+    : STATEMENT_IR name=identifier LBRACE entries=returnPolicyField* RBRACE
+    ;
+
+node statementIrBindings
+    : STATEMENT_BINDINGS name=identifier LBRACE entries=returnPolicyField* RBRACE
+    ;
+
+node flowActions
+    : FLOW_ACTIONS name=identifier LBRACE entries=returnPolicyField* RBRACE
+    ;
+
+node flowBindings
+    : FLOW_BINDINGS name=identifier LBRACE entries=returnPolicyField* RBRACE
+    ;
+
+node selectionPolicy
+    : SELECTION_POLICY name=identifier LBRACE entries=selectionPolicyField* RBRACE
+    ;
+
+node selectionBindings
+    : SELECTION_BINDINGS name=identifier LBRACE entries=returnPolicyField* RBRACE
+    ;
+
+node selectionPolicyField
+    : name=identifier ASSIGN value=identifier SEMI #IdentifierValue
+    | name=identifier ASSIGN value=STRING_LITERAL SEMI #MessageValue
+    ;
+
+node modulesDeclaration
+    : MODULES LBRACE modules=generatedModule* RBRACE
+    ;
+
+node generatedModule
+    : name=identifier LBRACE fields=generatedModuleField* RBRACE
+    ;
+
+node generatedModuleField
+    : name=identifier ASSIGN LBRACK values=identifierList? RBRACK SEMI
+    ;
+
+node returnPolicyField
+    : name=identifier ASSIGN value=identifier SEMI
+    ;
+
+node returnPolicyErrors
+    : name=identifier LBRACE entries=returnPolicyError* RBRACE
+    ;
+
+node returnPolicyError
+    : name=identifier ASSIGN message=STRING_LITERAL SEMI
+    ;
+
+node modelBindings
+    : MODEL_BINDINGS name=identifier LBRACE entries=returnPolicyField* RBRACE
+    ;
+
+node rustContextDeclaration
+    : RUST_CONTEXT name=identifier SEMI
+    ;
+
+node analyzerSignature
+    : ANALYZER name=RULE_REF LPAREN parameters=functionParameterList? RPAREN result=functionResult SEMI
+    ;
+
+node inheritedDeclaration
+    : INHERITED name=identifier COLON type=typeExpression SEMI
+    ;
+
+node typeAlias
+    : TYPE name=identifier ASSIGN value=typeExpression SEMI
+    ;
+
+node enumDeclaration
+    : ENUM name=identifier LBRACE values=enumValueList RBRACE
+    ;
+
+node enumValueList
+    : first=identifier rest=enumValueTail*
+    ;
+
+inline enumValueTail
+    : COMMA value=identifier
+    ;
+
+node entityDeclaration
+    : ENTITY name=identifier LBRACE fields=entityField* RBRACE
+    ;
+
+node entityField
+    : name=identifier COLON type=typeExpression initializer=fieldInitializer? SEMI
+    ;
+
+inline fieldInitializer
+    : ASSIGN value=actionExpression
+    ;
+
+node typeExpression
+    : name=identifier arguments=typeArguments?
+    ;
+
+node typeArguments
+    : LT first=typeExpression rest=typeArgumentTail* GT
+    ;
+
+inline typeArgumentTail
+    : COMMA value=typeExpression
+    ;
+
+node recordDeclaration
+    : RECORD name=identifier LPAREN fields=recordFieldList? RPAREN SEMI
+    ;
+
+node recordFieldList
+    : first=recordField rest=recordFieldTail*
+    ;
+
+inline recordFieldTail
+    : COMMA value=recordField
+    ;
+
+node recordField
+    : name=identifier type=fieldType? defaultValue=fieldInitializer?
+    ;
+
+node fieldType
+    : COLON value=typeExpression
+    ;
+
+node intrinsicDeclaration
+    : INTRINSIC name=identifier LPAREN parameters=functionParameterList? RPAREN result=functionResult? effect=MUTATES? tail=intrinsicTail
+    ;
+
+node intrinsicTail
+    : ASSIGN value=actionExpression requirement=intrinsicRequirement? SEMI #Defined
+    | SEMI #External
+    ;
+
+node functionDeclaration
+    : FUNCTION name=identifier LPAREN parameters=functionParameterList? RPAREN result=functionResult? effect=MUTATES? body=actionBlock
+    ;
+
+node functionParameterList
+    : first=functionParameter rest=functionParameterTail*
+    ;
+
+inline functionParameterTail
+    : COMMA value=functionParameter
+    ;
+
+node functionParameter
+    : name=identifier annotation=fieldType?
+    ;
+
+node functionResult
+    : ARROW type=typeExpression
+    ;
+
+node identifierList
+    : first=identifier rest=identifierTail*
+    ;
+
+inline identifierTail
+    : COMMA value=identifier
+    ;
+
+node intrinsicRequirement
+    : REQUIRES value=actionExpression
+    ;
+
+node queryDeclaration
+    : QUERY name=identifier LPAREN parameters=identifierList? RPAREN ASSIGN value=actionExpression SEMI
+    ;
+
+node executionContract -> enable(ACTION)
+    : EXECUTION_CONTRACT LBRACE entries=executionEntry* RBRACE
+    ;
+
+node executionEntry
+    : kind=executionKind name=identifier LPAREN parameters=contractParameters? RPAREN body=actionBlock
+    ;
+
+inline executionKind
+    : value=EXECUTE
+    | value=EVALUATE
+    ;
+
+node contractParameters
+    : first=contractParameter rest=contractParameterTail*
+    ;
+
+inline contractParameterTail
+    : COMMA value=contractParameter
+    ;
+
+node contractParameter
+    : name=identifier binding=contractBinding?
+    ;
+
+inline contractBinding
+    : COLON value=actionExpression
+    ;
+
+node actionBlock -> enable(ACTION)
+    : LBRACE statements=actionStatement* RBRACE
+    ;
+
+inline actionStatement
+    : value=letStatement
+    | value=expressionOrAssignment
+    | value=ifStatement
+    | value=foreachStatement
+    | value=whileStatement
+    | value=returnStatement
+    | value=requireStatement
+    | value=analyzeStatement
+    | value=withStatement
+    | value=matchStatement
+    | value=errorStatement
+    ;
+
+node letStatement
+    : LET name=identifier ASSIGN value=actionExpression context=analysisContext? failure=errorClause? SEMI
+    ;
+
+node expressionOrAssignment
+    : target=actionExpression assignment=assignmentTail? SEMI
+    ;
+
+node assignmentTail
+    : ASSIGN value=actionExpression context=analysisContext? failure=errorClause?
+    ;
+
+node ifStatement
+    : IF condition=actionExpression thenBranch=actionBlock otherwise=elseClause?
+    ;
+
+inline elseClause
+    : ELSE body=actionBlock
+    ;
+
+node foreachStatement
+    : kind=foreachKind item=identifier IN collection=actionExpression filter=whereClause? body=actionBlock
+    ;
+
+node whileStatement
+    : WHILE condition=actionExpression body=actionBlock
+    ;
+
+inline foreachKind
+    : value=FOREACH
+    | value=FOR
+    ;
+
+node whereClause
+    : WHERE value=actionExpression
+    ;
+
+node returnStatement
+    : RETURN value=actionExpression SEMI
+    ;
+
+node requireStatement
+    : REQUIRE condition=actionExpression ELSE failure=requireFailure SEMI
+    ;
+
+inline requireFailure
+    : value=errorResponse
+    | value=actionBlock
+    ;
+
+node errorClause
+    : ELSE failure=errorResponse
+    ;
+
+node errorResponse
+    : kind=errorKind message=actionExpression location=errorLocation? #Error
+    | name=identifier #Signal
+    ;
+
+node errorLocation
+    : AT value=actionExpression
+    ;
+
+node errorStatement
+    : kind=errorKind message=actionExpression location=errorLocation? SEMI
+    ;
+
+inline errorKind
+    : value=ERROR
+    | value=RUNTIME_ERROR
+    ;
+
+node analyzeStatement
+    : ANALYZE child=identifier optional=QUESTION? context=analysisContext? destination=analysisDestination? fallback=analysisFallback? ending=analysisEnding
+    ;
+
+node analysisContext
+    : WITH first=namedArgument rest=namedArgumentTail*
+    ;
+
+node analysisDestination
+    : ARROW name=identifier
+    ;
+
+node analysisFallback
+    : DEFAULT value=actionExpression
+    ;
+
+inline analysisEnding
+    : value=SEMI
+    | handler=onFailure terminator=SEMI?
+    | value=CONTINUE_ON_ERROR terminator=SEMI
+    ;
+
+node onFailure
+    : ON FAILURE body=actionBlock
+    ;
+
+node withStatement
+    : WITH target=actionPlace ASSIGN value=actionExpression body=actionBlock cleanup=finallyClause?
+    ;
+
+node finallyClause
+    : FINALLY body=actionBlock
+    ;
+
+node matchStatement
+    : MATCH value=actionExpression LBRACE arms=matchArm* RBRACE
+    ;
+
+node matchArm
+    : pattern=actionExpression FAT_ARROW body=actionStatement
+    ;
+
+node actionPlace
+    : base=identifier parts=placePart*
+    ;
+
+node placePart
+    : DOT name=identifier   #Field
+    | LBRACK index=actionExpression RBRACK #Index
+    ;
+
+node argumentList
+    : first=actionArgument rest=argumentTail*
+    ;
+
+inline argumentTail
+    : COMMA value=actionArgument
+    ;
+
+node actionArgument
+    : value=actionExpression named=argumentName?
+    ;
+
+node argumentName
+    : COLON value=actionExpression
+    ;
+
+inline namedArgumentTail
+    : COMMA value=namedArgument
+    ;
+
+node namedArgument
+    : name=identifier COLON value=actionExpression
+    ;
+
+node actionExpression
+    : first=actionUnary rest=binaryPart* choice=ternaryPart?
+    ;
+
+node binaryPart
+    : operator=binaryOperator value=actionUnary
+    ;
+
+inline binaryOperator
+    : value=PLUS
+    | value=MINUS
+    | value=STAR
+    | value=SLASH
+    | value=EQEQ
+    | value=NEQ
+    | value=LT
+    | value=GT
+    | value=LE
+    | value=GE
+    | value=AND
+    | value=OR_WORD
+    | value=IN
+    | value=IS
+    ;
+
+node ternaryPart
+    : QUESTION yes=actionExpression COLON no=actionExpression
+    ;
+
+node actionUnary
+    : prefixes=prefixOperator* atom=actionAtom suffixes=actionPostfix*
+    ;
+
+inline prefixOperator
+    : value=NEW
+    | value=NOT
+    | value=MINUS
+    | value=PLUS
+    ;
+
+inline actionAtom
+    : value=identifier
+    | value=INTEGER
+    | value=FLOAT_LITERAL
+    | value=STRING_LITERAL
+    | value=TRUE
+    | value=FALSE
+    | value=NONE
+    | LPAREN value=actionExpression RPAREN
+    | LBRACK elements=listElements? RBRACK
+    | LBRACE RBRACE
+    | value=rewriteExpression
+    ;
+
+node listElements
+    : first=actionExpression rest=argumentTail* comprehension=listComprehension?
+    ;
+
+node listComprehension
+    : FOR item=identifier IN collection=actionExpression filter=whereClause?
+    ;
+
+node rewriteExpression
+    : REWRITE value=actionExpression BOTTOM_UP LBRACE arms=rewriteArm* RBRACE
+    ;
+
+node rewriteArm
+    : pattern=actionExpression FAT_ARROW value=actionExpression SEMI
+    ;
+
+node actionPostfix
+    : DOT name=identifier #Field
+    | LBRACK index=actionExpression RBRACK #Index
+    | LPAREN arguments=argumentList? RPAREN #Call
+    | EXISTS #Exists
+    ;
+
+inline identifier
+    : value=RULE_REF
+    | value=TOKEN_REF
+    | value=RESULT
+    | value=TYPE
+    | value=EXECUTE
+    | value=EVALUATE
+    | value=NODE
+    | value=INLINE
+    | value=RECORD
+    | value=OTHERWISE
+    | value=PRESENT
+    | value=EMPTY
+    ;
+
+SEMA     : 'sema';
+FOR      : 'for';
+ANALYSIS : 'analysis';
+ANALYSIS_STATUS : 'analysis_status';
+EXECUTION_OBLIGATIONS : 'execution_obligations';
+GRAMMAR  : 'grammar';
+OPTIONS  : 'options';
+SEMANTIC_MODEL : 'semantic_model';
+RETURN_POLICY : 'return_policy' -> require(MODEL);
+ASSIGNMENT_POLICY : 'assignment_policy' -> require(MODEL);
+MODEL_SCHEMA : 'model_schema' -> require(MODEL);
+EXECUTION_PROFILE : 'execution_profile' -> require(MODEL);
+MODEL_BINDINGS : 'model_bindings' -> require(MODEL);
+ASSIGNMENT_BINDINGS : 'assignment_bindings' -> require(MODEL);
+CONDITION_POLICY : 'condition_policy' -> require(MODEL);
+CONDITION_BINDINGS : 'condition_bindings' -> require(MODEL);
+STATEMENT_IR : 'statement_ir' -> require(MODEL);
+STATEMENT_BINDINGS : 'statement_bindings' -> require(MODEL);
+FLOW_ACTIONS : 'flow_actions' -> require(MODEL);
+FLOW_BINDINGS : 'flow_bindings' -> require(MODEL);
+SELECTION_POLICY : 'selection_policy' -> require(MODEL);
+SELECTION_BINDINGS : 'selection_bindings' -> require(MODEL);
+MODULES : 'modules' -> require(MODEL);
+EXECUTION_MODEL : 'execution_model';
+LOWERING_MODEL : 'lowering_model';
+BACKEND_C : 'backend_c';
+BACKEND_LLVM : 'backend_llvm';
+INPUT    : 'input' -> require(MODEL);
+RUNTIME_STATE : 'runtime_state' -> require(MODEL);
+PROPERTIES : 'properties' -> require(MODEL);
+FORALL : 'forall' -> require(MODEL);
+EXPECT : 'expect' -> require(MODEL);
+FITS : 'fits' -> require(MODEL);
+FAILS : 'fails' -> require(MODEL);
+RUST_CONTEXT : 'rust_context' -> require(MODEL);
+ANALYZER : 'analyzer' -> require(MODEL);
+INHERITED : 'inherited' -> require(MODEL);
+EXECUTION_CONTRACT : 'execution_contract';
+EXECUTION : 'execution';
+RESULT   : 'result';
+TYPE     : 'type';
+ENUM     : 'enum' -> require(MODEL);
+ENTITY   : 'entity' -> require(MODEL);
+RECORD   : 'record';
+INTRINSIC: 'intrinsic' -> require(MODEL);
+FUNCTION : 'function' -> require(MODEL);
+MUTATES  : 'mutates' -> require(MODEL);
+QUERY    : 'query' -> require(MODEL);
+REQUIRES : 'requires' -> require(MODEL);
+EXECUTE  : 'execute';
+EVALUATE : 'evaluate';
+NEW      : 'new' -> require(ACTION);
+REQUIRE  : 'require' -> require(ACTION);
+ERROR    : 'error' -> require(ACTION);
+RUNTIME_ERROR : 'runtime_error' -> require(ACTION);
+AT       : 'at' -> require(ACTION);
+ANALYZE  : 'analyze' -> require(ACTION);
+WITH     : 'with' -> require(ACTION);
+ON       : 'on' -> require(ACTION);
+FAILURE  : 'failure' -> require(ACTION);
+DEFAULT  : 'default' -> require(ACTION);
+CONTINUE_ON_ERROR : 'continue_on_error' -> require(ACTION);
+FINALLY  : 'finally' -> require(ACTION);
+WHERE    : 'where' -> require(ACTION);
+MATCH    : 'match' -> require(ACTION);
+IS       : 'is' -> require(ACTION);
+EXISTS   : 'exists' -> require(ACTION);
+PRESENT  : 'present';
+REWRITE  : 'rewrite' -> require(ACTION);
+BOTTOM_UP: 'bottom_up' -> require(ACTION);
+OTHERWISE: 'otherwise';
+AND      : 'and' -> require(ACTION);
+OR_WORD  : 'or' -> require(ACTION);
+NOT      : 'not' -> require(ACTION);
+LET      : 'let' -> require(ACTION);
+IF       : 'if' -> require(ACTION);
+ELSE     : 'else' -> require(ACTION);
+FOREACH  : 'foreach' -> require(ACTION);
+WHILE    : 'while' -> require(ACTION);
+IN       : 'in' -> require(ACTION);
+RETURN   : 'return' -> require(ACTION);
+NODE     : 'node';
+INLINE   : 'inline';
+EMPTY    : 'empty';
+TRUE     : 'true' -> require(ACTION);
+FALSE    : 'false' -> require(ACTION);
+NONE     : 'none' -> require(ACTION);
+FLOAT_LITERAL : [0-9]+ '.' [0-9]+ -> require(ACTION);
+
+STRING_LITERAL
+    : '\'' SingleStringCharacter* '\''
+    | '"' DoubleStringCharacter* '"'
+    ;
+
+fragment SingleStringCharacter
+    : Escape
+    | ~['\\\r\n]
+    ;
+
+fragment DoubleStringCharacter
+    : Escape
+    | ~["\\\r\n]
+    ;
+
+fragment Escape
+    : '\\' .
+    ;
+
+RULE_REF  : [a-z] [a-zA-Z_0-9]*;
+TOKEN_REF : [A-Z] [a-zA-Z_0-9]*;
+INTEGER   : [0-9]+;
+
+OR     : '|';
+QUESTION : '?';
+STAR   : '*';
+PLUS   : '+';
+LPAREN : '(';
+RPAREN : ')';
+LBRACK : '[';
+RBRACK : ']';
+LBRACE : '{';
+RBRACE : '}';
+SEMI   : ';';
+COLON  : ':';
+COMMA  : ',';
+ASSIGN : '=';
+DOT    : '.';
+HASH   : '#';
+LT     : '<';
+GT     : '>';
+ARROW  : '->';
+FAT_ARROW : '=>';
+EQEQ   : '==';
+NEQ    : '!=';
+LE     : '<=';
+GE     : '>=';
+MINUS  : '-';
+SLASH  : '/';
+BANG   : '!';
+
+BLOCK_COMMENT : '/*' .*? '*/' -> skip;
+LINE_COMMENT  : '//' ~[\r\n]* -> skip;
+WS            : [ \t\r\n\f]+ -> skip;

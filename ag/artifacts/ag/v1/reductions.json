@@ -1,0 +1,1498 @@
+{
+  "version": 1,
+  "instructions": [
+    {
+      "rule": 0,
+      "rhsLength": 2,
+      "opcode": "construct-node",
+      "spanPolicy": "matched-rhs",
+      "typeName": "document",
+      "variantName": null,
+      "operands": [],
+      "fields": [
+        {
+          "name": "header",
+          "rhsIndex": 0
+        },
+        {
+          "name": "items",
+          "rhsIndex": 1
+        }
+      ]
+    },
+    {
+      "rule": 1,
+      "rhsLength": 3,
+      "opcode": "construct-node",
+      "spanPolicy": "matched-rhs",
+      "typeName": "grammarDeclaration",
+      "variantName": null,
+      "operands": [],
+      "fields": [
+        {
+          "name": "name",
+          "rhsIndex": 1
+        }
+      ]
+    },
+    {
+      "rule": 2,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 3,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 4,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 5,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 6,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 7,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 8,
+      "rhsLength": 4,
+      "opcode": "construct-node",
+      "spanPolicy": "matched-rhs",
+      "typeName": "optionsBlock",
+      "variantName": null,
+      "operands": [],
+      "fields": [
+        {
+          "name": "entries",
+          "rhsIndex": 2
+        }
+      ]
+    },
+    {
+      "rule": 9,
+      "rhsLength": 4,
+      "opcode": "construct-node",
+      "spanPolicy": "matched-rhs",
+      "typeName": "optionEntry",
+      "variantName": null,
+      "operands": [],
+      "fields": [
+        {
+          "name": "name",
+          "rhsIndex": 0
+        },
+        {
+          "name": "value",
+          "rhsIndex": 2
+        }
+      ]
+    },
+    {
+      "rule": 10,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 11,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 12,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 13,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 14,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 15,
+      "rhsLength": 4,
+      "opcode": "construct-node",
+      "spanPolicy": "matched-rhs",
+      "typeName": "lexerClassesBlock",
+      "variantName": null,
+      "operands": [],
+      "fields": [
+        {
+          "name": "entries",
+          "rhsIndex": 2
+        }
+      ]
+    },
+    {
+      "rule": 16,
+      "rhsLength": 4,
+      "opcode": "construct-node",
+      "spanPolicy": "matched-rhs",
+      "typeName": "channelsBlock",
+      "variantName": null,
+      "operands": [],
+      "fields": [
+        {
+          "name": "names",
+          "rhsIndex": 2
+        }
+      ]
+    },
+    {
+      "rule": 17,
+      "rhsLength": 3,
+      "opcode": "construct-record",
+      "spanPolicy": "matched-rhs",
+      "typeName": "channelList",
+      "variantName": null,
+      "operands": [],
+      "fields": [
+        {
+          "name": "first",
+          "rhsIndex": 0
+        },
+        {
+          "name": "rest",
+          "rhsIndex": 1
+        },
+        {
+          "name": "trailing",
+          "rhsIndex": 2
+        }
+      ]
+    },
+    {
+      "rule": 18,
+      "rhsLength": 2,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        1
+      ],
+      "fields": []
+    },
+    {
+      "rule": 19,
+      "rhsLength": 4,
+      "opcode": "construct-node",
+      "spanPolicy": "matched-rhs",
+      "typeName": "conflictsBlock",
+      "variantName": null,
+      "operands": [],
+      "fields": [
+        {
+          "name": "entries",
+          "rhsIndex": 2
+        }
+      ]
+    },
+    {
+      "rule": 20,
+      "rhsLength": 9,
+      "opcode": "construct-node",
+      "spanPolicy": "matched-rhs",
+      "typeName": "conflictEntry",
+      "variantName": "PreferShift",
+      "operands": [],
+      "fields": [
+        {
+          "name": "terminal",
+          "rhsIndex": 2
+        },
+        {
+          "name": "rule",
+          "rhsIndex": 5
+        },
+        {
+          "name": "label",
+          "rhsIndex": 7
+        }
+      ]
+    },
+    {
+      "rule": 21,
+      "rhsLength": 9,
+      "opcode": "construct-node",
+      "spanPolicy": "matched-rhs",
+      "typeName": "conflictEntry",
+      "variantName": "PreferReduce",
+      "operands": [],
+      "fields": [
+        {
+          "name": "rule",
+          "rhsIndex": 2
+        },
+        {
+          "name": "label",
+          "rhsIndex": 4
+        },
+        {
+          "name": "terminal",
+          "rhsIndex": 7
+        }
+      ]
+    },
+    {
+      "rule": 22,
+      "rhsLength": 7,
+      "opcode": "construct-node",
+      "spanPolicy": "matched-rhs",
+      "typeName": "parserRuleSpec",
+      "variantName": null,
+      "operands": [],
+      "fields": [
+        {
+          "name": "kind",
+          "rhsIndex": 0
+        },
+        {
+          "name": "name",
+          "rhsIndex": 1
+        },
+        {
+          "name": "context",
+          "rhsIndex": 2
+        },
+        {
+          "name": "first",
+          "rhsIndex": 4
+        },
+        {
+          "name": "rest",
+          "rhsIndex": 5
+        }
+      ]
+    },
+    {
+      "rule": 23,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 24,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 25,
+      "rhsLength": 2,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        1
+      ],
+      "fields": []
+    },
+    {
+      "rule": 26,
+      "rhsLength": 2,
+      "opcode": "construct-node",
+      "spanPolicy": "matched-rhs",
+      "typeName": "parserAlternative",
+      "variantName": "EmptyAlternative",
+      "operands": [],
+      "fields": [
+        {
+          "name": "label",
+          "rhsIndex": 1
+        }
+      ]
+    },
+    {
+      "rule": 27,
+      "rhsLength": 2,
+      "opcode": "construct-node",
+      "spanPolicy": "matched-rhs",
+      "typeName": "parserAlternative",
+      "variantName": "NonemptyAlternative",
+      "operands": [],
+      "fields": [
+        {
+          "name": "elements",
+          "rhsIndex": 0
+        },
+        {
+          "name": "label",
+          "rhsIndex": 1
+        }
+      ]
+    },
+    {
+      "rule": 28,
+      "rhsLength": 2,
+      "opcode": "construct-node",
+      "spanPolicy": "matched-rhs",
+      "typeName": "alternativeLabel",
+      "variantName": null,
+      "operands": [],
+      "fields": [
+        {
+          "name": "name",
+          "rhsIndex": 1
+        }
+      ]
+    },
+    {
+      "rule": 29,
+      "rhsLength": 3,
+      "opcode": "construct-node-or-forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": "parserElement",
+      "variantName": null,
+      "operands": [
+        1
+      ],
+      "fields": [
+        {
+          "name": "field",
+          "rhsIndex": 0
+        },
+        {
+          "name": "symbol",
+          "rhsIndex": 1
+        },
+        {
+          "name": "suffix",
+          "rhsIndex": 2
+        }
+      ]
+    },
+    {
+      "rule": 30,
+      "rhsLength": 2,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 31,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 32,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 33,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 34,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 35,
+      "rhsLength": 3,
+      "opcode": "construct-node",
+      "spanPolicy": "matched-rhs",
+      "typeName": "qualifiedReference",
+      "variantName": null,
+      "operands": [],
+      "fields": [
+        {
+          "name": "scope",
+          "rhsIndex": 0
+        },
+        {
+          "name": "name",
+          "rhsIndex": 2
+        }
+      ]
+    },
+    {
+      "rule": 36,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 37,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 38,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 39,
+      "rhsLength": 6,
+      "opcode": "construct-node",
+      "spanPolicy": "matched-rhs",
+      "typeName": "lexerRuleSpec",
+      "variantName": null,
+      "operands": [],
+      "fields": [
+        {
+          "name": "isFragment",
+          "rhsIndex": 0
+        },
+        {
+          "name": "name",
+          "rhsIndex": 1
+        },
+        {
+          "name": "body",
+          "rhsIndex": 3
+        },
+        {
+          "name": "commands",
+          "rhsIndex": 4
+        }
+      ]
+    },
+    {
+      "rule": 40,
+      "rhsLength": 2,
+      "opcode": "construct-node-or-forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": "lexerAltList",
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": [
+        {
+          "name": "first",
+          "rhsIndex": 0
+        },
+        {
+          "name": "rest",
+          "rhsIndex": 1
+        }
+      ]
+    },
+    {
+      "rule": 41,
+      "rhsLength": 2,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        1
+      ],
+      "fields": []
+    },
+    {
+      "rule": 42,
+      "rhsLength": 1,
+      "opcode": "construct-node",
+      "spanPolicy": "matched-rhs",
+      "typeName": "lexerAlternative",
+      "variantName": "EmptyLexerAlternative",
+      "operands": [],
+      "fields": []
+    },
+    {
+      "rule": 43,
+      "rhsLength": 1,
+      "opcode": "construct-node",
+      "spanPolicy": "matched-rhs",
+      "typeName": "lexerAlternative",
+      "variantName": "NonemptyLexerAlternative",
+      "operands": [],
+      "fields": [
+        {
+          "name": "elements",
+          "rhsIndex": 0
+        }
+      ]
+    },
+    {
+      "rule": 44,
+      "rhsLength": 2,
+      "opcode": "construct-node-or-forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": "lexerElement",
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": [
+        {
+          "name": "atom",
+          "rhsIndex": 0
+        },
+        {
+          "name": "suffix",
+          "rhsIndex": 1
+        }
+      ]
+    },
+    {
+      "rule": 45,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 46,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 47,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 48,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 49,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 50,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 51,
+      "rhsLength": 2,
+      "opcode": "construct-node",
+      "spanPolicy": "matched-rhs",
+      "typeName": "lexerNegation",
+      "variantName": null,
+      "operands": [],
+      "fields": [
+        {
+          "name": "value",
+          "rhsIndex": 1
+        }
+      ]
+    },
+    {
+      "rule": 52,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 53,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 54,
+      "rhsLength": 3,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        1
+      ],
+      "fields": []
+    },
+    {
+      "rule": 55,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 56,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 57,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 58,
+      "rhsLength": 2,
+      "opcode": "construct-record",
+      "spanPolicy": "matched-rhs",
+      "typeName": "starSuffix",
+      "variantName": null,
+      "operands": [],
+      "fields": [
+        {
+          "name": "kind",
+          "rhsIndex": 0
+        },
+        {
+          "name": "lazy",
+          "rhsIndex": 1
+        }
+      ]
+    },
+    {
+      "rule": 59,
+      "rhsLength": 2,
+      "opcode": "construct-record",
+      "spanPolicy": "matched-rhs",
+      "typeName": "plusSuffix",
+      "variantName": null,
+      "operands": [],
+      "fields": [
+        {
+          "name": "kind",
+          "rhsIndex": 0
+        },
+        {
+          "name": "lazy",
+          "rhsIndex": 1
+        }
+      ]
+    },
+    {
+      "rule": 60,
+      "rhsLength": 3,
+      "opcode": "construct-node",
+      "spanPolicy": "matched-rhs",
+      "typeName": "lexerCommands",
+      "variantName": null,
+      "operands": [],
+      "fields": [
+        {
+          "name": "first",
+          "rhsIndex": 1
+        },
+        {
+          "name": "rest",
+          "rhsIndex": 2
+        }
+      ]
+    },
+    {
+      "rule": 61,
+      "rhsLength": 2,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        1
+      ],
+      "fields": []
+    },
+    {
+      "rule": 62,
+      "rhsLength": 2,
+      "opcode": "construct-node-or-forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": "lexerCommand",
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": [
+        {
+          "name": "name",
+          "rhsIndex": 0
+        },
+        {
+          "name": "argument",
+          "rhsIndex": 1
+        }
+      ]
+    },
+    {
+      "rule": 63,
+      "rhsLength": 3,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        1
+      ],
+      "fields": []
+    },
+    {
+      "rule": 64,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 65,
+      "rhsLength": 1,
+      "opcode": "forward",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 66,
+      "rhsLength": 2,
+      "opcode": "list-append",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0,
+        1
+      ],
+      "fields": []
+    },
+    {
+      "rule": 67,
+      "rhsLength": 0,
+      "opcode": "list-empty",
+      "spanPolicy": "empty-at-lookahead",
+      "typeName": null,
+      "variantName": null,
+      "operands": [],
+      "fields": []
+    },
+    {
+      "rule": 68,
+      "rhsLength": 2,
+      "opcode": "list-append",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0,
+        1
+      ],
+      "fields": []
+    },
+    {
+      "rule": 69,
+      "rhsLength": 0,
+      "opcode": "list-empty",
+      "spanPolicy": "empty-at-lookahead",
+      "typeName": null,
+      "variantName": null,
+      "operands": [],
+      "fields": []
+    },
+    {
+      "rule": 70,
+      "rhsLength": 2,
+      "opcode": "list-append",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0,
+        1
+      ],
+      "fields": []
+    },
+    {
+      "rule": 71,
+      "rhsLength": 0,
+      "opcode": "list-empty",
+      "spanPolicy": "empty-at-lookahead",
+      "typeName": null,
+      "variantName": null,
+      "operands": [],
+      "fields": []
+    },
+    {
+      "rule": 72,
+      "rhsLength": 1,
+      "opcode": "optional-some",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 73,
+      "rhsLength": 0,
+      "opcode": "optional-none",
+      "spanPolicy": "empty-at-lookahead",
+      "typeName": null,
+      "variantName": null,
+      "operands": [],
+      "fields": []
+    },
+    {
+      "rule": 74,
+      "rhsLength": 2,
+      "opcode": "list-append",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0,
+        1
+      ],
+      "fields": []
+    },
+    {
+      "rule": 75,
+      "rhsLength": 0,
+      "opcode": "list-empty",
+      "spanPolicy": "empty-at-lookahead",
+      "typeName": null,
+      "variantName": null,
+      "operands": [],
+      "fields": []
+    },
+    {
+      "rule": 76,
+      "rhsLength": 1,
+      "opcode": "optional-some",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 77,
+      "rhsLength": 0,
+      "opcode": "optional-none",
+      "spanPolicy": "empty-at-lookahead",
+      "typeName": null,
+      "variantName": null,
+      "operands": [],
+      "fields": []
+    },
+    {
+      "rule": 78,
+      "rhsLength": 2,
+      "opcode": "list-append",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0,
+        1
+      ],
+      "fields": []
+    },
+    {
+      "rule": 79,
+      "rhsLength": 0,
+      "opcode": "list-empty",
+      "spanPolicy": "empty-at-lookahead",
+      "typeName": null,
+      "variantName": null,
+      "operands": [],
+      "fields": []
+    },
+    {
+      "rule": 80,
+      "rhsLength": 1,
+      "opcode": "optional-some",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 81,
+      "rhsLength": 0,
+      "opcode": "optional-none",
+      "spanPolicy": "empty-at-lookahead",
+      "typeName": null,
+      "variantName": null,
+      "operands": [],
+      "fields": []
+    },
+    {
+      "rule": 82,
+      "rhsLength": 2,
+      "opcode": "list-append",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0,
+        1
+      ],
+      "fields": []
+    },
+    {
+      "rule": 83,
+      "rhsLength": 0,
+      "opcode": "list-empty",
+      "spanPolicy": "empty-at-lookahead",
+      "typeName": null,
+      "variantName": null,
+      "operands": [],
+      "fields": []
+    },
+    {
+      "rule": 84,
+      "rhsLength": 1,
+      "opcode": "optional-some",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 85,
+      "rhsLength": 0,
+      "opcode": "optional-none",
+      "spanPolicy": "empty-at-lookahead",
+      "typeName": null,
+      "variantName": null,
+      "operands": [],
+      "fields": []
+    },
+    {
+      "rule": 86,
+      "rhsLength": 2,
+      "opcode": "list-append",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0,
+        1
+      ],
+      "fields": []
+    },
+    {
+      "rule": 87,
+      "rhsLength": 1,
+      "opcode": "list-singleton",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 88,
+      "rhsLength": 1,
+      "opcode": "optional-some",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 89,
+      "rhsLength": 0,
+      "opcode": "optional-none",
+      "spanPolicy": "empty-at-lookahead",
+      "typeName": null,
+      "variantName": null,
+      "operands": [],
+      "fields": []
+    },
+    {
+      "rule": 90,
+      "rhsLength": 1,
+      "opcode": "optional-some",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 91,
+      "rhsLength": 0,
+      "opcode": "optional-none",
+      "spanPolicy": "empty-at-lookahead",
+      "typeName": null,
+      "variantName": null,
+      "operands": [],
+      "fields": []
+    },
+    {
+      "rule": 92,
+      "rhsLength": 1,
+      "opcode": "optional-some",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 93,
+      "rhsLength": 0,
+      "opcode": "optional-none",
+      "spanPolicy": "empty-at-lookahead",
+      "typeName": null,
+      "variantName": null,
+      "operands": [],
+      "fields": []
+    },
+    {
+      "rule": 94,
+      "rhsLength": 1,
+      "opcode": "optional-some",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 95,
+      "rhsLength": 0,
+      "opcode": "optional-none",
+      "spanPolicy": "empty-at-lookahead",
+      "typeName": null,
+      "variantName": null,
+      "operands": [],
+      "fields": []
+    },
+    {
+      "rule": 96,
+      "rhsLength": 1,
+      "opcode": "optional-some",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 97,
+      "rhsLength": 0,
+      "opcode": "optional-none",
+      "spanPolicy": "empty-at-lookahead",
+      "typeName": null,
+      "variantName": null,
+      "operands": [],
+      "fields": []
+    },
+    {
+      "rule": 98,
+      "rhsLength": 2,
+      "opcode": "list-append",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0,
+        1
+      ],
+      "fields": []
+    },
+    {
+      "rule": 99,
+      "rhsLength": 0,
+      "opcode": "list-empty",
+      "spanPolicy": "empty-at-lookahead",
+      "typeName": null,
+      "variantName": null,
+      "operands": [],
+      "fields": []
+    },
+    {
+      "rule": 100,
+      "rhsLength": 2,
+      "opcode": "list-append",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0,
+        1
+      ],
+      "fields": []
+    },
+    {
+      "rule": 101,
+      "rhsLength": 1,
+      "opcode": "list-singleton",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 102,
+      "rhsLength": 1,
+      "opcode": "optional-some",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 103,
+      "rhsLength": 0,
+      "opcode": "optional-none",
+      "spanPolicy": "empty-at-lookahead",
+      "typeName": null,
+      "variantName": null,
+      "operands": [],
+      "fields": []
+    },
+    {
+      "rule": 104,
+      "rhsLength": 1,
+      "opcode": "optional-some",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 105,
+      "rhsLength": 0,
+      "opcode": "optional-none",
+      "spanPolicy": "empty-at-lookahead",
+      "typeName": null,
+      "variantName": null,
+      "operands": [],
+      "fields": []
+    },
+    {
+      "rule": 106,
+      "rhsLength": 1,
+      "opcode": "optional-some",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 107,
+      "rhsLength": 0,
+      "opcode": "optional-none",
+      "spanPolicy": "empty-at-lookahead",
+      "typeName": null,
+      "variantName": null,
+      "operands": [],
+      "fields": []
+    },
+    {
+      "rule": 108,
+      "rhsLength": 2,
+      "opcode": "list-append",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0,
+        1
+      ],
+      "fields": []
+    },
+    {
+      "rule": 109,
+      "rhsLength": 0,
+      "opcode": "list-empty",
+      "spanPolicy": "empty-at-lookahead",
+      "typeName": null,
+      "variantName": null,
+      "operands": [],
+      "fields": []
+    },
+    {
+      "rule": 110,
+      "rhsLength": 1,
+      "opcode": "optional-some",
+      "spanPolicy": "matched-rhs",
+      "typeName": null,
+      "variantName": null,
+      "operands": [
+        0
+      ],
+      "fields": []
+    },
+    {
+      "rule": 111,
+      "rhsLength": 0,
+      "opcode": "optional-none",
+      "spanPolicy": "empty-at-lookahead",
+      "typeName": null,
+      "variantName": null,
+      "operands": [],
+      "fields": []
+    }
+  ]
+}

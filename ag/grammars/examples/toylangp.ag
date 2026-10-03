@@ -1,0 +1,388 @@
+grammar ToyLangP;
+
+options {
+    parser = LALR;
+    lookahead = 2;
+    ast = explicit;
+}
+
+channels {
+    HIDDEN
+}
+
+conflicts {
+    prefer shift ELSE over reduce ifStatement#IfStatement;
+}
+
+node program
+    : declarations=declaration+ EOF
+    ;
+
+inline declaration
+    : value=varDeclaration
+    | value=funDeclaration
+    | value=funDefinition
+    | value=methodOutOf
+    | value=constructorOutOf
+    | value=destructorOutOf
+    | value=structDeclaration
+    ;
+
+node declarator
+    : name=ID
+    ;
+
+node varDeclaration
+    : name=declarator COLON type=typeSpecifier SEMI                                  #ScalarVariable
+    | name=declarator COLON LeftBrack length=NUMBER RightBrack type=typeSpecifier SEMI #ArrayVariable
+    ;
+
+node funDeclarator
+    : FUN name=ID LPAREN parameters=formalParameters? RPAREN COLON type=returnType
+    ;
+
+node funDeclaration
+    : declarator=funDeclarator SEMI
+    ;
+
+node funDefinition
+    : declarator=funDeclarator body=compoundStatement
+    ;
+
+node constructorDeclarator
+    : name=ID LPAREN parameters=formalParameters? RPAREN
+    ;
+
+node constructorDeclaration
+    : declarator=constructorDeclarator SEMI
+    ;
+
+node constructorDefinition
+    : declarator=constructorDeclarator body=compoundStatement
+    ;
+
+node destructorDeclarator
+    : TILDE name=ID LPAREN RPAREN
+    ;
+
+node destructorDeclaration
+    : declarator=destructorDeclarator SEMI
+    ;
+
+node destructorDefinition
+    : declarator=destructorDeclarator body=compoundStatement
+    ;
+
+node methodOutOf
+    : FUN class=ID DoubleColon name=ID LPAREN parameters=formalParameters? RPAREN COLON type=returnType body=compoundStatement
+    ;
+
+node constructorOutOf
+    : class=ID DoubleColon name=ID LPAREN parameters=formalParameters? RPAREN body=compoundStatement
+    ;
+
+node destructorOutOf
+    : class=ID DoubleColon TILDE name=ID LPAREN RPAREN body=compoundStatement
+    ;
+
+node structDeclaration
+    : STRUCT name=ID base=inheritance? LBRACE members=memberDeclaration* sections=accessSection* RBRACE SEMI
+    ;
+
+inline inheritance
+    : COLON value=ID
+    ;
+
+node accessSection
+    : access=accessSpecifier COLON members=memberDeclaration*
+    ;
+
+inline accessSpecifier
+    : value=PRIVATE
+    | value=PROTECTED
+    | value=PUBLIC
+    ;
+
+inline memberDeclaration
+    : value=varDeclaration
+    | value=method
+    ;
+
+inline method
+    : value=funDeclaration
+    | value=funDefinition
+    | value=constructorDeclaration
+    | value=constructorDefinition
+    | value=destructorDeclaration
+    | value=destructorDefinition
+    ;
+
+inline returnType
+    : value=typeSpecifier
+    | value=VOID
+    ;
+
+inline typeSpecifier
+    : type=INT
+    | type=FLOAT
+    | type=BOOL
+    | star=STAR? type=CHAR
+    | type=ID
+    ;
+
+node formalParameters
+    : first=formalParameter rest=formalParameterTail*
+    ;
+
+inline formalParameterTail
+    : COMMA value=formalParameter
+    ;
+
+node formalParameter
+    : name=declarator COLON type=typeSpecifier
+    ;
+
+node compoundStatement
+    : LBRACE items=compoundItem* RBRACE
+    ;
+
+inline compoundItem
+    : value=localDeclaration
+    | value=statement
+    ;
+
+inline localDeclaration
+    : value=varDeclaration
+    | value=varInitialization
+    | value=varConstruction
+    ;
+
+node varInitialization
+    : name=declarator COLON type=typeSpecifier ASSIGN value=expression SEMI
+    ;
+
+node varConstruction
+    : name=declarator COLON type=typeSpecifier LPAREN arguments=argList? RPAREN SEMI
+    ;
+
+inline relop
+    : value=LE
+    | value=LT
+    | value=GT
+    | value=GE
+    | value=EQ
+    | value=NEQ
+    ;
+
+node expression
+    : left=additiveExpression comparison=comparisonTail?
+    ;
+
+inline comparisonTail
+    : operator=relop right=additiveExpression
+    ;
+
+inline addop
+    : value=PLUS
+    | value=MINUS
+    ;
+
+node additiveExpression
+    : first=term rest=additiveOperation*
+    ;
+
+inline additiveOperation
+    : operator=addop operand=term
+    ;
+
+inline mulop
+    : value=STAR
+    | value=DIV
+    ;
+
+node term
+    : first=factor rest=multiplicativeOperation*
+    ;
+
+inline multiplicativeOperation
+    : operator=mulop operand=factor
+    ;
+
+node factor
+    : LPAREN value=expression RPAREN         #ParenthesizedFactor
+    | value=varUsage                       #VariableFactor
+    | value=call                           #CallFactor
+    | value=NUMBER                         #NumberFactor
+    | value=FLOAT_LITERAL                  #FloatFactor
+    | value=STRING_LITERAL                 #StringFactor
+    | value=CHAR_LITERAL                   #CharFactor
+    | value=bool_literal                   #BoolFactor
+    | value=NULL                           #NullFactor
+    | MINUS operand=factor                 #NegatedFactor
+    ;
+
+inline bool_literal
+    : value=FALSE
+    | value=TRUE
+    ;
+
+node varUsage
+    : name=ID fields=fieldAccess* index=arrayIndex?
+    ;
+
+inline fieldAccess
+    : DOT value=ID
+    ;
+
+inline arrayIndex
+    : LeftBrack value=expression RightBrack
+    ;
+
+node call
+    : target=varUsage LPAREN arguments=argList? RPAREN
+    ;
+
+node argList
+    : first=argument rest=argumentTail*
+    ;
+
+inline argumentTail
+    : COMMA value=argument
+    ;
+
+inline argument
+    : value=expression
+    ;
+
+inline statement
+    : value=whileStatement
+    | value=forStatement
+    | value=ifStatement
+    | value=assignStatement SEMI
+    | value=call SEMI
+    | value=compoundStatement
+    | value=returnStatement
+    ;
+
+node whileStatement
+    : WHILE LPAREN condition=expression RPAREN body=statement
+    ;
+
+node forStatement
+    // The shared semantic pass requires an int control variable updated here.
+    : FOR LPAREN initialization=varInitialization condition=expression SEMI update=assignStatement RPAREN body=statement
+    ;
+
+node ifStatement
+    : IF LPAREN condition=expression RPAREN thenBranch=statement                            #IfStatement
+    | IF LPAREN condition=expression RPAREN thenBranch=statement ELSE elseBranch=statement #IfElseStatement
+    ;
+
+inline assignop
+    : value=ASSIGN
+    | value=ASSIGN_PLUS
+    | value=ASSIGN_MINUS
+    | value=ASSIGN_MUL
+    | value=ASSIGN_DIV
+    ;
+
+node assignStatement
+    : target=varUsage operator=assignop value=expression         #ValueAssignment
+    | target=varUsage operator=INC                               #PostIncrement
+    | target=varUsage operator=DEC                               #PostDecrement
+    ;
+
+node returnStatement
+    : RETURN value=expression? SEMI
+    ;
+
+DOT        : '.';
+PLUS       : '+';
+MINUS      : '-';
+STAR       : '*';
+DIV        : '/';
+COMMA      : ',';
+LPAREN     : '(';
+RPAREN     : ')';
+LBRACE     : '{';
+RBRACE     : '}';
+LeftBrack  : '[';
+RightBrack : ']';
+SEMI       : ';';
+COLON      : ':';
+LT         : '<';
+LE         : '<=';
+GT         : '>';
+GE         : '>=';
+ASSIGN     : '=';
+ASSIGN_PLUS  : '+=';
+ASSIGN_MINUS : '-=';
+ASSIGN_MUL   : '*=';
+ASSIGN_DIV   : '/=';
+INC        : '++';
+DEC        : '--';
+EQ         : '==';
+NEQ        : '!=';
+INT        : 'int';
+FLOAT      : 'float';
+BOOL       : 'bool';
+CHAR       : 'char';
+VOID       : 'void';
+IF         : 'if';
+ELSE       : 'else';
+WHILE      : 'while';
+FOR        : 'for';
+RETURN     : 'return';
+FALSE      : 'false';
+TRUE       : 'true';
+NULL       : 'null';
+STRUCT     : 'struct';
+PRIVATE    : 'private';
+PROTECTED  : 'protected';
+PUBLIC     : 'public';
+DoubleColon: '::';
+TILDE      : '~';
+FUN        : 'fun';
+
+BLOCK_COMMENT
+    : '/*' .*? '*/' -> channel(HIDDEN)
+    ;
+
+LINE_COMMENT
+    : '//' ~[\r\n]* -> channel(HIDDEN)
+    ;
+
+ID
+    : [a-zA-Z_] [a-zA-Z_0-9]*
+    ;
+
+NUMBER
+    : '0'
+    | [1-9] [0-9]*
+    ;
+
+FLOAT_LITERAL
+    : NUMBER DOT [0-9]*
+    | NUMBER ('E'|'e') NUMBER
+    | NUMBER DOT [0-9]* ('E'|'e') NUMBER
+    ;
+
+STRING_LITERAL
+    : '"' SChar* '"'
+    ;
+
+CHAR_LITERAL
+    : '\'' SChar '\''
+    ;
+
+fragment SChar
+    : ~["\\\r\n] | EscapeSequence
+    ;
+
+fragment EscapeSequence
+    : '\\' [btnfr"'\\]
+    ;
+
+WS
+    : [ \t\r\n]+ -> channel(HIDDEN)
+    ;

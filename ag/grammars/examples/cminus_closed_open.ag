@@ -1,0 +1,271 @@
+/*
+ * Deterministic C Minus grammar using the standard closed/open statement
+ * split. It binds else to the nearest unmatched if without a global shift
+ * preference. The declaration prefix still requires LR(2).
+ */
+
+grammar CMinusClosedOpen;
+
+options {
+    parser = LR;
+    lookahead = 2;
+    ast = explicit;
+}
+
+channels {
+    HIDDEN
+}
+
+node program
+    : declarations=declaration+ EOF
+    ;
+
+inline declaration
+    : value=varDeclaration
+    | value=funDeclaration
+    ;
+
+node declarator
+    : name=ID
+    ;
+
+node varDeclaration
+    : type=typeSpecifier name=declarator SEMI
+    ;
+
+node funDeclaration
+    : type=returnType name=ID LPAREN parameters=formalParameters? RPAREN body=compoundStatement
+    ;
+
+inline returnType
+    : value=typeSpecifier
+    | value=VOID
+    ;
+
+inline typeSpecifier
+    : value=INT
+    | value=STRING
+    ;
+
+node formalParameters
+    : first=formalParameter rest=formalParameterTail*
+    ;
+
+inline formalParameterTail
+    : COMMA value=formalParameter
+    ;
+
+node formalParameter
+    : type=typeSpecifier name=declarator
+    ;
+
+node compoundStatement
+    : LBRACE items=compoundItem* RBRACE
+    ;
+
+inline compoundItem
+    : value=localDeclaration
+    | value=statement
+    ;
+
+inline localDeclaration
+    : value=varDeclaration
+    | value=varInitialization
+    ;
+
+node varInitialization
+    : type=typeSpecifier name=declarator ASSIGN value=additiveExpression SEMI
+    ;
+
+inline relop
+    : value=LE
+    | value=LT
+    | value=GT
+    | value=GE
+    | value=EQ
+    | value=NEQ
+    ;
+
+node booleanExpression
+    : left=additiveExpression operator=relop right=additiveExpression
+    ;
+
+inline addop
+    : value=PLUS
+    | value=MINUS
+    ;
+
+node additiveExpression
+    : first=term rest=additiveOperation*
+    ;
+
+inline additiveOperation
+    : operator=addop operand=term
+    ;
+
+inline mulop
+    : value=MUL
+    | value=DIV
+    ;
+
+node term
+    : first=factor rest=multiplicativeOperation*
+    ;
+
+inline multiplicativeOperation
+    : operator=mulop operand=factor
+    ;
+
+node factor
+    : LPAREN value=additiveExpression RPAREN #ParenthesizedFactor
+    | value=varUsage                       #VariableFactor
+    | value=call                           #CallFactor
+    | value=NUMBER                         #NumberFactor
+    | value=STRING_LITERAL                 #StringFactor
+    | MINUS operand=factor                 #NegatedFactor
+    ;
+
+node varUsage
+    : name=ID
+    ;
+
+node call
+    : name=ID LPAREN arguments=argList? RPAREN
+    ;
+
+node argList
+    : first=argument rest=argumentTail*
+    ;
+
+inline argumentTail
+    : COMMA value=argument
+    ;
+
+inline argument
+    : value=additiveExpression
+    ;
+
+inline statement
+    : value=closedStatement
+    | value=openStatement
+    ;
+
+inline closedStatement
+    : value=closedWhileStatement
+    | value=closedForStatement
+    | value=closedIfStatement
+    | value=assignStatement SEMI
+    | value=call SEMI
+    | value=compoundStatement
+    | value=returnStatement
+    ;
+
+inline openStatement
+    : value=openWhileStatement
+    | value=openForStatement
+    | value=openIfStatement
+    ;
+
+node closedWhileStatement
+    : WHILE LPAREN condition=booleanExpression RPAREN body=closedStatement
+    ;
+
+node openWhileStatement
+    : WHILE LPAREN condition=booleanExpression RPAREN body=openStatement
+    ;
+
+node closedForStatement
+    : FOR LPAREN initialization=varInitialization condition=booleanExpression SEMI update=assignStatement RPAREN body=closedStatement
+    ;
+
+node openForStatement
+    : FOR LPAREN initialization=varInitialization condition=booleanExpression SEMI update=assignStatement RPAREN body=openStatement
+    ;
+
+node closedIfStatement
+    : IF LPAREN condition=booleanExpression RPAREN thenBranch=closedStatement ELSE elseBranch=closedStatement
+    ;
+
+node openIfStatement
+    : IF LPAREN condition=booleanExpression RPAREN thenBranch=statement
+    | IF LPAREN condition=booleanExpression RPAREN thenBranch=closedStatement ELSE elseBranch=openStatement
+    ;
+
+inline assignop
+    : value=ASSIGN
+    | value=ASSIGN_PLUS
+    | value=ASSIGN_MINUS
+    | value=ASSIGN_MUL
+    | value=ASSIGN_DIV
+    ;
+
+node assignStatement
+    : target=varUsage operator=assignop value=additiveExpression #ValueAssignment
+    | target=varUsage operator=INC                               #PostIncrement
+    | target=varUsage operator=DEC                               #PostDecrement
+    ;
+
+node returnStatement
+    : RETURN value=additiveExpression? SEMI
+    ;
+
+PLUS         : '+';
+MINUS        : '-';
+MUL          : '*';
+DIV          : '/';
+COMMA        : ',';
+LPAREN       : '(';
+RPAREN       : ')';
+LBRACE       : '{';
+RBRACE       : '}';
+SEMI         : ';';
+LT           : '<';
+LE           : '<=';
+GT           : '>';
+GE           : '>=';
+ASSIGN       : '=';
+ASSIGN_PLUS  : '+=';
+ASSIGN_MINUS : '-=';
+ASSIGN_MUL   : '*=';
+ASSIGN_DIV   : '/=';
+INC          : '++';
+DEC          : '--';
+EQ           : '==';
+NEQ          : '!=';
+INT          : 'int';
+STRING       : 'string';
+VOID         : 'void';
+IF           : 'if';
+ELSE         : 'else';
+WHILE        : 'while';
+FOR          : 'for';
+RETURN       : 'return';
+
+BLOCK_COMMENT
+    : '/*' .*? '*/' -> channel(HIDDEN)
+    ;
+
+LINE_COMMENT
+    : '//' ~[\r\n]* -> channel(HIDDEN)
+    ;
+
+ID
+    : [a-zA-Z_] [a-zA-Z_0-9]*
+    ;
+
+NUMBER
+    : '0'
+    | [1-9] [0-9]*
+    ;
+
+STRING_LITERAL
+    : '"' (~["\\\r\n] | EscapeSequence)* '"'
+    ;
+
+fragment EscapeSequence
+    : '\\' [btnfr"'\\]
+    ;
+
+WS
+    : [ \t\r\n]+ -> channel(HIDDEN)
+    ;

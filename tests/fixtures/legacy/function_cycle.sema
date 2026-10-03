@@ -1,0 +1,15 @@
+sema FunctionCycle for "function_cycle.ag";
+
+semantic_model {
+    function outer(value) {
+        return inner(value);
+    }
+
+    function inner(value) {
+        return outer(value);
+    }
+}
+
+node program
+    : EOF analysis {}
+    ;

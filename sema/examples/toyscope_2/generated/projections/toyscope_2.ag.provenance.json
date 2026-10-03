@@ -1,0 +1,218 @@
+{
+  "format": 1,
+  "document_format": 1,
+  "projection": "ag",
+  "specification": "ToyScope2Typed",
+  "grammar": "ToyScope",
+  "source": "agsem/toyscope_2_typed.coge",
+  "source_sha256": "5751818df285e041615bb27bfe55fb578f7a2c4eb325de6c1aa9a9f6aa76c02e",
+  "output_sha256": "3df901ec3ee61e1ff3ae980424a74b811bfb509678a1aad127db4a88b9117c3e",
+  "tool_sha256": "ebe3f129dcde18c766c400de8d3adc150f17ea92e542f09d69a854765dbbe0a4",
+  "contracts": [],
+  "binding_schema": null,
+  "origins": [
+    {
+      "output_begin": 0,
+      "output_end": 118,
+      "input_begin": 30,
+      "input_end": 148,
+      "replacement": false
+    },
+    {
+      "output_begin": 118,
+      "output_end": 120,
+      "input_begin": 3705,
+      "input_end": 3707,
+      "replacement": false
+    },
+    {
+      "output_begin": 120,
+      "output_end": 165,
+      "input_begin": 5283,
+      "input_end": 5328,
+      "replacement": false
+    },
+    {
+      "output_begin": 165,
+      "output_end": 211,
+      "input_begin": 5463,
+      "input_end": 5509,
+      "replacement": false
+    },
+    {
+      "output_begin": 211,
+      "output_end": 261,
+      "input_begin": 5825,
+      "input_end": 5875,
+      "replacement": false
+    },
+    {
+      "output_begin": 261,
+      "output_end": 291,
+      "input_begin": 5975,
+      "input_end": 6005,
+      "replacement": false
+    },
+    {
+      "output_begin": 291,
+      "output_end": 316,
+      "input_begin": 6105,
+      "input_end": 6130,
+      "replacement": false
+    },
+    {
+      "output_begin": 316,
+      "output_end": 373,
+      "input_begin": 6230,
+      "input_end": 6287,
+      "replacement": false
+    },
+    {
+      "output_begin": 373,
+      "output_end": 427,
+      "input_begin": 6430,
+      "input_end": 6484,
+      "replacement": false
+    },
+    {
+      "output_begin": 427,
+      "output_end": 507,
+      "input_begin": 6810,
+      "input_end": 6890,
+      "replacement": false
+    },
+    {
+      "output_begin": 507,
+      "output_end": 585,
+      "input_begin": 7057,
+      "input_end": 7135,
+      "replacement": false
+    },
+    {
+      "output_begin": 585,
+      "output_end": 648,
+      "input_begin": 7512,
+      "input_end": 7575,
+      "replacement": false
+    },
+    {
+      "output_begin": 648,
+      "output_end": 723,
+      "input_begin": 7675,
+      "input_end": 7750,
+      "replacement": false
+    },
+    {
+      "output_begin": 723,
+      "output_end": 782,
+      "input_begin": 8115,
+      "input_end": 8174,
+      "replacement": false
+    },
+    {
+      "output_begin": 782,
+      "output_end": 845,
+      "input_begin": 8274,
+      "input_end": 8337,
+      "replacement": false
+    },
+    {
+      "output_begin": 845,
+      "output_end": 918,
+      "input_begin": 8562,
+      "input_end": 8635,
+      "replacement": false
+    },
+    {
+      "output_begin": 918,
+      "output_end": 962,
+      "input_begin": 8801,
+      "input_end": 8845,
+      "replacement": false
+    },
+    {
+      "output_begin": 962,
+      "output_end": 987,
+      "input_begin": 8907,
+      "input_end": 8932,
+      "replacement": false
+    },
+    {
+      "output_begin": 987,
+      "output_end": 1044,
+      "input_begin": 8994,
+      "input_end": 9051,
+      "replacement": false
+    },
+    {
+      "output_begin": 1044,
+      "output_end": 1121,
+      "input_begin": 9151,
+      "input_end": 9228,
+      "replacement": false
+    },
+    {
+      "output_begin": 1121,
+      "output_end": 1202,
+      "input_begin": 9453,
+      "input_end": 9534,
+      "replacement": false
+    },
+    {
+      "output_begin": 1202,
+      "output_end": 1246,
+      "input_begin": 9700,
+      "input_end": 9744,
+      "replacement": false
+    },
+    {
+      "output_begin": 1246,
+      "output_end": 1271,
+      "input_begin": 9806,
+      "input_end": 9831,
+      "replacement": false
+    },
+    {
+      "output_begin": 1271,
+      "output_end": 1298,
+      "input_begin": 9893,
+      "input_end": 9920,
+      "replacement": false
+    },
+    {
+      "output_begin": 1298,
+      "output_end": 1359,
+      "input_begin": 9982,
+      "input_end": 10043,
+      "replacement": false
+    },
+    {
+      "output_begin": 1359,
+      "output_end": 1399,
+      "input_begin": 10163,
+      "input_end": 10203,
+      "replacement": false
+    },
+    {
+      "output_begin": 1399,
+      "output_end": 1468,
+      "input_begin": 10507,
+      "input_end": 10576,
+      "replacement": false
+    },
+    {
+      "output_begin": 1468,
+      "output_end": 1528,
+      "input_begin": 10676,
+      "input_end": 10736,
+      "replacement": false
+    },
+    {
+      "output_begin": 1528,
+      "output_end": 1802,
+      "input_begin": 10903,
+      "input_end": 11177,
+      "replacement": false
+    }
+  ]
+}

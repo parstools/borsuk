@@ -1,0 +1,29 @@
+// Document envelope for version 1. Ag productions are supplied by Ag.ag.
+grammar SemaDocument;
+
+options { parser = LALR; lookahead = 2; ast = explicit; }
+
+node document
+    : specification=specificationDeclaration header=grammarDeclaration items=topLevelItem* EOF
+    ;
+
+node specificationDeclaration
+    : kind=specificationKind name=TOKEN_REF SEMI version=formatVersion?
+    ;
+
+inline specificationKind
+    : value=SEMA
+    | value=COGE
+    ;
+
+node formatVersion
+    : FORMAT version=INTEGER SEMI
+    ;
+
+node generationOptions -> enable(ACTION), disable(AG)
+    : GENERATION LBRACE entries=generationOptionEntry* RBRACE
+    ;
+
+COGE : 'coge';
+FORMAT : 'format';
+GENERATION : 'generation';

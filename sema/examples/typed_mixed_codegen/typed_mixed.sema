@@ -1,0 +1,43 @@
+sema TypedMixed for "typed_mixed.ag";
+
+semantic_model {
+    rust_context MixedContext;
+    analyzer program() -> TypeKind;
+    analyzer returnType() -> TypeKind;
+    analyzer typeSpecifier() -> TypeKind;
+
+    intrinsic void_type() -> TypeKind;
+    intrinsic int_type() -> TypeKind;
+    intrinsic char_type(pointer: Bool) -> TypeKind;
+}
+
+node program
+    : type=returnType EOF
+      analysis {
+        analyze type -> resolved;
+        result = resolved;
+      }
+    ;
+
+inline returnType
+    : value=typeSpecifier
+      analysis {
+        analyze value -> resolved;
+        result = resolved;
+      }
+    | value=VOID
+      analysis {
+        result = void_type();
+      }
+    ;
+
+inline typeSpecifier
+    : value=INT
+      analysis {
+        result = int_type();
+      }
+    | value=CHAR star=STAR?
+      analysis {
+        result = char_type(star.present);
+      }
+    ;
