@@ -46,6 +46,9 @@ build-*/
 cmake-build-*/
 /rust/target/
 
+# Local Rust dependency lockfiles
+Cargo.lock
+
 # CMake generated files
 CMakeFiles/
 CMakeCache.txt

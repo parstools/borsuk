@@ -11,6 +11,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 option(AGAS_BUILD_ANTLR_BOOTSTRAP
        "Build the reproducible ANTLR C++ bootstrap frontend" OFF)
 
+set(AGAS_ZBIK_SOURCE_DIR "${PROJECT_SOURCE_DIR}/zbik" CACHE PATH
+    "Path to the Zbik Git submodule")
+
 set(AGAS_ZBIK_REVISION "" CACHE STRING
     "Stable Zbik revision recorded in generated parser artifacts")
 if(NOT AGAS_ZBIK_REVISION)
@@ -27,11 +30,11 @@ if(NOT AGAS_ZBIK_REVISION)
     endif()
 endif()
 
-set(AGAS_ZBIK_SOURCE_DIR "${PROJECT_SOURCE_DIR}/zbik" CACHE PATH
-    "Path to the Zbik Git submodule")
 if(NOT EXISTS "${AGAS_ZBIK_SOURCE_DIR}/CMakeLists.txt")
     message(FATAL_ERROR "Zbik source tree not found: ${AGAS_ZBIK_SOURCE_DIR}")
 endif()
+
+include(CTest)
 
 set(AGAS_SAVED_BUILD_TESTING "${BUILD_TESTING}")
 set(BUILD_TESTING OFF)
@@ -95,11 +98,10 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(agas_cli_support PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
-include(CTest)
 add_executable(agas_ast_promotion_tests ag/tests/AstPromotionTest.cpp)
 target_link_libraries(agas_ast_promotion_tests PRIVATE agas_core)
 target_compile_definitions(agas_ast_promotion_tests PRIVATE
-    AGAS_PINNED_ARTIFACT_DIR="${PROJECT_SOURCE_DIR}/ag/ag/artifacts/ag/v1")
+    AGAS_PINNED_ARTIFACT_DIR="${PROJECT_SOURCE_DIR}/ag/artifacts/ag/v1")
 add_test(NAME agas_ast_promotion_tests COMMAND agas_ast_promotion_tests)
 add_executable(agas_artifact_manifest_tests ag/tests/ArtifactManifestTest.cpp)
 target_link_libraries(agas_artifact_manifest_tests PRIVATE agas_core)
@@ -122,8 +124,8 @@ add_executable(agas_artifact_reproduction_tests
     ag/tests/ArtifactReproductionTest.cpp)
 target_link_libraries(agas_artifact_reproduction_tests PRIVATE agas_core)
 target_compile_definitions(agas_artifact_reproduction_tests PRIVATE
-    AGAS_TEST_GRAMMAR_FILE="${PROJECT_SOURCE_DIR}/ag/ag/grammars/Ag.ag"
-    AGAS_PINNED_ARTIFACT_DIR="${PROJECT_SOURCE_DIR}/ag/ag/artifacts/ag/v1"
+    AGAS_TEST_GRAMMAR_FILE="${PROJECT_SOURCE_DIR}/ag/grammars/Ag.ag"
+    AGAS_PINNED_ARTIFACT_DIR="${PROJECT_SOURCE_DIR}/ag/artifacts/ag/v1"
     AGAS_GENERATOR_VERSION="${PROJECT_VERSION}"
     AGAS_ZBIK_REVISION="${AGAS_ZBIK_REVISION}"
 )
@@ -176,8 +178,8 @@ add_executable(agas_packaged_frontend_tests
     ag/tests/PackagedAgFrontendTest.cpp)
 target_link_libraries(agas_packaged_frontend_tests PRIVATE agas_core)
 target_compile_definitions(agas_packaged_frontend_tests PRIVATE
-    AGAS_TEST_GRAMMAR_FILE="${PROJECT_SOURCE_DIR}/ag/ag/grammars/Ag.ag"
-    AGAS_PINNED_ARTIFACT_DIR="${PROJECT_SOURCE_DIR}/ag/ag/artifacts/ag/v1"
+    AGAS_TEST_GRAMMAR_FILE="${PROJECT_SOURCE_DIR}/ag/grammars/Ag.ag"
+    AGAS_PINNED_ARTIFACT_DIR="${PROJECT_SOURCE_DIR}/ag/artifacts/ag/v1"
 )
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(agas_packaged_frontend_tests PRIVATE
@@ -190,8 +192,8 @@ add_executable(agas_artifact_runtime_parity_tests
     ag/tests/ArtifactRuntimeParityTest.cpp)
 target_link_libraries(agas_artifact_runtime_parity_tests PRIVATE agas_core)
 target_compile_definitions(agas_artifact_runtime_parity_tests PRIVATE
-    AGAS_TEST_GRAMMAR_FILE="${PROJECT_SOURCE_DIR}/ag/ag/grammars/Ag.ag"
-    AGAS_PINNED_ARTIFACT_DIR="${PROJECT_SOURCE_DIR}/ag/ag/artifacts/ag/v1"
+    AGAS_TEST_GRAMMAR_FILE="${PROJECT_SOURCE_DIR}/ag/grammars/Ag.ag"
+    AGAS_PINNED_ARTIFACT_DIR="${PROJECT_SOURCE_DIR}/ag/artifacts/ag/v1"
 )
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(agas_artifact_runtime_parity_tests PRIVATE
@@ -204,8 +206,8 @@ add_executable(agas_static_rust_parser_export_tests
     ag/tests/StaticRustParserExportTest.cpp)
 target_link_libraries(agas_static_rust_parser_export_tests PRIVATE agas_core)
 target_compile_definitions(agas_static_rust_parser_export_tests PRIVATE
-    AGAS_PINNED_ARTIFACT_DIR="${PROJECT_SOURCE_DIR}/ag/ag/artifacts/ag/v1"
-    AGAS_COMPRESSED_TABLE_GRAMMAR="${PROJECT_SOURCE_DIR}/ag/ag/grammars/CompressedTable.ag"
+    AGAS_PINNED_ARTIFACT_DIR="${PROJECT_SOURCE_DIR}/ag/artifacts/ag/v1"
+    AGAS_COMPRESSED_TABLE_GRAMMAR="${PROJECT_SOURCE_DIR}/ag/grammars/CompressedTable.ag"
     AGAS_GENERATED_RUST_PARSER="${PROJECT_SOURCE_DIR}/rust/crates/ag-runtime/src/generated/compressed_table.rs"
 )
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -218,9 +220,9 @@ add_test(NAME agas_static_rust_parser_export_tests
 add_executable(agas_conflict_policy_tests ag/tests/ConflictPolicyTest.cpp)
 target_link_libraries(agas_conflict_policy_tests PRIVATE agas_core)
 target_compile_definitions(agas_conflict_policy_tests PRIVATE
-    AGAS_PINNED_ARTIFACT_DIR="${PROJECT_SOURCE_DIR}/ag/ag/artifacts/ag/v1"
-    AGAS_IF_ELSE_GRAMMAR="${PROJECT_SOURCE_DIR}/ag/ag/grammars/examples/if-else.ag"
-    AGAS_RESOLVED_IF_ELSE_GRAMMAR="${PROJECT_SOURCE_DIR}/ag/ag/grammars/examples/if-else-prefer-shift.ag"
+    AGAS_PINNED_ARTIFACT_DIR="${PROJECT_SOURCE_DIR}/ag/artifacts/ag/v1"
+    AGAS_IF_ELSE_GRAMMAR="${PROJECT_SOURCE_DIR}/ag/grammars/examples/if-else.ag"
+    AGAS_RESOLVED_IF_ELSE_GRAMMAR="${PROJECT_SOURCE_DIR}/ag/grammars/examples/if-else-prefer-shift.ag"
 )
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(agas_conflict_policy_tests PRIVATE
@@ -240,8 +242,8 @@ add_custom_target(agas_check_reproducibility
 add_executable(agas ag/src/agas_main.cpp)
 target_link_libraries(agas PRIVATE agas_core agas_cli_support)
 target_compile_definitions(agas PRIVATE
-    AGAS_DEFAULT_GRAMMAR_FILE="${PROJECT_SOURCE_DIR}/ag/ag/grammars/Ag.ag"
-    AGAS_DEFAULT_ARTIFACT_DIR="${PROJECT_SOURCE_DIR}/ag/ag/artifacts/ag/v1"
+    AGAS_DEFAULT_GRAMMAR_FILE="${PROJECT_SOURCE_DIR}/ag/grammars/Ag.ag"
+    AGAS_DEFAULT_ARTIFACT_DIR="${PROJECT_SOURCE_DIR}/ag/artifacts/ag/v1"
     AGAS_GENERATOR_VERSION="${PROJECT_VERSION}"
     AGAS_ZBIK_REVISION="${AGAS_ZBIK_REVISION}"
 )
@@ -251,8 +253,8 @@ endif()
 add_executable(ag ag/src/agas_main.cpp)
 target_link_libraries(ag PRIVATE agas_core agas_cli_support)
 target_compile_definitions(ag PRIVATE
-    AGAS_DEFAULT_GRAMMAR_FILE="${PROJECT_SOURCE_DIR}/ag/ag/grammars/Ag.ag"
-    AGAS_DEFAULT_ARTIFACT_DIR="${PROJECT_SOURCE_DIR}/ag/ag/artifacts/ag/v1"
+    AGAS_DEFAULT_GRAMMAR_FILE="${PROJECT_SOURCE_DIR}/ag/grammars/Ag.ag"
+    AGAS_DEFAULT_ARTIFACT_DIR="${PROJECT_SOURCE_DIR}/ag/artifacts/ag/v1"
     AGAS_GENERATOR_VERSION="${PROJECT_VERSION}"
     AGAS_ZBIK_REVISION="${AGAS_ZBIK_REVISION}"
 )
@@ -260,7 +262,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(agas PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 add_test(NAME agas_uses_pinned_artifact
-         COMMAND agas "${PROJECT_SOURCE_DIR}/ag/ag/grammars/Ag.ag")
+         COMMAND agas "${PROJECT_SOURCE_DIR}/ag/grammars/Ag.ag")
 set_tests_properties(agas_uses_pinned_artifact PROPERTIES
     PASS_REGULAR_EXPRESSION "grammar=Ag")
 
@@ -401,9 +403,9 @@ add_dependencies(agsem_core_validation_tests sema_artifact)
 add_test(NAME agsem_core_validation_tests
     COMMAND agsem_core_validation_tests
         "${SEMA_ARTIFACT_DIR}"
-        "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/functions.sema"
-        "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/function_cycle.sema"
-        "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/function_unresolved.sema")
+        "${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/functions.sema"
+        "${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/function_cycle.sema"
+        "${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/function_unresolved.sema")
 add_executable(agsem_checked_semantics_tests
     "${PROJECT_SOURCE_DIR}/tests/integration/CheckedSemanticsTest.cpp")
 target_link_libraries(agsem_checked_semantics_tests PRIVATE agsem_core)
@@ -412,8 +414,8 @@ add_test(NAME agsem_checked_semantics_tests
     COMMAND agsem_checked_semantics_tests
         "${SEMA_ARTIFACT_DIR}"
         "${PROJECT_SOURCE_DIR}/ag/artifacts/ag/v1"
-        "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/scope_codegen.sema"
-        "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/scope_codegen.ag")
+        "${PROJECT_SOURCE_DIR}/sema/examples/scope_codegen/scope_codegen.sema"
+        "${PROJECT_SOURCE_DIR}/sema/examples/scope_codegen/scope_codegen.ag")
 add_executable(agsem_prepared_properties_tests
     "${PROJECT_SOURCE_DIR}/tests/integration/PreparedPropertiesTest.cpp")
 target_link_libraries(agsem_prepared_properties_tests PRIVATE
@@ -423,7 +425,7 @@ add_test(NAME agsem_prepared_properties_tests
     COMMAND agsem_prepared_properties_tests
         "${SEMA_ARTIFACT_DIR}"
         "${PROJECT_SOURCE_DIR}/ag/artifacts/ag/v1"
-        "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/toyc_full.sema"
+        "${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/toyc_full.sema"
         "${PROJECT_SOURCE_DIR}/ag/grammars/examples/toyc.ag")
 add_executable(agsem_prepared_function_plan_tests
     "${PROJECT_SOURCE_DIR}/tests/integration/PreparedFunctionPlanTest.cpp")
@@ -434,8 +436,8 @@ add_test(NAME agsem_prepared_function_plan_tests
     COMMAND agsem_prepared_function_plan_tests
         "${SEMA_ARTIFACT_DIR}"
         "${PROJECT_SOURCE_DIR}/ag/artifacts/ag/v1"
-        "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/scope_codegen.sema"
-        "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/scope_codegen.ag")
+        "${PROJECT_SOURCE_DIR}/sema/examples/scope_codegen/scope_codegen.sema"
+        "${PROJECT_SOURCE_DIR}/sema/examples/scope_codegen/scope_codegen.ag")
 add_executable(agsem_semantic_binding_tests "${PROJECT_SOURCE_DIR}/tests/integration/SemanticBindingTest.cpp")
 target_link_libraries(agsem_semantic_binding_tests PRIVATE coge_core)
 add_dependencies(agsem_semantic_binding_tests sema_document_artifact)
@@ -452,7 +454,7 @@ target_link_libraries(agsem_document_frontend_tests PRIVATE coge_core)
 add_dependencies(agsem_document_frontend_tests sema_document_artifact sema_artifact)
 add_test(NAME agsem_document_frontend_tests COMMAND agsem_document_frontend_tests
     "${SEMA_DOCUMENT_ARTIFACT_DIR}" "${PROJECT_SOURCE_DIR}/ag/artifacts/ag/v1"
-    "${SEMA_ARTIFACT_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    "${SEMA_ARTIFACT_DIR}" "${PROJECT_SOURCE_DIR}")
 add_library(agsem_document_cli STATIC "${PROJECT_SOURCE_DIR}/sema/src/DocumentCli.cpp")
 target_link_libraries(agsem_document_cli PUBLIC agsem_core)
 target_compile_definitions(agsem_document_cli PRIVATE
@@ -473,7 +475,7 @@ target_compile_definitions(coge PRIVATE
     AGAS_PINNED_ARTIFACT_DIR="${PROJECT_SOURCE_DIR}/ag/artifacts/ag/v1")
 add_dependencies(coge sema_artifact sema_document_artifact)
 add_test(NAME sema_requires_explicit_legacy
-    COMMAND sema "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/minimal.sema")
+    COMMAND sema "${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/minimal.sema")
 set_tests_properties(sema_requires_explicit_legacy PROPERTIES WILL_FAIL TRUE)
 add_test(NAME sema_parses_standalone
     COMMAND sema "${PROJECT_SOURCE_DIR}/tests/integration/standalone.sema")
@@ -549,40 +551,40 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(sema PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 add_test(NAME sema_parses_minimal
-         COMMAND coge --legacy "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/minimal.sema")
+         COMMAND coge --legacy "${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/minimal.sema")
 set_tests_properties(sema_parses_minimal PROPERTIES
     PASS_REGULAR_EXPRESSION "syntax OK")
 add_test(NAME sema_parses_functions
-         COMMAND coge --legacy "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/functions.sema")
+         COMMAND coge --legacy "${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/functions.sema")
 set_tests_properties(sema_parses_functions PROPERTIES
     PASS_REGULAR_EXPRESSION "syntax OK")
 add_test(NAME sema_parses_execution_model
-         COMMAND coge --legacy "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/execution_model_syntax.sema")
+         COMMAND coge --legacy "${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/execution_model_syntax.sema")
 set_tests_properties(sema_parses_execution_model PROPERTIES
     PASS_REGULAR_EXPRESSION "syntax OK")
 add_test(NAME sema_rejects_function_cycle
-         COMMAND coge --legacy "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/function_cycle.sema")
+         COMMAND coge --legacy "${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/function_cycle.sema")
 set_tests_properties(sema_rejects_function_cycle PROPERTIES WILL_FAIL TRUE)
 add_test(NAME sema_rejects_unresolved_function_call
-         COMMAND coge --legacy "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/function_unresolved.sema")
+         COMMAND coge --legacy "${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/function_unresolved.sema")
 set_tests_properties(sema_rejects_unresolved_function_call PROPERTIES WILL_FAIL TRUE)
 add_test(NAME sema_parses_legacy
          COMMAND coge --legacy
-                 "${PROJECT_SOURCE_DIR}/sema/toyc.sema.txt"
-                 "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/toyscope_1.sema.txt"
-                 "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/toyscope_2.sema.txt"
-                 "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/toyscope_3.sema.txt")
+                 "${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/toyc.sema.txt"
+                 "${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/toyscope_1.sema.txt"
+                 "${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/toyscope_2.sema.txt"
+                 "${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/toyscope_3.sema.txt")
 set_tests_properties(sema_parses_legacy PROPERTIES
     PASS_REGULAR_EXPRESSION "syntax OK")
 add_test(NAME sema_rejects_invalid_syntax
-         COMMAND coge --legacy "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/invalid.sema")
+         COMMAND coge --legacy "${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/invalid.sema")
 set_tests_properties(sema_rejects_invalid_syntax PROPERTIES WILL_FAIL TRUE)
 add_test(NAME sema_collects_calls
          COMMAND coge --legacy --calls "${CMAKE_CURRENT_BINARY_DIR}/sema-call-names-test.txt"
-                 "${PROJECT_SOURCE_DIR}/sema/toyc.sema.txt"
-                 "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/toyscope_1.sema.txt"
-                 "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/toyscope_2.sema.txt"
-                 "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/toyscope_3.sema.txt")
+                 "${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/toyc.sema.txt"
+                 "${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/toyscope_1.sema.txt"
+                 "${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/toyscope_2.sema.txt"
+                 "${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/toyscope_3.sema.txt")
 set_tests_properties(sema_collects_calls PROPERTIES
     PASS_REGULAR_EXPRESSION "93 unique call names")
 add_test(NAME sema_scope_codegen
@@ -599,14 +601,14 @@ add_test(NAME sema_scope_codegen
 add_test(NAME sema_scope_codegen_rejects_bad_type
     COMMAND "${CMAKE_COMMAND}"
         "-DSEMA=$<TARGET_FILE:coge>"
-        "-DSOURCE=${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/scope_codegen_bad_type.sema"
+        "-DSOURCE=${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/scope_codegen_bad_type.sema"
         "-DOUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/scope-invalid-test"
         "-DEXPECTED_MESSAGE=return type mismatch"
         -P "${PROJECT_SOURCE_DIR}/tools/check_scope_rejection.cmake")
 add_test(NAME sema_scope_codegen_rejects_grammar_mismatch
     COMMAND "${CMAKE_COMMAND}"
         "-DSEMA=$<TARGET_FILE:coge>"
-        "-DSOURCE=${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/scope_codegen_bad_grammar.sema"
+        "-DSOURCE=${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/scope_codegen_bad_grammar.sema"
         "-DOUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/scope-grammar-mismatch-test"
         "-DEXPECTED_MESSAGE=rule program alternative 1 differs from source grammar in element count"
         -P "${PROJECT_SOURCE_DIR}/tools/check_scope_rejection.cmake")
@@ -627,13 +629,13 @@ add_test(NAME sema_typed_codegen
     COMMAND python3
         "${PROJECT_SOURCE_DIR}/tools/check_typed_codegen.py"
         --sema $<TARGET_FILE:coge>
-        --source "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/typed_codegen.sema"
-        --expected "${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/typed_codegen/generated/sema_gen.rs"
+        --source "${PROJECT_SOURCE_DIR}/sema/examples/typed_codegen/typed_codegen.sema"
+        --expected "${PROJECT_SOURCE_DIR}/sema/examples/typed_codegen/generated/sema_gen.rs"
         --output-dir "${CMAKE_CURRENT_BINARY_DIR}/typed-codegen-generated-test")
 add_test(NAME sema_typed_codegen_rejects_missing_signature
     COMMAND "${CMAKE_COMMAND}"
         "-DSEMA=$<TARGET_FILE:coge>"
-        "-DSOURCE=${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/typed_codegen_missing_signature.sema"
+        "-DSOURCE=${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/typed_codegen_missing_signature.sema"
         "-DOUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/typed-missing-signature-test"
         "-DEXPECTED_MESSAGE=missing analyzer signature for rule value"
         -P "${PROJECT_SOURCE_DIR}/tools/check_scope_rejection.cmake")
@@ -713,32 +715,32 @@ add_test(NAME sema_toycp_typed_codegen
 add_test(NAME sema_toyscope_1_reports_missing_typed_contract
     COMMAND "${CMAKE_COMMAND}"
         "-DSEMA=$<TARGET_FILE:coge>"
-        "-DSOURCE=${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/toyscope_1.sema.txt"
+        "-DSOURCE=${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/toyscope_1.sema.txt"
         "-DOUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/toyscope-1-generated-test"
         "-DEXPECTED_MESSAGE=Rust generation needs rust_context declaration"
         -P "${PROJECT_SOURCE_DIR}/tools/check_scope_rejection.cmake")
 add_test(NAME sema_scope_codegen_rejects_effect_violation
     COMMAND "${CMAKE_COMMAND}"
         "-DSEMA=$<TARGET_FILE:coge>"
-        "-DSOURCE=${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/scope_codegen_bad_effect.sema"
+        "-DSOURCE=${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/scope_codegen_bad_effect.sema"
         "-DOUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/scope-effect-violation-test"
         "-DEXPECTED_MESSAGE=mutating call from read-only function"
         -P "${PROJECT_SOURCE_DIR}/tools/check_scope_rejection.cmake")
 add_test(NAME sema_scope_codegen_rejects_bad_analysis_result
     COMMAND "${CMAKE_COMMAND}"
         "-DSEMA=$<TARGET_FILE:coge>"
-        "-DSOURCE=${PROJECT_SOURCE_DIR}/tests/integration/fixtures/legacy/scope_codegen_bad_analysis.sema"
+        "-DSOURCE=${PROJECT_SOURCE_DIR}/tests/fixtures/legacy/scope_codegen_bad_analysis.sema"
         "-DOUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/scope-bad-analysis-test"
         "-DEXPECTED_MESSAGE=analyzer result must have type SymbolId"
         -P "${PROJECT_SOURCE_DIR}/tools/check_scope_rejection.cmake")
 add_test(NAME agas_emits_toycm_package
-         COMMAND python3 "${CMAKE_CURRENT_SOURCE_DIR}/tools/check_toycm_package.py"
+         COMMAND python3 "${PROJECT_SOURCE_DIR}/ag/tools/check_toycm_package.py"
                  --agas $<TARGET_FILE:agas>
-                 --grammar "${PROJECT_SOURCE_DIR}/ag/grammars/examples/toycm.ag")
+                 --grammar "${PROJECT_SOURCE_DIR}/ag/grammars/additional/toycm.ag")
 set_tests_properties(agas_emits_toycm_package PROPERTIES
     PASS_REGULAR_EXPRESSION "sections=7")
 add_test(NAME agas_xml_example
-         COMMAND python3 "${CMAKE_CURRENT_SOURCE_DIR}/tools/check_xml_example.py"
+         COMMAND python3 "${PROJECT_SOURCE_DIR}/ag/tools/check_xml_example.py"
                  --agas $<TARGET_FILE:agas>
                  --grammar "${PROJECT_SOURCE_DIR}/ag/grammars/examples/xml.ag"
                  --example "${PROJECT_SOURCE_DIR}/ag/grammars/examples/example.xml")
@@ -821,13 +823,13 @@ add_custom_command(
             -Dlanguage=Cpp -visitor -no-listener
             -o "${AGAS_GENERATED_DIR}" Ag.g4
     DEPENDS "${AGAS_GRAMMAR}" "${AGAS_ANTLR_JAR}"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/grammars"
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/ag/grammars"
     COMMENT "Generating the temporary Agas bootstrap parser with ANTLR ${AGAS_ANTLR_VERSION}"
     VERBATIM
 )
 
 add_library(agas_bootstrap
-    src/bootstrap/AntlrFrontend.cpp
+    ag/src/bootstrap/AntlrFrontend.cpp
     ${AGAS_GENERATED_SOURCES}
     ${AGAS_GENERATED_HEADERS}
 )
@@ -840,13 +842,13 @@ target_include_directories(agas_bootstrap SYSTEM PRIVATE "${ANTLR4_INCLUDE_DIR}"
 
 target_link_libraries(agas_bootstrap PUBLIC agas_core antlr4_shared)
 
-add_executable(agas-bootstrap src/main.cpp)
+add_executable(agas-bootstrap ag/src/main.cpp)
 target_link_libraries(agas-bootstrap PRIVATE agas_bootstrap agas_cli_support)
 add_test(NAME agas_bootstrap_help COMMAND agas-bootstrap --help)
 set_tests_properties(agas_bootstrap_help PROPERTIES
     PASS_REGULAR_EXPRESSION "Agas ANTLR bootstrap")
 
-add_executable(agas-merge-report src/merge_report.cpp)
+add_executable(agas-merge-report ag/src/merge_report.cpp)
 target_link_libraries(agas-merge-report PRIVATE agas_bootstrap agas_cli_support)
 add_test(NAME agas_merge_report_help COMMAND agas-merge-report --help)
 set_tests_properties(agas_merge_report_help PROPERTIES
@@ -878,7 +880,7 @@ add_custom_target(agas_reproduce_from_antlr
             "${AGAS_REPRODUCED_RUST_PARSER}"
             "${PROJECT_SOURCE_DIR}/rust/crates/ag-runtime/src/generated/compressed_table.rs"
     COMMAND "${CMAKE_COMMAND}" "-DREPRODUCED_DIR=${AGAS_REPRODUCED_PACKAGE_DIR}"
-            "-DPINNED_DIR=${CMAKE_CURRENT_SOURCE_DIR}/artifacts/ag/v1"
+            "-DPINNED_DIR=${PROJECT_SOURCE_DIR}/ag/artifacts/ag/v1"
             -P "${PROJECT_SOURCE_DIR}/ag/cmake/CompareArtifactPackage.cmake"
     DEPENDS agas-bootstrap agas
     COMMENT "Reproducing pinned Agas artifacts from the ANTLR bootstrap"
@@ -900,7 +902,7 @@ target_link_libraries(agsem_document_projection_tests PRIVATE coge_core)
 add_dependencies(agsem_document_projection_tests sema_document_artifact sema_artifact)
 add_test(NAME agsem_document_projection_tests COMMAND agsem_document_projection_tests
     "${SEMA_DOCUMENT_ARTIFACT_DIR}" "${PROJECT_SOURCE_DIR}/ag/artifacts/ag/v1"
-    "${SEMA_ARTIFACT_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_BINARY_DIR}/stage3-fixtures")
+    "${SEMA_ARTIFACT_DIR}" "${PROJECT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/stage3-fixtures")
 add_executable(agsem_semantic_link_tests "${PROJECT_SOURCE_DIR}/tests/integration/SemanticLinkTest.cpp")
 target_link_libraries(agsem_semantic_link_tests PRIVATE agsem_core)
 add_dependencies(agsem_semantic_link_tests sema_document_artifact)
@@ -911,41 +913,41 @@ add_test(NAME agsem_semantic_link_tests COMMAND agsem_semantic_link_tests
 add_test(NAME agsem_template_tests COMMAND python3
     "${PROJECT_SOURCE_DIR}/tests/integration/check_templates.py"
     --sema $<TARGET_FILE:sema> --coge $<TARGET_FILE:coge>
-    --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    --repo "${PROJECT_SOURCE_DIR}")
 set_tests_properties(agsem_template_tests PROPERTIES TIMEOUT 180)
 add_test(NAME agsem_document_cli_tests COMMAND python3
     "${PROJECT_SOURCE_DIR}/tests/integration/check_document_cli.py"
     --sema $<TARGET_FILE:sema> --coge $<TARGET_FILE:coge>
     --ag $<TARGET_FILE:ag> --agas $<TARGET_FILE:agas>
-    --fixtures "${CMAKE_CURRENT_BINARY_DIR}/stage3-fixtures" --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    --fixtures "${CMAKE_CURRENT_BINARY_DIR}/stage3-fixtures" --repo "${PROJECT_SOURCE_DIR}")
 set_tests_properties(agsem_document_cli_tests PROPERTIES DEPENDS agsem_document_projection_tests)
 add_test(NAME agsem_toyscope_layer_tests COMMAND python3
     "${PROJECT_SOURCE_DIR}/tests/integration/check_toyscope_layers.py"
     --sema $<TARGET_FILE:sema> --coge $<TARGET_FILE:coge> --ag $<TARGET_FILE:ag>
-    --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    --repo "${PROJECT_SOURCE_DIR}")
 add_test(NAME agsem_migrated_examples_tests COMMAND python3
     "${PROJECT_SOURCE_DIR}/tests/integration/check_migrated_examples.py"
     --sema $<TARGET_FILE:sema> --coge $<TARGET_FILE:coge> --ag $<TARGET_FILE:ag>
-    --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    --repo "${PROJECT_SOURCE_DIR}")
 add_test(NAME agsem_migration_message_tests COMMAND python3
     "${PROJECT_SOURCE_DIR}/tests/integration/check_migration_messages.py"
     --sema $<TARGET_FILE:sema> --coge $<TARGET_FILE:coge>
-    --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    --repo "${PROJECT_SOURCE_DIR}")
 add_test(NAME agsem_enum_constant_tests COMMAND python3
     "${PROJECT_SOURCE_DIR}/tests/integration/check_enum_constants.py"
     --sema $<TARGET_FILE:sema> --coge $<TARGET_FILE:coge>
-    --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    --repo "${PROJECT_SOURCE_DIR}")
 add_test(NAME agsem_collection_tests COMMAND python3
     "${PROJECT_SOURCE_DIR}/tests/integration/check_collections.py"
     --sema $<TARGET_FILE:sema> --coge $<TARGET_FILE:coge>
-    --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    --repo "${PROJECT_SOURCE_DIR}")
 
 add_executable(agsem_completeness_tests "${PROJECT_SOURCE_DIR}/tests/integration/CompletenessTest.cpp")
 target_link_libraries(agsem_completeness_tests PRIVATE coge_core)
 add_dependencies(agsem_completeness_tests sema_document_artifact)
 add_test(NAME agsem_completeness_tests COMMAND agsem_completeness_tests
     "${SEMA_DOCUMENT_ARTIFACT_DIR}" "${PROJECT_SOURCE_DIR}/ag/artifacts/ag/v1"
-    "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    "${PROJECT_SOURCE_DIR}")
 add_test(NAME agsem_completeness_cli_tests COMMAND python3
     "${PROJECT_SOURCE_DIR}/tests/integration/check_completeness_cli.py"
     --sema $<TARGET_FILE:sema> --coge $<TARGET_FILE:coge>)
