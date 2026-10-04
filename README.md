@@ -1,4 +1,4 @@
-![Borsuk logo](docs/images/borsuk_logo.jpeg)
+<p align="center"><img src="docs/images/borsuk_logo.jpeg" alt="Borsuk logo" width="480"></p>
 
 # borsuk
 
@@ -7,6 +7,8 @@
 Grammar-driven compiler toolkit: deterministic LR(k)/LALR(k) parsing with
 Unicode lexers and explicit ASTs (ag), semantic analysis (sema) and code
 generation (coge).
+
+Project page: https://parstools.github.io/borsuk/
 
 ## Tools
 

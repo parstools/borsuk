@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Borsuk – a grammar-driven compiler toolkit</title>
+<meta name="description" content="Borsuk builds compilers from a grammar: deterministic LR(k)/LALR(k) parsing with Unicode lexers and explicit ASTs, then semantic analysis and code generation, with C++ and Rust runtimes and C11 and LLVM backends.">
+<link rel="icon" type="image/jpeg" href="images/borsuk_logo.jpeg">
+<meta property="og:title" content="Borsuk">
+<meta property="og:description" content="A grammar-driven compiler toolkit: deterministic LR(k) parsing, semantic analysis and code generation.">
+<meta property="og:image" content="images/borsuk_logo.jpeg">
+<style>
+  :root {
+    --bg: #f4f6fa;
+    --surface: #ffffff;
+    --text: #172233;
+    --muted: #586476;
+    --border: #dbe1ea;
+    --accent: #1d6fd8;
+    --accent-text: #ffffff;
+    --code-bg: #eaeef4;
+    --shadow: 0 1px 2px rgba(23, 34, 51, .06), 0 8px 24px rgba(23, 34, 51, .1);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e141c;
+      --surface: #16202b;
+      --text: #e5ebf2;
+      --muted: #97a4b5;
+      --border: #263241;
+      --accent: #5aa2ff;
+      --accent-text: #0a1018;
+      --code-bg: #1f2a37;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 8px 24px rgba(0, 0, 0, .4);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Ubuntu, Cantarell, sans-serif;
+  }
+  a { color: var(--accent); }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 0 16px; }
+  header { padding: 40px 0 20px; text-align: center; }
+  header img { width: 100%; max-width: 820px; height: auto; border-radius: 14px; box-shadow: var(--shadow); }
+  h1 { font-size: 2.8rem; margin: 22px 0 2px; letter-spacing: -.02em; }
+  .name { color: var(--muted); margin: 0 0 10px; }
+  .tagline { font-size: 1.22rem; max-width: 720px; margin: 0 auto; }
+  .buttons { margin: 22px 0 0; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .button {
+    display: inline-block; padding: 10px 20px; border-radius: 8px; font-weight: 600; text-decoration: none;
+    border: 1px solid var(--border); color: var(--text); background: var(--surface);
+  }
+  .button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+  section { padding: 40px 0 6px; }
+  h2 { font-size: 1.6rem; margin: 0 0 16px; letter-spacing: -.01em; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+  .card h3 { margin: 0 0 8px; font-size: 1.06rem; }
+  .card p { margin: 0; color: var(--muted); }
+  .tools { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .tool { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+  .tool .cmd { font-family: ui-monospace, "SFMono-Regular", "DejaVu Sans Mono", Menlo, monospace; font-weight: 700; font-size: 1.15rem; }
+  .tool .ext { color: var(--muted); font-size: .95rem; }
+  .tool p { margin: 8px 0 0; color: var(--muted); }
+  code, pre { font-family: ui-monospace, "SFMono-Regular", "JetBrains Mono", "DejaVu Sans Mono", Menlo, monospace; font-size: .9em; }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow-x: auto; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+  .note { color: var(--muted); }
+  ul.docs { margin: 0; padding-left: 20px; }
+  ul.docs li { margin: 4px 0; }
+  footer { padding: 40px 0 56px; color: var(--muted); font-size: .92rem; text-align: center; }
+  @media (max-width: 760px) {
+    .two { grid-template-columns: 1fr; }
+    h1 { font-size: 2.2rem; }
+    .tagline { font-size: 1.06rem; }
+  }
+</style>
+</head>
+<body>
+<header class="wrap">
+  <img src="images/borsuk_logo.jpeg" alt="A wildcat hands a grammar rule to a badger, who builds an LR parsing table" width="1024" height="559">
+  <h1>Borsuk</h1>
+  <p class="name">Polish for <em>badger</em></p>
+  <p class="tagline">A toolkit for your own compilers: parse a language from its grammar, as with Bison or ANTLR, then
+    check its meaning and generate code from the same specification.</p>
+  <div class="buttons">
+    <a class="button primary" href="https://github.com/parstools/borsuk">View on GitHub</a>
+    <a class="button" href="https://parstools.github.io/zbik/">Żbik, its LR engine</a>
+    <a class="button" href="#build">Build it</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <section>
+    <h2>Three tools, one specification</h2>
+    <div class="tools">
+      <div class="tool">
+        <div class="cmd">ag</div>
+        <div class="ext">.ag — grammar</div>
+        <p>Unicode lexer, LR(k)/LALR(k) parser, token channels and an explicit AST with named fields and variants.</p>
+      </div>
+      <div class="tool">
+        <div class="cmd">sema</div>
+        <div class="ext">.sema — grammar + semantics</div>
+        <p>Everything in <code>.ag</code>, plus a semantic contract and analysis: typed actions, inferred analyzer
+          signatures and generated Rust analyzers.</p>
+      </div>
+      <div class="tool">
+        <div class="cmd">coge</div>
+        <div class="ext">.coge — grammar + semantics + code</div>
+        <p>Everything in <code>.sema</code>, plus an IR executor, lowering and backends: C11 and LLVM for the
+          constructs they support.</p>
+      </div>
+    </div>
+    <p class="note">Each file is self-contained: a <code>.sema</code> or <code>.coge</code> file carries its own grammar
+      and lexer.</p>
+  </section>
+
+  <section>
+    <h2>Deterministic, and it tells you early</h2>
+    <div class="two">
+      <div>
+        <p>Like Bison, Borsuk builds LR tables, but with lookahead <em>k</em> greater than one when the grammar needs
+          it. Conflicts are found when the table is built, for the grammar itself and without sample inputs, and
+          the generated parser never backtracks. LL(*) and GLR parsers accept such grammars and show ambiguity
+          only on a concrete input.</p>
+        <p>Like ANTLR, a grammar is a readable file with lexer rules, channels and an AST shape. Conflicts you accept
+          are resolved by name, as the classic dangling <code>else</code> here.</p>
+        <p>Parsers are built into versioned, integrity-checked packages with C++ and Rust runtimes, or exported as
+          static Rust parsers, so a program loads a pinned parser instead of regenerating it at startup.</p>
+      </div>
+<pre title="An excerpt of ag/grammars/examples/if-else-prefer-shift.ag"><code>grammar ToyC;
+
+options {
+    parser = LR;
+    lookahead = 1;
+    ast = explicit;
+}
+
+conflicts {
+    prefer shift ELSE over reduce ifStatement#IfStatement;
+}
+
+node ifStatement
+    : IF B thenBranch=statement                           #IfStatement
+    | IF B thenBranch=statement ELSE elseBranch=statement #IfElseStatement
+    ;
+
+inline statement
+    : value=ifStatement
+    | value=compoundStatement
+    ;
+
+IF   : 'if';
+ELSE : 'else';
+WS   : [ \t\r\n]+ -> channel(HIDDEN);</code></pre>
+    </div>
+    <p class="note">An excerpt of
+      <a href="https://github.com/parstools/borsuk/blob/main/ag/grammars/examples/if-else-prefer-shift.ag">if-else-prefer-shift.ag</a>.</p>
+  </section>
+
+  <section>
+    <h2>What else it has</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Unicode lexing</h3>
+        <p>UTF-8 input, longest match, fragments, greedy and lazy quantifiers, token channels and lexer classes
+          scoped by the parser.</p>
+      </div>
+      <div class="card">
+        <h3>Execution and code generation</h3>
+        <p>Typed IR interpreters, execution profiles and a Structured Core IR. ToyC shows the C11 and LLVM backends;
+          ToyCP shows interpretation with classes, inheritance, construction and cleanup.</p>
+      </div>
+      <div class="card">
+        <h3>Migration and inspection</h3>
+        <p>Grammar and analysis projections, specification templates, completeness reports, inspection of checked
+          models and the provenance of every output.</p>
+      </div>
+      <div class="card">
+        <h3>Honest limits</h3>
+        <p>Unsupported constructs are rejected explicitly, never half-handled. The format guides list what each tool
+          supports today.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="build">
+    <h2>Build and try</h2>
+    <p>Borsuk needs a C++20 compiler, CMake 4.0 or newer, ICU (<code>uc</code>), <code>nlohmann_json</code> 3.11 or
+      newer, and the Żbik submodule. Generated Rust needs Cargo with the 2024 edition.</p>
+<pre><code>git clone --recursive https://github.com/parstools/borsuk.git
+cd borsuk
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --target ag sema coge -j2
+
+build/bin/ag --check ag/grammars/examples/cmm.ag
+build/bin/coge --check --contracts contracts/toyc-runtime-v1.json coge/examples/toyc/toyc.coge</code></pre>
+    <p class="note">Normal builds use pinned parser artifacts and need neither Java nor ANTLR. The
+      <a href="https://github.com/parstools/borsuk#readme">README</a> walks through ToyC and ToyCP from
+      specification to running interpreter.</p>
+  </section>
+
+  <section>
+    <h2>Documentation</h2>
+    <ul class="docs">
+      <li><a href="https://github.com/parstools/borsuk/blob/main/ag/docs/AG_FORMAT.md">The Ag grammar format</a></li>
+      <li><a href="https://github.com/parstools/borsuk/blob/main/docs/DOCUMENT_CLI.md">Document CLI</a></li>
+      <li><a href="https://github.com/parstools/borsuk/blob/main/coge/docs/CORE_IR.md">Core IR guide</a></li>
+      <li><a href="https://github.com/parstools/borsuk/blob/main/coge/docs/EXECUTION_MODEL.md">Execution model</a></li>
+      <li><a href="https://github.com/parstools/borsuk/blob/main/docs/GENERATED.md">Regenerating the examples</a></li>
+    </ul>
+    <p class="note">Most documents also have a Polish version, with the <code>.pl.md</code> suffix.</p>
+  </section>
+</main>
+
+<footer class="wrap">
+  Apache-2.0 · built on <a href="https://parstools.github.io/zbik/">Żbik</a> ·
+  <a href="https://github.com/parstools/borsuk">github.com/parstools/borsuk</a>
+</footer>
+</body>
+</html>
